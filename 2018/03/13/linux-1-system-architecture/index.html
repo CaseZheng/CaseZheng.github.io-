@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux系统架构">
+<meta property="og:url" content="http://www.casezheng.date/2018/03/13/linux-1-system-architecture/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.151Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="linux系统架构">
+<meta name="twitter:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/03/13/linux-1-system-architecture/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>linux系统架构 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/03/13/linux-1-system-architecture/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux系统架构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-13 19:54:33" itemprop="dateCreated datePublished" datetime="2018-03-13T19:54:33+08:00">2018-03-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。</p>
+<h1 id="Linux内核主要模块"><a href="#Linux内核主要模块" class="headerlink" title="Linux内核主要模块"></a>Linux内核主要模块</h1><p>Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。</p>
+<h2 id="进程调度SCHED"><a href="#进程调度SCHED" class="headerlink" title="进程调度SCHED"></a>进程调度SCHED</h2><p>进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。</p>
+<ol>
+<li>SCHED_OTHER<strong>分时调度策略（默认）</strong>，针对<strong>普通进程的时间片轮转调度策略</strong>。系统给所有的运行状态的进程分配时间片。在当前进程的时间片用完后，系统从进程中优先级高的进程中选择进程运行。</li>
+<li>SCHED_FIFO<strong>实时调度策略，先到先服务</strong>，针对运行的<strong>实时性要求比较高、运行时间短</strong>的进程调度策略。系统按照进入队列的先后进行进程的调度，在没有更高优先级到来或者当前进程没有因为等待资源而阻塞的情况下，会一直运行。</li>
+<li>SCHED_RR<strong>实时调度策略，时间片轮转</strong>，针对<strong>实时性比较高、运行时间长</strong>的进行调度策略。SCHED_RR和SCHED_OTHER相似，但SCHED_RR的优先级要高的多。系统分配给SCHED_RR进程时间片，然后轮循进程，将时间片用完的进程放在队列末尾。</li>
+</ol>
+<p>由于存在多种调度方式，Linux进程调度采用“有条件可剥夺”的调度方式。普通进程中采用SCHED_OTHER的时间片轮询方式，<strong>实时进程可以剥夺普通进程</strong>。如果普通进程在用户空间运行，则普通进程立即停止运行，将资源让给实时进程；如果普通进程在内核空间，则需要等系统调用返回用户空间后方可剥夺资源。</p>
+<h2 id="内存管理MMU"><a href="#内存管理MMU" class="headerlink" title="内存管理MMU"></a>内存管理MMU</h2><p>内存管理时多个进程间共享内存的策略。在Linux中内存管理主要概念是<strong>虚拟内存</strong>。虚拟内存让内存可以使用比实际物理内存更大的内存，每个进程的虚拟内存有不同的地址空间，多个进程的虚拟内存不会冲突。虚拟内存的分配策略是每个进程都可以公平地使用虚拟内存。</p>
+<h2 id="虚拟文件系统VFS"><a href="#虚拟文件系统VFS" class="headerlink" title="虚拟文件系统VFS"></a>虚拟文件系统VFS</h2><p>Linux支持多种文件系统。最常见的文件格式是ext2和ext3。ext2文件系统用于固定文件系统和可活动文件系统，是ext的扩展。ext3是ext2上增加日志功能后的扩展。ext2和ext3可以互相转化。</p>
+<h2 id="网络接口"><a href="#网络接口" class="headerlink" title="网络接口"></a>网络接口</h2><p>Linux支持多种网络接口和协议。网络接口分为网络协议和驱动程序，网络协议是网络传输的通信标准，驱动程序是对硬件设备的驱动程序。</p>
+<h2 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h2><p>Linux下进程通信方式：<strong>管道、信号、消息队列、共享内存、套接字</strong>。</p>
+<h1 id="Linux文件系统"><a href="#Linux文件系统" class="headerlink" title="Linux文件系统"></a>Linux文件系统</h1><p>Linux操作系统文件结构的开始是一个顶级目录结构，叫做<strong>根目录</strong>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@VM_187_252_centos /]$ cd /</span><br><span class="line">[CaseZheng@VM_187_252_centos /]$ ls</span><br><span class="line">bin  boot  data  dev  etc  home  lib  lib64  lost+found  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var</span><br></pre></td></tr></table></figure></p>
+<p>根目录下常用目录作用：</p>
+<ol>
+<li>/bin Binary存放经常使用的命令</li>
+<li>/boot 存放启动linux时需要使用的核心文件，包括连接文件和镜像文件</li>
+<li>/dev Device存放Linux的外部设备</li>
+<li>/etc 存放所有系统管理所需要的配置文件和子目录</li>
+<li>/home 用户家目录</li>
+<li>/lib 存放系统最基本的动态链接库</li>
+<li>/lost+found 一般情况下是空的，当系统非法关机，存放一些文件</li>
+<li>/media linux系统自动识别一些设备，当识别后会将识别的设备挂载在这个目录下</li>
+<li>/mnt 专门给外挂的文件系统使用</li>
+<li>/opt 可选的应用程序软件包</li>
+<li>/proc 虚拟目录，系统内存的映射，可直接访问该目录获取系统信息，这个目录内容在内存中，而不是硬盘。</li>
+<li>/root 根用户的主目录</li>
+<li>/sbin 存放系统管理员使用的系统管理程序</li>
+<li>/selinux Redhat/CentOS特有目录，Selinux是安全机制，比较复杂，该目录用于存放selinux相关文件。</li>
+<li>/src 存放一些服务启动后需要提取的数据</li>
+<li>/sys 该目录下安装sysfs文件系统，sysfs文件系统集成了3中文件系统信息：针对进程信息的proc文件系统、针对设备的devfs文件系统、针对伪终端的devpts文件系统，该文件系统是内核设备的一个直观反映。当一个内核对象被创建的时候，对应的文件和目录也在内核对象子系统中被创建。</li>
+<li>/var 包含系统定义表，以便在系统运行改变时只备份该目录</li>
+<li>/tmp 用于临时性存储</li>
+<li>/usr 用户的很多应用程序和文件放在该目录下</li>
+<li>/usr/bin 系统用户使用的应用程序</li>
+<li>/usr/sbin 超级用户使用的比较高级的管理程序和系统守护程序</li>
+<li>/usr/src 内核源代码默认的放置目录</li>
+<li>/usr/lib 库文件</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/12/hexo-plantuml/" rel="prev" title="博客搭建纪要">
+      <i class="fa fa-chevron-left"></i> 博客搭建纪要
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/14/linux-2-gcc-make/" rel="next" title="linux编译链接">
+      linux编译链接 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux内核主要模块"><span class="nav-number">1.</span> <span class="nav-text">Linux内核主要模块</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#进程调度SCHED"><span class="nav-number">1.1.</span> <span class="nav-text">进程调度SCHED</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存管理MMU"><span class="nav-number">1.2.</span> <span class="nav-text">内存管理MMU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟文件系统VFS"><span class="nav-number">1.3.</span> <span class="nav-text">虚拟文件系统VFS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络接口"><span class="nav-number">1.4.</span> <span class="nav-text">网络接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进程间通信"><span class="nav-number">1.5.</span> <span class="nav-text">进程间通信</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux文件系统"><span class="nav-number">2.</span> <span class="nav-text">Linux文件系统</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

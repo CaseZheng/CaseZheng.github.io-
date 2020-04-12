@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="存储过程和函数存储过程和函数是事先经过编译并存储在数据库的一段SQL语句的集合，调用存储过程和函数可以简化应用开发人员的工作，减少数据在数据库和应用服务器之间的传输，对提高数据处理的效率有好处。存储过程和函数的区别：  函数必须有返回值，存储过程没有。 存储过程的参数使用IN、OUT、INOUT类型，而函数参数只能是IN类型。  存储过程和函数的相关操作创建、修改存储过程或函数1234567891">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 存储过程和函数 触发器">
+<meta property="og:url" content="http://www.casezheng.date/2018/03/30/mysql-8/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="存储过程和函数存储过程和函数是事先经过编译并存储在数据库的一段SQL语句的集合，调用存储过程和函数可以简化应用开发人员的工作，减少数据在数据库和应用服务器之间的传输，对提高数据处理的效率有好处。存储过程和函数的区别：  函数必须有返回值，存储过程没有。 存储过程的参数使用IN、OUT、INOUT类型，而函数参数只能是IN类型。  存储过程和函数的相关操作创建、修改存储过程或函数1234567891">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.166Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL 存储过程和函数 触发器">
+<meta name="twitter:description" content="存储过程和函数存储过程和函数是事先经过编译并存储在数据库的一段SQL语句的集合，调用存储过程和函数可以简化应用开发人员的工作，减少数据在数据库和应用服务器之间的传输，对提高数据处理的效率有好处。存储过程和函数的区别：  函数必须有返回值，存储过程没有。 存储过程的参数使用IN、OUT、INOUT类型，而函数参数只能是IN类型。  存储过程和函数的相关操作创建、修改存储过程或函数1234567891">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/03/30/mysql-8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL 存储过程和函数 触发器 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/03/30/mysql-8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 存储过程和函数 触发器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-30 20:18:02" itemprop="dateCreated datePublished" datetime="2018-03-30T20:18:02+08:00">2018-03-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="存储过程和函数"><a href="#存储过程和函数" class="headerlink" title="存储过程和函数"></a>存储过程和函数</h1><p>存储过程和函数是事先经过编译并存储在数据库的一段SQL语句的集合，调用存储过程和函数可以简化应用开发人员的工作，减少数据在数据库和应用服务器之间的传输，对提高数据处理的效率有好处。<br>存储过程和函数的区别：</p>
+<ol>
+<li>函数必须有返回值，存储过程没有。</li>
+<li>存储过程的参数使用IN、OUT、INOUT类型，而函数参数只能是IN类型。</li>
+</ol>
+<h1 id="存储过程和函数的相关操作"><a href="#存储过程和函数的相关操作" class="headerlink" title="存储过程和函数的相关操作"></a>存储过程和函数的相关操作</h1><h2 id="创建、修改存储过程或函数"><a href="#创建、修改存储过程或函数" class="headerlink" title="创建、修改存储过程或函数"></a>创建、修改存储过程或函数</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">PROCEDURE</span> sp_name ([proc_parameter[,...]])</span><br><span class="line">    [characteristic ...] routine_body</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> sp_name ([func_parameter[,...]])</span><br><span class="line">    <span class="keyword">RETURNS</span> <span class="keyword">type</span></span><br><span class="line">    [characteristic ...] routine_body</span><br><span class="line"></span><br><span class="line">    proc_parameter:</span><br><span class="line">    [ <span class="keyword">IN</span> | <span class="keyword">OUT</span> | INOUT ] param_name <span class="keyword">type</span></span><br><span class="line"></span><br><span class="line">    func_parameter:</span><br><span class="line">        param_name <span class="keyword">type</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span>:</span><br><span class="line">    <span class="keyword">Any</span> valid MySQL <span class="keyword">data</span> <span class="keyword">type</span></span><br><span class="line"></span><br><span class="line">characteristic:</span><br><span class="line">        <span class="keyword">LANGUAGE</span> <span class="keyword">SQL</span></span><br><span class="line">    | [<span class="keyword">NOT</span>] <span class="keyword">DETERMINISTIC</span></span><br><span class="line">    | &#123; CONTAINS <span class="keyword">SQL</span> | <span class="keyword">NO</span> <span class="keyword">SQL</span> | <span class="keyword">READS</span> <span class="keyword">SQL</span> <span class="keyword">DATA</span> | MODIFIES <span class="keyword">SQL</span> <span class="keyword">DATA</span> &#125;</span><br><span class="line">    | <span class="keyword">SQL</span> <span class="keyword">SECURITY</span> &#123; DEFINER | INVOKER &#125;</span><br><span class="line">    | <span class="keyword">COMMENT</span> <span class="string">'string'</span></span><br><span class="line"></span><br><span class="line">routine_body:</span><br><span class="line">    Valid <span class="keyword">SQL</span> <span class="keyword">procedure</span> <span class="keyword">statement</span> <span class="keyword">or</span> statements</span><br><span class="line"></span><br><span class="line"><span class="keyword">ALTER</span> &#123;<span class="keyword">PROCEDURE</span> | <span class="keyword">FUNCTION</span>&#125; sp_name [characteristic ...]</span><br><span class="line"></span><br><span class="line">characteristic:</span><br><span class="line">        &#123; CONTAINS <span class="keyword">SQL</span> | <span class="keyword">NO</span> <span class="keyword">SQL</span> | <span class="keyword">READS</span> <span class="keyword">SQL</span> <span class="keyword">DATA</span> | MODIFIES <span class="keyword">SQL</span> <span class="keyword">DATA</span> &#125;</span><br><span class="line">    | <span class="keyword">SQL</span> <span class="keyword">SECURITY</span> &#123; DEFINER | INVOKER &#125;</span><br><span class="line">    | <span class="keyword">COMMENT</span> <span class="string">'string</span></span><br></pre></td></tr></table></figure>
+<p>调用过程：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CALL</span> sp_name([parameter[,......]])</span><br></pre></td></tr></table></figure></p>
+<p>MySQL存储过程和函数允许包含DDL语句，允许在存储过程中执行提交或回滚，但存储过程和函数中不允许执行LOAD DATA INFILE语句。存储过程和函数可以调用其他的过程或函数。<br>在执行创建过程和函数之前，通过DELIMITER语句将语句的结束符从”;”修改成其他符号。在创建过程和函数后通过”DELIMITER ;”语句再将结束符改回”;”<br>存储过程的好处在于处理逻辑封装在数据库端，调用者不需要了解中间的处理逻辑，一旦处理逻辑发生变化，只需要修改存储过程即可，而对调用者的程序完全没有影响。</p>
+<p>存储过程和函数的 CREATE 语法不支持使用 CREATE OR REPLACE 对存储过程和函数进行修改，如果需要对已有的存储过程或者函数进行修改，需要执行 ALTER 语法。</p>
+<p>characteristic特征值部分：</p>
+<ol>
+<li>LANGUAGE SQL：说明下面过程的 BODY 是使用 SQL 语言编写，这条是系统默认的，为今后 MySQL 会支持的除 SQL 外的其他语言支持的存储过程而准备。</li>
+<li>[NOT] DETERMINISTIC：DETERMINISTIC 确定的，即每次输入一样输出也一样的程序，NOT DETERMINISTIC 非确定的，默认是非确定的。当前，这个特征值还没有被优化程序使用。</li>
+<li>{ CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }：这些特征值提供子程序使用数据的内在信息，这些特征值目前只是提供给服务器，并没有根据这些特征值来约束过程实际使用数据的情况。如果这些特征没有明确给定，默认使用的值是 CONTAINS SQL。<ol>
+<li>CONTAINS SQL 表示子程序不包含读或写数据的语句。</li>
+<li>NO SQL 表示子程序不包含 SQL 语句。</li>
+<li>READS SQL DATA 表示子程序包含读数据的语句，但不包含写数据的语句。</li>
+<li>MODIFIES SQL DATA 表示子程序包含写数据的语句。</li>
+</ol>
+</li>
+<li>SQL SECURITY { DEFINER | INVOKER }：可以用来指定子程序该用创建子程序者的许可来执行，还是使用调用者的许可来执行。默认值是 DEFINER。</li>
+<li>COMMENT ‘string’：存储过程或者函数的注释信息</li>
+</ol>
+<h2 id="删除存储过程或者函数"><a href="#删除存储过程或者函数" class="headerlink" title="删除存储过程或者函数"></a>删除存储过程或者函数</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> &#123;<span class="keyword">PROCEDURE</span> | <span class="keyword">FUNCTION</span>&#125; [<span class="keyword">IF</span> <span class="keyword">EXISTS</span>] sp_name</span><br></pre></td></tr></table></figure>
+<h2 id="查看存储过程或函数"><a href="#查看存储过程或函数" class="headerlink" title="查看存储过程或函数"></a>查看存储过程或函数</h2><h3 id="查看存储过程或函数的状态"><a href="#查看存储过程或函数的状态" class="headerlink" title="查看存储过程或函数的状态"></a>查看存储过程或函数的状态</h3><p>SHOW {PROCEDURE|FUNCTION} STATUS [LIKE ‘pattern’];</p>
+<h3 id="查看存储过程或函数的定义"><a href="#查看存储过程或函数的定义" class="headerlink" title="查看存储过程或函数的定义"></a>查看存储过程或函数的定义</h3><p>SHOW CREATE {PROCEDURE|FUNCTION} sp_name;</p>
+<h3 id="通过系统表查看存储过程或函数信息"><a href="#通过系统表查看存储过程或函数信息" class="headerlink" title="通过系统表查看存储过程或函数信息"></a>通过系统表查看存储过程或函数信息</h3><p>查看information_schema.routines表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; DELIMITER $$</span><br><span class="line">MariaDB [test]&gt; CREATE PROCEDURE select_test_int (IN p_a INT, IN p_b INT)</span><br><span class="line">    -&gt; READS SQL DATA</span><br><span class="line">    -&gt; BEGIN</span><br><span class="line">    -&gt;     SELECT a, b from test_int</span><br><span class="line">    -&gt;         WHERE a&lt;p_a or b&gt;p_b;</span><br><span class="line">    -&gt; END $$</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; DELIMITER ;</span><br><span class="line">MariaDB [test]&gt; call select_test_int(1, 10);</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">| a        | b           |</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">| 56457789 | 04294967295 |</span><br><span class="line">| 56457789 | 04294967295 |</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Query</span> OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">call</span> select_test_int(<span class="number">10</span>, <span class="number">10</span>);</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">| a        | b           |</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">|    00001 | 00000000001 |</span><br><span class="line">| 56457789 | 04294967295 |</span><br><span class="line">|    00001 | 00000000001 |</span><br><span class="line">| 56457789 | 04294967295 |</span><br><span class="line">+<span class="comment">----------+-------------+</span></span><br><span class="line">4 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Query</span> OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">SHOW</span> <span class="keyword">PROCEDURE</span> <span class="keyword">STATUS</span>;</span><br><span class="line">+<span class="comment">------+-----------------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line">| Db   | Name            | Type      | Definer        | Modified            | Created             | Security_type | <span class="keyword">Comment</span> | character_set_client | collation_connection | <span class="keyword">Database</span> <span class="keyword">Collation</span> |</span><br><span class="line">+<span class="comment">------+-----------------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line">| <span class="keyword">test</span> | select_test_int | <span class="keyword">PROCEDURE</span> | root@localhost | <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">22</span>:<span class="number">58</span>:<span class="number">38</span> | <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">22</span>:<span class="number">58</span>:<span class="number">38</span> | DEFINER       |         | utf8                 | utf8_general_ci      | latin1_swedish_ci  |</span><br><span class="line">+<span class="comment">------+-----------------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">SHOW</span> <span class="keyword">CREATE</span> <span class="keyword">PROCEDURE</span> select_test_int\G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">           <span class="keyword">Procedure</span>: select_test_int</span><br><span class="line">            sql_mode:</span><br><span class="line">    <span class="keyword">Create</span> <span class="keyword">Procedure</span>: <span class="keyword">CREATE</span> DEFINER=<span class="string">`root`</span>@<span class="string">`localhost`</span> <span class="keyword">PROCEDURE</span> <span class="string">`select_test_int`</span>(<span class="keyword">IN</span> p_a <span class="built_in">INT</span>, <span class="keyword">IN</span> p_b <span class="built_in">INT</span>)</span><br><span class="line">    <span class="keyword">READS</span> <span class="keyword">SQL</span> <span class="keyword">DATA</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    <span class="keyword">SELECT</span> a, b <span class="keyword">from</span> test_int</span><br><span class="line">        <span class="keyword">WHERE</span> a&lt;p_a <span class="keyword">or</span> b&gt;p_b;</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">character_set_client: utf8</span><br><span class="line">collation_connection: utf8_general_ci</span><br><span class="line">  <span class="keyword">Database</span> <span class="keyword">Collation</span>: latin1_swedish_ci</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">DROP</span> <span class="keyword">PROCEDURE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> select_test_int\G</span><br><span class="line"><span class="keyword">Query</span> OK, <span class="number">0</span> <span class="keyword">rows</span> affected (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; DELIMITER $$</span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> select_test_int_f (p_a <span class="built_in">INT</span>, p_b <span class="built_in">INT</span>)</span><br><span class="line">    -&gt; <span class="keyword">RETURNS</span> <span class="built_in">INT</span></span><br><span class="line">    -&gt; <span class="keyword">BEGIN</span></span><br><span class="line">    -&gt;     <span class="keyword">DECLARE</span> p_c <span class="built_in">INT</span>;</span><br><span class="line">    -&gt;     SELECT count(1) INTO p_c from test_int</span><br><span class="line">    -&gt;         WHERE a&lt;p_a or b&gt;p_b;</span><br><span class="line">    -&gt;     RETURN(p_c);</span><br><span class="line">    -&gt; END $$</span><br><span class="line">Query OK, 0 rows affected (0.05 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; DELIMITER ;</span><br><span class="line">MariaDB [test]&gt; select select_test_int_f(1, 2);</span><br><span class="line">+<span class="comment">-------------------------+</span></span><br><span class="line">| select_test_int_f(1, 2) |</span><br><span class="line">+<span class="comment">-------------------------+</span></span><br><span class="line">|                       2 |</span><br><span class="line">+<span class="comment">-------------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">SHOW</span> <span class="keyword">FUNCTION</span> <span class="keyword">STATUS</span>;</span><br><span class="line">+<span class="comment">------+-------------------+----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line">| Db   | Name              | Type     | Definer        | Modified            | Created             | Security_type | <span class="keyword">Comment</span> | character_set_client | collation_connection | <span class="keyword">Database</span> <span class="keyword">Collation</span> |</span><br><span class="line">+<span class="comment">------+-------------------+----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line">| <span class="keyword">test</span> | select_test_int_f | <span class="keyword">FUNCTION</span> | root@localhost | <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">19</span> | <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">19</span> | DEFINER       |         | utf8                 | utf8_general_ci      | latin1_swedish_ci  |</span><br><span class="line">+<span class="comment">------+-------------------+----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+</span></span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">SHOW</span> <span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> select_test_int_f\G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line"><span class="keyword">Function</span>: select_test_int_f</span><br><span class="line">            sql_mode:</span><br><span class="line">     <span class="keyword">Create</span> <span class="keyword">Function</span>: <span class="keyword">CREATE</span> DEFINER=<span class="string">`root`</span>@<span class="string">`localhost`</span> <span class="keyword">FUNCTION</span> <span class="string">`select_test_int_f`</span>(p_a <span class="built_in">INT</span>, p_b <span class="built_in">INT</span>) <span class="keyword">RETURNS</span> <span class="built_in">int</span>(<span class="number">11</span>)</span><br><span class="line">        <span class="keyword">BEGIN</span></span><br><span class="line">        <span class="keyword">DECLARE</span> p_c <span class="built_in">INT</span>;</span><br><span class="line">            <span class="keyword">SELECT</span> <span class="keyword">count</span>(<span class="number">1</span>) <span class="keyword">INTO</span> p_c <span class="keyword">from</span> test_int</span><br><span class="line">                <span class="keyword">WHERE</span> a&lt;p_a <span class="keyword">or</span> b&gt;p_b;</span><br><span class="line">            RETURN(p_c);</span><br><span class="line">        <span class="keyword">END</span></span><br><span class="line">character_set_client: utf8</span><br><span class="line">collation_connection: utf8_general_ci</span><br><span class="line"><span class="keyword">Database</span> <span class="keyword">Collation</span>: latin1_swedish_ci</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">select</span> * <span class="keyword">from</span> information_schema.routines <span class="keyword">where</span> SPECIFIC_NAME=<span class="string">'select_test_int_f'</span>\G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">           SPECIFIC_NAME: select_test_int_f</span><br><span class="line">         ROUTINE_CATALOG: <span class="keyword">def</span></span><br><span class="line">          ROUTINE_SCHEMA: <span class="keyword">test</span></span><br><span class="line">            ROUTINE_NAME: select_test_int_f</span><br><span class="line">            ROUTINE_TYPE: <span class="keyword">FUNCTION</span></span><br><span class="line">               DATA_TYPE: <span class="built_in">int</span></span><br><span class="line">CHARACTER_MAXIMUM_LENGTH: <span class="literal">NULL</span></span><br><span class="line">  CHARACTER_OCTET_LENGTH: <span class="literal">NULL</span></span><br><span class="line">       NUMERIC_PRECISION: <span class="number">10</span></span><br><span class="line">           NUMERIC_SCALE: <span class="number">0</span></span><br><span class="line">      DATETIME_PRECISION: <span class="literal">NULL</span></span><br><span class="line">      CHARACTER_SET_NAME: <span class="literal">NULL</span></span><br><span class="line">          COLLATION_NAME: <span class="literal">NULL</span></span><br><span class="line">          DTD_IDENTIFIER: <span class="built_in">int</span>(<span class="number">11</span>)</span><br><span class="line">            ROUTINE_BODY: <span class="keyword">SQL</span></span><br><span class="line">      ROUTINE_DEFINITION: <span class="keyword">BEGIN</span></span><br><span class="line">    <span class="keyword">DECLARE</span> p_c <span class="built_in">INT</span>;</span><br><span class="line">    <span class="keyword">SELECT</span> <span class="keyword">count</span>(<span class="number">1</span>) <span class="keyword">INTO</span> p_c <span class="keyword">from</span> test_int</span><br><span class="line">        <span class="keyword">WHERE</span> a&lt;p_a <span class="keyword">or</span> b&gt;p_b;</span><br><span class="line">    RETURN(p_c);</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">           EXTERNAL_NAME: <span class="literal">NULL</span></span><br><span class="line">       EXTERNAL_LANGUAGE: <span class="literal">NULL</span></span><br><span class="line">         PARAMETER_STYLE: <span class="keyword">SQL</span></span><br><span class="line">        IS_DETERMINISTIC: <span class="keyword">NO</span></span><br><span class="line">         SQL_DATA_ACCESS: CONTAINS <span class="keyword">SQL</span></span><br><span class="line">                SQL_PATH: <span class="literal">NULL</span></span><br><span class="line">           SECURITY_TYPE: DEFINER</span><br><span class="line">                 CREATED: <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">19</span></span><br><span class="line">            LAST_ALTERED: <span class="number">2018</span><span class="number">-03</span><span class="number">-30</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">19</span></span><br><span class="line">                SQL_MODE:</span><br><span class="line">         ROUTINE_COMMENT:</span><br><span class="line">                 DEFINER: root@localhost</span><br><span class="line">    CHARACTER_SET_CLIENT: utf8</span><br><span class="line">    COLLATION_CONNECTION: utf8_general_ci</span><br><span class="line">      DATABASE_COLLATION: latin1_swedish_ci</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.01</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">drop</span> <span class="keyword">function</span> <span class="keyword">if</span> <span class="keyword">exists</span> select_test_int_f;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>存储过程和函数都可以使用变量，变量不区分大小写。</p>
+<h2 id="变量定义"><a href="#变量定义" class="headerlink" title="变量定义"></a>变量定义</h2><p>通过 DECLARE 可以定义一个局部变量，该变量的作用范围只能在 BEGIN……END 块中，可以用在嵌套的块中。变量的定义必须写在复合语句的开头，并且在任何其他语句的前面。可以一次声明多个相同类型的变量。如果需要，可以使用 DEFAULT 赋默认值。<br>定义一个变量的语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DECLARE</span> var_name[,...] <span class="keyword">type</span> [<span class="keyword">DEFAULT</span> <span class="keyword">value</span>]</span><br></pre></td></tr></table></figure></p>
+<h2 id="变量赋值"><a href="#变量赋值" class="headerlink" title="变量赋值"></a>变量赋值</h2><p>变量可以直接赋值，或者通过查询赋值。<br>直接赋值使用 SET，可以赋常量或者赋表达式，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> var_name = expr [, var_name = expr] ...</span><br></pre></td></tr></table></figure></p>
+<p>通过查询赋值：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> col_name[,...] <span class="keyword">INTO</span> var_name[,...] table_expr</span><br></pre></td></tr></table></figure></p>
+<h1 id="定义条件和处理"><a href="#定义条件和处理" class="headerlink" title="定义条件和处理"></a>定义条件和处理</h1><h2 id="条件定义"><a href="#条件定义" class="headerlink" title="条件定义"></a>条件定义</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DECLARE</span> condition_name CONDITION <span class="keyword">FOR</span> condition_value</span><br><span class="line"></span><br><span class="line">condition_value:</span><br><span class="line">        <span class="keyword">SQLSTATE</span> [<span class="keyword">VALUE</span>] sqlstate_value</span><br><span class="line">    | mysql_error_code</span><br></pre></td></tr></table></figure>
+<h2 id="条件处理"><a href="#条件处理" class="headerlink" title="条件处理"></a>条件处理</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DECLARE</span> handler_type <span class="keyword">HANDLER</span> <span class="keyword">FOR</span> condition_value[,...] sp_statement</span><br><span class="line"></span><br><span class="line">handler_type:</span><br><span class="line">        CONTINUE</span><br><span class="line">    | <span class="keyword">EXIT</span></span><br><span class="line">    | <span class="keyword">UNDO</span></span><br><span class="line"></span><br><span class="line">condition_value:</span><br><span class="line">        <span class="keyword">SQLSTATE</span> [<span class="keyword">VALUE</span>] sqlstate_value</span><br><span class="line">    | condition_name</span><br><span class="line">    | SQLWARNING</span><br><span class="line">    | <span class="keyword">NOT</span> <span class="keyword">FOUND</span></span><br><span class="line">    | SQLEXCEPTION</span><br><span class="line">    | mysql_error_code</span><br></pre></td></tr></table></figure>
+<h1 id="光标的使用"><a href="#光标的使用" class="headerlink" title="光标的使用"></a>光标的使用</h1><p>在存储过程和函数中可以使用光标对结果集进行循环的处理。光标的使用包括光标的声明、<br>OPEN、FETCH 和 CLOSE，其语法分别如下。</p>
+<p>声明光标：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DECLARE</span> cursor_name <span class="keyword">CURSOR</span> <span class="keyword">FOR</span> select_statement</span><br></pre></td></tr></table></figure></p>
+<p>OPEN 光标：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OPEN cursor_name</span><br></pre></td></tr></table></figure></p>
+<p>FETCH 光标：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FETCH cursor_name INTO var_name [, var_name] ...</span><br></pre></td></tr></table></figure></p>
+<p>CLOSE 光标：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CLOSE cursor_name</span><br></pre></td></tr></table></figure></p>
+<p><strong>变量、条件、处理程序、光标都是通过 DECLARE 定义的，它们之间是有先后顺序的要求的。变量和条件必须在最前面声明，然后才能是光标的声明，最后才可以是处理程序的声明</strong></p>
+<h1 id="流程控制"><a href="#流程控制" class="headerlink" title="流程控制"></a>流程控制</h1><h2 id="IF语句"><a href="#IF语句" class="headerlink" title="IF语句"></a>IF语句</h2><p>IF 实现条件判断，满足不同的条件执行不同的语句列表，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">IF search_condition THEN statement_list</span><br><span class="line">    [ELSEIF search_condition THEN statement_list] ...</span><br><span class="line">    [ELSE statement_list]</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">IF</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="CASE语句"><a href="#CASE语句" class="headerlink" title="CASE语句"></a>CASE语句</h2><p>CASE 实现比 IF 更复杂一些的条件构造，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CASE case_value</span><br><span class="line">    WHEN when_value THEN statement_list</span><br><span class="line">    [WHEN when_value THEN statement_list] ...</span><br><span class="line">    [ELSE statement_list]</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">CASE</span></span><br><span class="line"><span class="keyword">Or</span>:</span><br><span class="line"><span class="keyword">CASE</span></span><br><span class="line">    <span class="keyword">WHEN</span> search_condition <span class="keyword">THEN</span> statement_list</span><br><span class="line">    [<span class="keyword">WHEN</span> search_condition <span class="keyword">THEN</span> statement_list] ...</span><br><span class="line">    [<span class="keyword">ELSE</span> statement_list]</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">CASE</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="LOOP语句"><a href="#LOOP语句" class="headerlink" title="LOOP语句"></a>LOOP语句</h2><p>LOOP 实现简单的循环，退出循环的条件需要使用其他的语句定义，通常可以使用 LEAVE 语句实现，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[begin_label:] LOOP</span><br><span class="line">    statement_list</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">LOOP</span> [end_label]</span><br></pre></td></tr></table></figure></p>
+<p>如果不在 statement_list 中增加退出循环的语句，那么 LOOP 语句可以用来实现简单的死循环</p>
+<h2 id="LEAVE语句"><a href="#LEAVE语句" class="headerlink" title="LEAVE语句"></a>LEAVE语句</h2><p>用来从标注的流程构造中退出，通常和 BEGIN … END 或者循环一起使用。</p>
+<h2 id="INTRATE语句"><a href="#INTRATE语句" class="headerlink" title="INTRATE语句"></a>INTRATE语句</h2><p>ITERATE 语句必须用在循环中，作用是跳过当前循环的剩下的语句，直接进入下一轮循环</p>
+<h2 id="REPEAT语句"><a href="#REPEAT语句" class="headerlink" title="REPEAT语句"></a>REPEAT语句</h2><p>有条件的循环控制语句，当满足条件的时候退出循环，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[begin_label:] REPEAT</span><br><span class="line">    statement_list</span><br><span class="line">UNTIL search_condition</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">REPEAT</span> [end_label]</span><br></pre></td></tr></table></figure></p>
+<h2 id="WHERE-语句"><a href="#WHERE-语句" class="headerlink" title="WHERE 语句"></a>WHERE 语句</h2><p>WHILE 语句实现的也是有条件的循环控制语句，即当满足条件时执行循环的内容，具体语法如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[begin_label:] WHILE search_condition <span class="keyword">DO</span></span><br><span class="line">    statement_list</span><br><span class="line"><span class="keyword">END</span> <span class="keyword">WHILE</span> [end_label]</span><br></pre></td></tr></table></figure></p>
+<p>WHILE 循环和 REPEAT 循环的区别在于：WHILE 是满足条件才执行循环，REPEAT 是满足条件退出循环；WHILE 在首次循环执行之前就判断条件，所以循环最少执行 0 次，而 REPEAT 是在首次执行循环之后才判断条件，所以循环最少执行 1 次。</p>
+<p>存储过程和函数的优势是可以将数据的处理放在数据库服务器上进行，避免将大量的结果集传输给客户端，减少数据的传输，但是在数据库服务器上进行大量的复杂运算也会占用服务器的 CPU，造成数据库服务器的压力，所以不要在存储过程和函数中进行大量的复杂运算，应尽量将这些运算操作分摊到应用服务器上执行</p>
+<h1 id="触发器"><a href="#触发器" class="headerlink" title="触发器"></a>触发器</h1><h2 id="触发器创建"><a href="#触发器创建" class="headerlink" title="触发器创建"></a>触发器创建</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> trigger_name trigger_time trigger_event <span class="keyword">ON</span> tbl_name <span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="keyword">ROW</span> trigger_stmt</span><br></pre></td></tr></table></figure>
+<p>触发器只能创建在永久表上，不能对临时表创建触发器。<br>trigger_time触发器的触发时间，可以是BEFORE或AFTER，BEFORE的含义指在检查约束前出发，而AFTER在检查约束后触发。<br>trigger_event触发器触发的事件，INSERT、UPDATE或者DELETE。<br>对同一个表相同触发时间的相同触发事件，只能定义一个触发器。<br>使用别名OLD和NEW来引用触发器中发生变化的记录内容。</p>
+<h2 id="删除触发器"><a href="#删除触发器" class="headerlink" title="删除触发器"></a>删除触发器</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TRIGGER</span> [schema_name.]trigger_name;</span><br></pre></td></tr></table></figure>
+<h2 id="查看触发器"><a href="#查看触发器" class="headerlink" title="查看触发器"></a>查看触发器</h2><h3 id="SHOW-TRIGGERS"><a href="#SHOW-TRIGGERS" class="headerlink" title="SHOW TRIGGERS"></a>SHOW TRIGGERS</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">TRIGGERS</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="系统triggers表"><a href="#系统triggers表" class="headerlink" title="系统triggers表"></a>系统triggers表</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> information_schema.triggers;</span><br></pre></td></tr></table></figure>
+<h2 id="触发器使用"><a href="#触发器使用" class="headerlink" title="触发器使用"></a>触发器使用</h2><p>触发器执行的语句的限制：</p>
+<ol>
+<li>触发程序不能调用将数据返回客户端的存储程序，也不能使用采用 CALL 语句的动态 SQL 语句，但是允许存储程序通过参数将数据返回触发程序。也就是存储过程或者函数通过 OUT 或者 INOUT 类型的参数将数据返回触发器是可以的，但是不能调用直接返回数据的过程。</li>
+<li>不能在触发器中使用以显式或隐式方式开始或结束事务的语句，如 START TRANSACTION、COMMIT 或 ROLLBACK。</li>
+</ol>
+<p>MySQL 的触发器是按照 BEFORE 触发器、行操作、AFTER 触发器的顺序执行的，其中任何一步操作发生错误都不会继续执行剩下的操作。如果是对事务表进行的操作，那么会整个作为一个事务被回滚（Rollback），但是如果是对非事务表进行的操作，那么已经更新的记录将无法回滚，这也是设计触发器的时候需要注意的问题.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/27/mysql-7/" rel="prev" title="MySQL 字符集、索引、视图">
+      <i class="fa fa-chevron-left"></i> MySQL 字符集、索引、视图
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/04/01/mysql-9/" rel="next" title="MySQL 优化">
+      MySQL 优化 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#存储过程和函数"><span class="nav-number">1.</span> <span class="nav-text">存储过程和函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储过程和函数的相关操作"><span class="nav-number">2.</span> <span class="nav-text">存储过程和函数的相关操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#创建、修改存储过程或函数"><span class="nav-number">2.1.</span> <span class="nav-text">创建、修改存储过程或函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除存储过程或者函数"><span class="nav-number">2.2.</span> <span class="nav-text">删除存储过程或者函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看存储过程或函数"><span class="nav-number">2.3.</span> <span class="nav-text">查看存储过程或函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看存储过程或函数的状态"><span class="nav-number">2.3.1.</span> <span class="nav-text">查看存储过程或函数的状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看存储过程或函数的定义"><span class="nav-number">2.3.2.</span> <span class="nav-text">查看存储过程或函数的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过系统表查看存储过程或函数信息"><span class="nav-number">2.3.3.</span> <span class="nav-text">通过系统表查看存储过程或函数信息</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#变量"><span class="nav-number">3.</span> <span class="nav-text">变量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#变量定义"><span class="nav-number">3.1.</span> <span class="nav-text">变量定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#变量赋值"><span class="nav-number">3.2.</span> <span class="nav-text">变量赋值</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定义条件和处理"><span class="nav-number">4.</span> <span class="nav-text">定义条件和处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#条件定义"><span class="nav-number">4.1.</span> <span class="nav-text">条件定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#条件处理"><span class="nav-number">4.2.</span> <span class="nav-text">条件处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#光标的使用"><span class="nav-number">5.</span> <span class="nav-text">光标的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#流程控制"><span class="nav-number">6.</span> <span class="nav-text">流程控制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IF语句"><span class="nav-number">6.1.</span> <span class="nav-text">IF语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CASE语句"><span class="nav-number">6.2.</span> <span class="nav-text">CASE语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LOOP语句"><span class="nav-number">6.3.</span> <span class="nav-text">LOOP语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LEAVE语句"><span class="nav-number">6.4.</span> <span class="nav-text">LEAVE语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#INTRATE语句"><span class="nav-number">6.5.</span> <span class="nav-text">INTRATE语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REPEAT语句"><span class="nav-number">6.6.</span> <span class="nav-text">REPEAT语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WHERE-语句"><span class="nav-number">6.7.</span> <span class="nav-text">WHERE 语句</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#触发器"><span class="nav-number">7.</span> <span class="nav-text">触发器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#触发器创建"><span class="nav-number">7.1.</span> <span class="nav-text">触发器创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除触发器"><span class="nav-number">7.2.</span> <span class="nav-text">删除触发器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看触发器"><span class="nav-number">7.3.</span> <span class="nav-text">查看触发器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SHOW-TRIGGERS"><span class="nav-number">7.3.1.</span> <span class="nav-text">SHOW TRIGGERS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#系统triggers表"><span class="nav-number">7.3.2.</span> <span class="nav-text">系统triggers表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#触发器使用"><span class="nav-number">7.4.</span> <span class="nav-text">触发器使用</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

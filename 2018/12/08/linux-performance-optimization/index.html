@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="linux性能优化学习 性能指标高并发和响应快 两个核心指标:吞吐和延时,从应用负载视角考察性能,直接影响产品终端的用户体验,相对应的从系统资源出发的指标(资源使用率,饱和度等)性能问题的本质:系统资源到达瓶颈,请求处理不够快,无法支撑更多请求性能分析:找出应用或系统的瓶颈,并设法避免或缓解,更高效的利用系统资源处理更多请求 平均负载使用uptime可以查看系统负载12$ uptime 00:38">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux性能优化">
+<meta property="og:url" content="http://www.casezheng.date/2018/12/08/linux-performance-optimization/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="linux性能优化学习 性能指标高并发和响应快 两个核心指标:吞吐和延时,从应用负载视角考察性能,直接影响产品终端的用户体验,相对应的从系统资源出发的指标(资源使用率,饱和度等)性能问题的本质:系统资源到达瓶颈,请求处理不够快,无法支撑更多请求性能分析:找出应用或系统的瓶颈,并设法避免或缓解,更高效的利用系统资源处理更多请求 平均负载使用uptime可以查看系统负载12$ uptime 00:38">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/linux-performance-optimization_1.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/linux-performance-optimization_2.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/linux-performance-optimization_3.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/cpu_1.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/cpu_2.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/cpu_3.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/cpu_4.png">
+<meta property="og:updated_time" content="2019-12-23T15:45:35.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="linux性能优化">
+<meta name="twitter:description" content="linux性能优化学习 性能指标高并发和响应快 两个核心指标:吞吐和延时,从应用负载视角考察性能,直接影响产品终端的用户体验,相对应的从系统资源出发的指标(资源使用率,饱和度等)性能问题的本质:系统资源到达瓶颈,请求处理不够快,无法支撑更多请求性能分析:找出应用或系统的瓶颈,并设法避免或缓解,更高效的利用系统资源处理更多请求 平均负载使用uptime可以查看系统负载12$ uptime 00:38">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/linux-performance-optimization_1.png">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/12/08/linux-performance-optimization/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>linux性能优化 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/12/08/linux-performance-optimization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux性能优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-12-08 00:11:35" itemprop="dateCreated datePublished" datetime="2018-12-08T00:11:35+08:00">2018-12-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-23 23:45:35" itemprop="dateModified" datetime="2019-12-23T23:45:35+08:00">2019-12-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>linux性能优化学习</p>
+<h1 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h1><p><strong>高并发和响应快</strong> 两个核心指标:<strong>吞吐和延时</strong>,从<strong>应用负载视角</strong>考察性能,直接影响产品终端的用户体验,相对应的从<strong>系统资源</strong>出发的指标(资源使用率,饱和度等)<br><img src="/Picture/linux-performance-optimization_1.png" alt="性能指标两个角度"><br>性能问题的本质:系统资源到达瓶颈,请求处理不够快,无法支撑更多请求<br>性能分析:找出应用或系统的瓶颈,并设法避免或缓解,更高效的利用系统资源处理更多请求<br><img src="/Picture/linux-performance-optimization_2.png" alt="Linux性能工具图谱"><br><img src="/Picture/linux-performance-optimization_3.png" alt="Linux性能优化思维导图"></p>
+<h1 id="平均负载"><a href="#平均负载" class="headerlink" title="平均负载"></a>平均负载</h1><p>使用<code>uptime</code>可以查看系统负载<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ uptime</span><br><span class="line"> 00:38:27 up 62 days, 14 min,  2 users,  load average: 0.00, 0.04, 0.07</span><br></pre></td></tr></table></figure></p>
+<p>显示内容说明:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">00:38:27                           系统当前时间</span><br><span class="line">up 62 days, 14 min                 主机已运行时间</span><br><span class="line">2 users                            用户连接数</span><br><span class="line">load average: 0.00, 0.04, 0.07     系统平均负载,统计最近1,5,15分钟的系统平均负载</span><br></pre></td></tr></table></figure></p>
+<p>系统平均负载:指单位时间内，系统处于<strong>可运行状态</strong>和<strong>不可中断状态</strong>的平均进程数, 即<strong>平均活跃进程数</strong><br>可运行状态:正在使用CPU和正在等待CPU的进程(使用ps命令看到的处于R状态的进程)<br>不可中断状态:正处于内核态不可被打断的关键流程中的进程(不可中断状态是系统对进程和硬件设备的一种保护机制)<br>平均活跃进程不仅包括正在使用CPU的进程也包括等待CPU和等待I/O的进程,因此平均负载高不一定是CPU使用率高,也可能是I/O更繁忙了</p>
+<p>系统逻辑CPU核心数可以使用<a href="http://man.linuxde.net/top" target="_blank" rel="noopener">top</a>命令或者从文件/proc/cpuinfo中读取<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ grep &apos;model name&apos; /proc/cpuinfo | wc -l</span><br><span class="line">1</span><br></pre></td></tr></table></figure></p>
+<p>uptime命令会显示1分钟,5分钟,15分钟的平均负载,可以用来分析<strong>系统负载趋势</strong><br>系统负载异常需要结合历史数据,判断负载的变化趋势,当负载有明显升高趋势时再分析调查</p>
+<ol>
+<li><p>stress命令是Linux系统压力测试工具 —cpu cpu压测选项，-i io压测选项，-c 进程数压测选项，—timeout 执行时间</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">stress --cpu 1 --timeout 600  CPU密集型进程 模拟一个CPU使用率100%的场景 持续600s</span><br><span class="line">stress -i 1 --timeout 600 I/O密集型进程 模拟I/O压力 持续600s</span><br><span class="line">stress -c 8 --timeout 600 大量进程的场景 模拟8个进程 持续600s</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>sysstat包,包含了常用的Linux性能工具,用来监控和分析系统性能</p>
+<ol>
+<li><p><a href="http://man.linuxde.net/mpstat" target="_blank" rel="noopener">mpstat</a>多核CPU性能分析工具,用来实时查看每个CPU的性能指标和所有CPU的平均指标</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ mpstat -P ALL 5 3 显示所有CPU的指标,并每间隔5s输出一组数据,一共输出3组</span><br><span class="line">Linux 3.10.0-862.14.4.el7.x86_64 (VM_187_252_centos)    01/03/2019  _x86_64_    (1 CPU)</span><br><span class="line"></span><br><span class="line">01:41:06 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">01:41:11 PM  all    0.20    0.00    0.20    0.20    0.00    0.00    0.00    0.00    0.00   99.40</span><br><span class="line">01:41:11 PM    0    0.20    0.00    0.20    0.20    0.00    0.00    0.00    0.00    0.00   99.40</span><br><span class="line"></span><br><span class="line">01:41:11 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">01:41:16 PM  all    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00</span><br><span class="line">01:41:16 PM    0    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00</span><br><span class="line"></span><br><span class="line">01:41:16 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">01:41:21 PM  all    0.20    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.80</span><br><span class="line">01:41:21 PM    0    0.20    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.80</span><br><span class="line"></span><br><span class="line">Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">Average:     all    0.13    0.00    0.07    0.07    0.00    0.00    0.00    0.00    0.00   99.73</span><br><span class="line">Average:       0    0.13    0.00    0.07    0.07    0.00    0.00    0.00    0.00    0.00   99.73</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><a href="http://linux.51yip.com/search/pidstat" target="_blank" rel="noopener">pidstat</a>进程性能分析工具,用来实时查看进程的 CPU、内存、I/O 以及上下文切换等性能指标</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ pidstat -u 5 1 每5s输出一组数据</span><br><span class="line">Linux 3.10.0-862.14.4.el7.x86_64 (VM_187_252_centos)    01/03/2019  _x86_64_    (1 CPU)</span><br><span class="line"></span><br><span class="line">01:46:19 PM   UID       PID    %usr %system  %guest    %CPU   CPU  Command</span><br><span class="line">01:46:24 PM  1000     21765    0.20    0.00    0.00    0.20     0  vim</span><br><span class="line">01:46:24 PM  1000     22625    0.00    0.20    0.00    0.20     0  pidstat</span><br><span class="line">01:46:24 PM   994     28861    0.00    0.20    0.00    0.20     0  redis-server</span><br><span class="line"></span><br><span class="line">Average:      UID       PID    %usr %system  %guest    %CPU   CPU  Command</span><br><span class="line">Average:     1000     21765    0.20    0.00    0.00    0.20     -  vim</span><br><span class="line">Average:     1000     22625    0.00    0.20    0.00    0.20     -  pidstat</span><br><span class="line">Average:      994     28861    0.00    0.20    0.00    0.20     -  redis-server</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+<li><p><a href="http://man.linuxde.net/watch" target="_blank" rel="noopener">watch</a>以周期性的方式执行给定的指令，指令输出以全屏方式显示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch -d uptime</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="CPU上下文切换"><a href="#CPU上下文切换" class="headerlink" title="CPU上下文切换"></a>CPU上下文切换</h1><h2 id="CPU上下文切换的工作原理"><a href="#CPU上下文切换的工作原理" class="headerlink" title="CPU上下文切换的工作原理"></a>CPU上下文切换的工作原理</h2><p>CPU寄存器是CPU内置的容量小,但速度极快的内存. 程序计数器(PC)是用来存储CPU正在执行的指令位置,或者即将执行的下一条指令位置. CPU寄存器和程序计数器都是CPU在运行任何任务之前,必须的依赖环境.CPU寄存器和程序计数器被称为CPU上下文.<br><img src="/Picture/cpu_1.png" alt="CPU上下文切换"><br>CPU上下文切换:把前一个任务的CPU上下文保存起来,然后加载新任务的上下文到CPU寄存器和程序计数器中,最后再跳转到程序计数器所指的新位置,运行新任务.保存下来的上下文,存储在系统内核中,在系统再次调度执行时再次加载进来,保证任务原先的状态不受影响,让任务看起来还是连续运行的.</p>
+<p>CPU上下文切换根据任务不同,分为3个不同场景:进程上下文切换,线程上下文切换,中断上下文切换</p>
+<h3 id="进程上下文切换"><a href="#进程上下文切换" class="headerlink" title="进程上下文切换"></a>进程上下文切换</h3><p>Linux按照特权等级把进程的运行空间分为内核空间和用户空间.</p>
+<ul>
+<li>内核空间具有最高权限,可以访问所有资源</li>
+<li>用户空间只能访问受限资源,不能直接访问内存等硬件设备,必须通过系统调用陷入到内核中,才能访问这些资源</li>
+</ul>
+<p>即:进程既可以在用户空间运行,又可以在内核空间运行,进程在用户空间运行称为进程的用户态,陷入到内核空间的时候,称为进程的内核态<br>从用户态到内核态的转变,需要通过系统调用完成.<br><strong>系统调用会发生2次CPU上下文的切换</strong>,从用户态到内核态,CPU寄存器里用户态的指令位置需要先保存起来,CPU寄存器再更新为内核态指令的新位置,最后跳到内核态运行内核任务.系统调用后,CPU寄存器需要恢复原来保存用户态,然后再切换到用户空间,继续运行程序.<br><strong>系统调用过程不涉及虚拟内存等进程用户态的资源,也不切换进程</strong></p>
+<ul>
+<li>进程上下文切换是指从一个进程切换到另一个进程运行</li>
+<li>系统调用过程一直在同一个进程运行</li>
+</ul>
+<p>进程是由内核来管理和调度,进程的切换只能发生在内核态,进程的上下文包括虚拟内存,栈,全局变量等用户空间的资源和内核堆栈,寄存器等内核空间的状态<br>进程的上下文切换:在保存当前进程的内核状态和CPU寄存器之前,需要将该进程的虚拟内存,栈等保存下来,加载了下一个进程的内核态后,需要刷下进程的虚拟内存和用户栈<br><img src="/Picture/cpu_2.png" alt="进程上下文切换"><br>进程上下文切换频繁,很容易导致CPU将大量时间耗费在寄存器,内核栈以及虚拟内存等资源的保存和恢复上,缩短了真正运行进程的时间,导致平均负载升高<br>Linux通过TLB(快表,虚拟地址到物理地址的转换表)管理虚拟内存到物理内存的映射关系,当虚拟内存更新后,TLB也需要更新,内存访问也会随之变慢.多处理器系统,缓存被多个处理器共享,刷新缓存不仅影响当前处理器的进程,也影响共享缓存其它处理器的进程.<br>进程上下文切换的时机:</p>
+<ol>
+<li>进程时间片耗尽</li>
+<li>系统资源不足,进程被挂起,先执行其他进程,等资源满足时再运行</li>
+<li>进程sleep主动挂起</li>
+<li>有更高优先级进程时</li>
+<li>有硬件中断时,CPU上进程被挂起,转而执行内核中的中断服务程序</li>
+</ol>
+<h3 id="线程上下文切换"><a href="#线程上下文切换" class="headerlink" title="线程上下文切换"></a>线程上下文切换</h3><p>线程和进程的最大区别:<strong>线程是调度的基本单位,进程是资源拥有的基本单位</strong></p>
+<ul>
+<li>当进程只有一个线程时,可以认为进程就等于线程</li>
+<li>当进程拥有多个线程时,这些线程共享相同的虚拟内存和全局变量资源,这些资源在上下文切换中不需要修改</li>
+<li>线程也有自己的私有数据(例如栈和寄存器等),在上下文切换时需要保存</li>
+</ul>
+<p>线程上下文切换:</p>
+<ol>
+<li>两个线程数据不同进程,资源不共享,上下文切换过程与进程上下文切换一样</li>
+<li>两个线程属于同一个进程,有许多共享资源,切换时,虚拟内存等共享资源保持不动,只切换线程的私有数据,寄存器等不共享资源.</li>
+</ol>
+<h3 id="中断上下文切换"><a href="#中断上下文切换" class="headerlink" title="中断上下文切换"></a>中断上下文切换</h3><p><strong>中断处理会打断进程的正常调度和执行</strong>,转而调用中断处理程序,响应设备事件<br>中断上下文切换不涉及进程的用户态,中断上下文只包括内核态中断服务程序处理所必须的状态,包括CPU寄存器,内核堆栈,硬件中断参数等</p>
+<h2 id="系统上下文切换情况的查看"><a href="#系统上下文切换情况的查看" class="headerlink" title="系统上下文切换情况的查看"></a>系统上下文切换情况的查看</h2><p><a href="http://man.linuxde.net/vmstat" target="_blank" rel="noopener">vmstat</a>主要用来分析系统内存使用情况,也可分析CPU上下文切换和中断次数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#每隔5s输出一次数据</span><br><span class="line">$ vmstat 5</span><br><span class="line">procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----</span><br><span class="line"> r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st</span><br><span class="line"> 2  0    520 894220 230456 519308    0    0     2    29   33   53  0  0 99  0  0</span><br><span class="line"> 0  0    520 893940 230460 519348    0    0     0    13   46   66  0  0 99  0  0</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>cs(context switch)是每秒上下文切换次数</li>
+<li>in(interrupt)是每秒中断次数</li>
+<li>r(Running or Runnable)是就绪队列长度(正在运行或等待CPU的进程数)</li>
+<li>b(Blocked)是处于不可中断睡眠状态的进程数</li>
+</ul>
+<p>vmstat给出系统总体的上下文切换情况,每个进程的详细情况,需要使用pisstat查看<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#每隔5s输出一组数据 -w参数报告任务切换情况</span><br><span class="line">$ pidstat -w 5</span><br><span class="line">Linux 3.10.0-862.14.4.el7.x86_64 (VM_187_252_centos) 	01/15/2019 	_x86_64_	(1 CPU)</span><br><span class="line"></span><br><span class="line">11:55:15 PM   UID       PID   cswch/s nvcswch/s  Command</span><br><span class="line">11:55:20 PM     0         3      0.80      0.00  ksoftirqd/0</span><br><span class="line">11:55:20 PM     0         9      9.38      0.00  rcu_sched</span><br><span class="line">11:55:20 PM     0        11      0.20      0.00  watchdog/0</span><br><span class="line">11:55:20 PM     0        31      0.20      0.00  khugepaged</span><br><span class="line">11:55:20 PM     0       219      0.80      0.00  kworker/0:1H</span><br><span class="line">11:55:20 PM     0       221      0.20      0.00  kworker/u2:2</span><br><span class="line">11:55:20 PM     0       249      0.80      0.00  jbd2/vda1-8</span><br><span class="line">11:55:20 PM     0       698      1.20      0.00  smbd</span><br><span class="line">11:55:20 PM     0      1306      0.40      0.00  cleanupd</span><br><span class="line">11:55:20 PM  1000     25163      1.00      0.00  python36</span><br><span class="line">11:55:20 PM  1000     25355      0.40      0.00  sshd</span><br><span class="line">11:55:20 PM  1000     25634      0.20      0.00  sshd</span><br><span class="line">11:55:20 PM     0     26461      1.20      0.00  kworker/0:0</span><br><span class="line">11:55:20 PM  1000     26575      0.20      0.00  pidstat</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>cswch 每秒自愿上下文切换的次数 指进程无法获取所需资源,导致的上下文切换</li>
+<li>nvcswch 每秒非自愿上下文切换的次数 指进程由于时间片已到等原因,被系统强制调度,进而发生的上下文切换</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#-wt参数输出线程的上下文切换指标</span><br><span class="line">$ pidstat -wt 5</span><br><span class="line">Linux 3.10.0-862.14.4.el7.x86_64 (VM_187_252_centos) 	01/16/2019 	_x86_64_	(1 CPU)</span><br><span class="line"></span><br><span class="line">12:10:12 AM   UID      TGID       TID   cswch/s nvcswch/s  Command</span><br><span class="line">12:10:17 AM     0         3         -      0.40      0.00  ksoftirqd/0</span><br><span class="line">12:10:17 AM     0         -         3      0.40      0.00  |__ksoftirqd/0</span><br><span class="line">12:10:17 AM     0         9         -      0.80      0.00  rcu_sched</span><br><span class="line">12:10:17 AM     0         -         9      0.80      0.00  |__rcu_sched</span><br><span class="line">12:10:17 AM     0        11         -      0.40      0.00  watchdog/0</span><br><span class="line">12:10:17 AM     0         -        11      0.40      0.00  |__watchdog/0</span><br><span class="line">12:10:17 AM     0        31         -      0.20      0.00  khugepaged</span><br><span class="line">12:10:17 AM     0         -        31      0.20      0.00  |__khugepaged</span><br><span class="line">12:10:17 AM     0       219         -      0.80      0.00  kworker/0:1H</span><br><span class="line">12:10:17 AM     0         -       219      0.80      0.00  |__kworker/0:1H</span><br><span class="line">12:10:17 AM     0       221         -      0.20      0.00  kworker/u2:2</span><br><span class="line">12:10:17 AM     0         -       221      0.20      0.00  |__kworker/u2:2</span><br><span class="line">12:10:17 AM     0       249         -      0.60      0.00  jbd2/vda1-8</span><br><span class="line">12:10:17 AM     0         -       249      0.60      0.00  |__jbd2/vda1-8</span><br><span class="line">12:10:17 AM     0         -      1308      1.00      0.00  |__tuned</span><br><span class="line">12:10:17 AM     0         -       901      1.20      0.00  |__in:imjournal</span><br><span class="line">12:10:17 AM    27         -      1278      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1279      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1280      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1281      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1282      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1283      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1284      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1285      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1286      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1287      1.99      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1289      1.00      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1290      1.00      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1291      0.20      0.00  |__mysqld</span><br><span class="line">12:10:17 AM    27         -      1292      0.20      0.00  |__mysqld</span><br></pre></td></tr></table></figure>
+<h1 id="CPU使用率"><a href="#CPU使用率" class="headerlink" title="CPU使用率"></a>CPU使用率</h1><ul>
+<li>user(us),用户态CPU时间,不包含nice时间,包括了guest时间</li>
+<li>nice(ni),低优先级用户态时间,即进程优先级被调整为1-19(nice取值范围为-20到19,数值越大优先级反而越低)之间时的CPU时间</li>
+<li>system(sys),内核态CPU时间</li>
+<li>idle(id),空闲时间,不包括等待I/O的时间(iowait)</li>
+<li>iowait(wa),等待I/O的CPU时间</li>
+<li>irq(hi),处理硬中断的CPU时间</li>
+<li>softirq(si),处理软中断的CPU时间</li>
+<li>steal(st),当系统运行在虚拟机中的时候,被其他虚拟机占用的CPU时间</li>
+<li>guest(guest),代表通过虚拟化运行其他操作系统的时间(运行虚拟机的CPU时间)</li>
+<li>guest_nice(gnice),代表以低优先级运行虚拟机的时间</li>
+</ul>
+<p><strong>CPU使用率:除了空闲时间外的其他时间占总CPU时间的百分比</strong><br>性能工具计算CPU使用率取一段时间的两次值,做差后,再计算这段时间内的平均CPU使用率<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">平均CPU使用率=1-((空闲时间new-空间时间old)/(总CPU时间new-总CPU时间old))</span><br></pre></td></tr></table></figure></p>
+<p>由于性能工具给出的都是一段时间平均CPU使用率,所以要注意间隔时间的设置.(多个性能工具对比分析时,要保证它们用的相同的间隔)</p>
+<h2 id="CPU使用率查看"><a href="#CPU使用率查看" class="headerlink" title="CPU使用率查看"></a>CPU使用率查看</h2><ul>
+<li>top显示系统总体的CPU和内存使用情况,以及各个进程的资源使用情况</li>
+<li>ps只显示各个进程的资源使用情况</li>
+<li>pidstat专门分析每个进程占用系统资源的工具</li>
+</ul>
+<h2 id="CPU使用过高使用perf分析"><a href="#CPU使用过高使用perf分析" class="headerlink" title="CPU使用过高使用perf分析"></a>CPU使用过高使用perf分析</h2><p><a href="http://linux.51yip.com/search/perf" target="_blank" rel="noopener">perf</a>是Linux下的性能分析工具,能够进行函数与指令级的热点查找</p>
+<ul>
+<li>perf top实时显示占用CPU时钟最多的函数或指令,用来查找热点函数或者指令</li>
+<li>perf record提供保存数据功能</li>
+<li>perf report解析展示record的数据</li>
+</ul>
+<p>perf top和perf record添加<code>-g</code>参数开启调用关系采样,方便根据调用链分析性能问题</p>
+<h2 id="常规方法无法找到CPU使用率问题"><a href="#常规方法无法找到CPU使用率问题" class="headerlink" title="常规方法无法找到CPU使用率问题"></a>常规方法无法找到CPU使用率问题</h2><ol>
+<li>应用直接调用了其他二进制程序,运行时间较短,通过top等工具不易发现</li>
+<li>应用本身不断崩溃重启,启动过程资源初始化,很可能占用相当多的CPU</li>
+</ol>
+<p>可以通过<a href="http://man.linuxde.net/pstree" target="_blank" rel="noopener">pstree</a>找到进程的父进程,再从父进程所在应用入手,排查问题根源</p>
+<h1 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h1><h2 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h2><ol>
+<li>R(Running或Runnable)表示进程在CPU的就绪队列中,正在运行或正在等待运行</li>
+<li>D(Disk Sleep)<strong>不可中断睡眠状态</strong>,一般表示进程正在跟硬件交互,并且交互过程不允许被其他进程或中断打断</li>
+<li>Z(Zombie)<strong>僵尸进程</strong>,进程实际已经结束了,但父进程还没有回收它的资源</li>
+<li>S(Interruptible Sleep)可中断睡眠状态,表示进程因为等待某个事件而被系统挂起.当进程等待的事件发生时,它将被唤醒并进入R状态</li>
+<li>I(Idle)空闲状态,用在不可中断睡眠的内核线程上.</li>
+<li>T或t(Stopped或Traced),表示进程处于暂停或者跟踪状态</li>
+<li>X(Dead)表示进程已经消亡(top或者ps命令中不会看到它)</li>
+</ol>
+<p><a href="http://man.linuxde.net/dstat" target="_blank" rel="noopener">dstat</a>是一个全能系统信息统计工具<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ dstat </span><br><span class="line">You did not select any stats, using -cdngy by default.</span><br><span class="line">----total-cpu-usage---- -dsk/total- -net/total- ---paging-- ---system--</span><br><span class="line">usr sys idl wai hiq siq| read  writ| recv  send|  in   out | int   csw </span><br><span class="line">  9   2  72  17   0   0|6902k   88k|   0     0 |1550B   22k| 501   500 </span><br><span class="line"> 96   4   0   0   0   0|   0     0 |  54B  154B|   0     0 |1120   450 </span><br><span class="line"> 96   4   0   0   0   0|   0     0 | 164B 1188B|   0     0 |1163   462 </span><br><span class="line"> 88  12   0   0   0   0|   0     0 | 164B  456B|   0     0 |1156   579 </span><br><span class="line"> 23   4  70   3   0   0|  12k  192k| 164B  456B|   0     0 | 503   631 </span><br><span class="line">  1   2  95   2   0   0| 116k    0 |1090B 1300B|   0     0 | 267   353</span><br></pre></td></tr></table></figure></p>
+<p>僵尸进程使用pstree找出其父进程,在父进程中解决        </p>
+<h1 id="软中断"><a href="#软中断" class="headerlink" title="软中断"></a>软中断</h1><p>中断是一种<strong>异步的事件处理机制</strong>,可以提高系统的并发处理能力<br>中断处理程序会打断其他进程的进行,所以,<strong>中断处理程序需要尽可能快的运行,减少对正常进程运行调度的影响</strong><br>Linux将中断过程分为两个阶段,解决中断处理程序执行过长和中断丢失的问题</p>
+<ul>
+<li>上半部:快速处理中断,在中断禁止模式运行,主要处理跟硬件紧密相关的或时间敏感的工作,<strong>直接处理硬件请求,硬中断,快速执行</strong></li>
+<li>下半部:延迟处理上半部未完成的工作,通常以内核线程的方式运行,<strong>由内核触发,软中断,延迟执行</strong></li>
+</ul>
+<h2 id="软中断和内核线程查看"><a href="#软中断和内核线程查看" class="headerlink" title="软中断和内核线程查看"></a>软中断和内核线程查看</h2><p>/proc/softirqs 软中断运行情况<br>/proc/interrupts 硬中断运行情况</p>
+<p>软中断内核线程 ksoftirqd/CPU 编号<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ps aux | grep ksoftirqd | grep -v grep</span><br><span class="line">root         3  0.0  0.0      0     0 ?        S    Feb19   0:08 [ksoftirqd/0]</span><br></pre></td></tr></table></figure></p>
+<h1 id="CPU性能"><a href="#CPU性能" class="headerlink" title="CPU性能"></a>CPU性能</h1><h2 id="CPU性能指标"><a href="#CPU性能指标" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h2><p><img src="/Picture/cpu_3.png" alt="CPU性能指标"></p>
+<h2 id="CPU性能工具"><a href="#CPU性能工具" class="headerlink" title="CPU性能工具"></a>CPU性能工具</h2><h3 id="根据指标找工具"><a href="#根据指标找工具" class="headerlink" title="根据指标找工具"></a>根据指标找工具</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">性能指标</th>
+<th style="text-align:left">工具</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">平均负载</td>
+<td style="text-align:left">uptime top</td>
+<td style="text-align:left">uptime最简单; top提供更全的指标</td>
+</tr>
+<tr>
+<td style="text-align:left">系统整体CPU使用率</td>
+<td style="text-align:left">vmstat mpstat top sar /proc/stat</td>
+<td style="text-align:left">top vmstat mpstat只可以动态查看,sar可以记录历史数据 /proc/stat是其它性能工具的数据来源</td>
+</tr>
+<tr>
+<td style="text-align:left">进程CPU使用率</td>
+<td style="text-align:left">top pidstat ps htop atop</td>
+<td style="text-align:left">top和ps可以按CPU使用率给进程排序,而pidstat只显示实际用了CPU的进程 htop和atop以不同颜色显示更直观</td>
+</tr>
+<tr>
+<td style="text-align:left">系统上下文切换</td>
+<td style="text-align:left">vmstat</td>
+<td style="text-align:left">除了系统上下文切换数,还提供运行状态和不可中断状态进程数量</td>
+</tr>
+<tr>
+<td style="text-align:left">进程上下文切换</td>
+<td style="text-align:left">pidstat</td>
+<td style="text-align:left">-w参数</td>
+</tr>
+<tr>
+<td style="text-align:left">软中断</td>
+<td style="text-align:left">top /proc/softirqs mpstat</td>
+<td style="text-align:left">top提供软中断CPU使用率 /proc/softirqs和mpstat提供各种软中断在每个CPU上的运行次数</td>
+</tr>
+<tr>
+<td style="text-align:left">硬中断</td>
+<td style="text-align:left">vmstat /proc/interrupts</td>
+<td style="text-align:left">vmstat提供总的中断次数 /proc/interrupts提供各个中断在每个CPU上运行的基类次数</td>
+</tr>
+<tr>
+<td style="text-align:left">网络</td>
+<td style="text-align:left">dstat sar tcpdump</td>
+<td style="text-align:left">dstat sar提供总的网络接收和发送情况 tcpdump动态抓取正在进行的网络通信</td>
+</tr>
+<tr>
+<td style="text-align:left">I/O</td>
+<td style="text-align:left">dstat sar</td>
+<td style="text-align:left">dstat和sar都提供了I/O的整体情况</td>
+</tr>
+<tr>
+<td style="text-align:left">CPU个数</td>
+<td style="text-align:left">/proc/cpuinfo lscpu</td>
+<td style="text-align:left">lscpu更直观</td>
+</tr>
+<tr>
+<td style="text-align:left">事件剖析</td>
+<td style="text-align:left">perf execsnoop</td>
+<td style="text-align:left">perf可以用来分析CPU的缓存以及内核调用链,execsnoop用来监控短时进程</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="根据工具查指标"><a href="#根据工具查指标" class="headerlink" title="根据工具查指标"></a>根据工具查指标</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">性能指标</th>
+<th style="text-align:left">CPU性能指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">uptime</td>
+<td style="text-align:left">平均负载</td>
+</tr>
+<tr>
+<td style="text-align:left">top</td>
+<td style="text-align:left">平均负载、运行队列、整体的CPU使用率以及每个进程的状态和CPU使用率</td>
+</tr>
+<tr>
+<td style="text-align:left">htop</td>
+<td style="text-align:left">top增强版,以不同颜色区分不同类型的进程,更直观</td>
+</tr>
+<tr>
+<td style="text-align:left">atop</td>
+<td style="text-align:left">CPU/内存/磁盘/网络等各种资源的全面监控</td>
+</tr>
+<tr>
+<td style="text-align:left">vmstat</td>
+<td style="text-align:left">系统整体的CPU使用率/上下文切换次数/中断次数,包括处于运行和不可中断状态的进程数量</td>
+</tr>
+<tr>
+<td style="text-align:left">mpstat</td>
+<td style="text-align:left">每个CPU的使用率和软中断次数</td>
+</tr>
+<tr>
+<td style="text-align:left">pidstat</td>
+<td style="text-align:left">进程和线程的CPU使用率/中断上下文切换次数</td>
+</tr>
+<tr>
+<td style="text-align:left">/proc/softirqs</td>
+<td style="text-align:left">软中断类型和在每个CPU上的累计中断次数</td>
+</tr>
+<tr>
+<td style="text-align:left">/proc/interrupts</td>
+<td style="text-align:left">硬中断类型和在每个CPU上的累计中断次数</td>
+</tr>
+<tr>
+<td style="text-align:left">ps</td>
+<td style="text-align:left">每个进程的状态和CPU使用率</td>
+</tr>
+<tr>
+<td style="text-align:left">pstree</td>
+<td style="text-align:left">进程的父子关系</td>
+</tr>
+<tr>
+<td style="text-align:left">dstat</td>
+<td style="text-align:left">系统整体的CPU使用率</td>
+</tr>
+<tr>
+<td style="text-align:left">sar</td>
+<td style="text-align:left">系统整体CPU使用率,包括可配置的历史数据</td>
+</tr>
+<tr>
+<td style="text-align:left">strace</td>
+<td style="text-align:left">进程的系统调用</td>
+</tr>
+<tr>
+<td style="text-align:left">perf</td>
+<td style="text-align:left">CPU性能事件剖析,调用链/CPU缓存/CPU调度等</td>
+</tr>
+<tr>
+<td style="text-align:left">execsnoop</td>
+<td style="text-align:left">监控短时进程</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="性能分析"><a href="#性能分析" class="headerlink" title="性能分析"></a>性能分析</h3><p><img src="/Picture/cpu_4.png" alt="CPU性能分析"></p>
+<h2 id="CPU性能优化"><a href="#CPU性能优化" class="headerlink" title="CPU性能优化"></a>CPU性能优化</h2><h3 id="CPU优化"><a href="#CPU优化" class="headerlink" title="CPU优化"></a>CPU优化</h3><ol>
+<li>应用程序优化<ol>
+<li>编译器优化,编译器优化选项 例如:gcc优化选项-O2</li>
+<li>算法优化</li>
+<li>异步处理</li>
+<li>多线程代替多进程</li>
+<li>善用缓存</li>
+</ol>
+</li>
+<li>系统优化<ol>
+<li>CPU绑定</li>
+<li>CPU独占</li>
+<li>优先级调整</li>
+<li>为进程设置资源限制</li>
+<li>NUMA(Non-Uniform Memory Access)优化</li>
+<li>中断负载均衡</li>
+</ol>
+</li>
+</ol>
+<h2 id="Linux内存"><a href="#Linux内存" class="headerlink" title="Linux内存"></a>Linux内存</h2><h3 id="Linux内存原理"><a href="#Linux内存原理" class="headerlink" title="Linux内存原理"></a>Linux内存原理</h3><p><a href="https://www.casezheng.date/2019/02/24/linux-ram/#more">Linux内存简介</a></p>
+<h3 id="Linux内存使用情况查看"><a href="#Linux内存使用情况查看" class="headerlink" title="Linux内存使用情况查看"></a>Linux内存使用情况查看</h3><p><a href="http://man.linuxde.net/free" target="_blank" rel="noopener">free</a>命令可以查看系统内存使用情况<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ free</span><br><span class="line">            total        used        free      shared  buff/cache   available</span><br><span class="line">Mem:        1882860      589828      387196         112      905836     1090592</span><br><span class="line">Swap:       2047996      105736     1942260</span><br><span class="line">$ free -m</span><br><span class="line">            total        used        free      shared  buff/cache   available</span><br><span class="line">Mem:        1838         576         377           0         885        1064</span><br><span class="line">Swap:       1999         103        1896</span><br></pre></td></tr></table></figure></p>
+<p>Mem物理内存使用情况,Swap交换分区使用情况</p>
+<ol>
+<li>total总内存大小</li>
+<li>used已使用内存大小,包含共享内存</li>
+<li>free未使用内存大小</li>
+<li>shared共享内存大小</li>
+<li>buff/cache缓存和缓冲区大小</li>
+<li>available新进程可用内存大小,不仅包含未使用内存,也包括可回收的缓存,一般会比未使用内存大,但并不是所有缓存都可以被回收.</li>
+</ol>
+<p>free显示整个系统内存使用情况,进程内存使用情况用<a href="http://man.linuxde.net/top" target="_blank" rel="noopener">top</a>或ps等工具查看.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Tasks:  88 total,   1 running,  87 sleeping,   0 stopped,   0 zombie</span><br><span class="line">%Cpu(s):  1.7 us,  0.7 sy,  0.0 ni, 97.7 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st</span><br><span class="line">KiB Mem :  1882860 total,   384436 free,   590704 used,   907720 buff/cache</span><br><span class="line">KiB Swap:  2047996 total,  1942260 free,   105736 used.  1089708 avail Mem </span><br><span class="line">  PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND</span><br><span class="line">22272 root      20   0 3438356 326068   6172 S  0.3 17.3  27:45.68 java</span><br><span class="line">16200 root      20   0 2488224  55908   6636 S  0.3  3.0   8:51.48 java</span><br><span class="line">  538 CaseZhe+  20   0  945436  52264   7216 S  0.3  2.8   1:31.74 vim</span><br><span class="line">  547 CaseZhe+  20   0 1113148  51592  25008 S  0.0  2.7   0:00.80 python36</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>VIRT进程虚拟内存大小,只要是进程申请过的内存,即使还没有真正分配物理内存,也计算在内</li>
+<li>RES常驻进程内存大小,进程实际使用的物理内存大小,但不包括Swap和共享内存</li>
+<li>SHR共享内存大小(和其他进程共同使用的共享内存/加载的动态链接库/程序代码段等)</li>
+<li>%MEM进程使用物理内存占系统总内存的百分比</li>
+</ol>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="https://time.geekbang.org/column/140" target="_blank" rel="noopener">Linux性能优化实战</a></li>
+<li><a href="http://man.linuxde.net/" target="_blank" rel="noopener">Linux命令大全</a></li>
+<li><a href="http://linux.51yip.com/" target="_blank" rel="noopener">Linux命令手册</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/11/20/nginx/" rel="prev" title="nginx学习笔记">
+      <i class="fa fa-chevron-left"></i> nginx学习笔记
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/01/20/database-modeing/" rel="next" title="数据库建模">
+      数据库建模 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#性能指标"><span class="nav-number">1.</span> <span class="nav-text">性能指标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#平均负载"><span class="nav-number">2.</span> <span class="nav-text">平均负载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU上下文切换"><span class="nav-number">3.</span> <span class="nav-text">CPU上下文切换</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU上下文切换的工作原理"><span class="nav-number">3.1.</span> <span class="nav-text">CPU上下文切换的工作原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#进程上下文切换"><span class="nav-number">3.1.1.</span> <span class="nav-text">进程上下文切换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程上下文切换"><span class="nav-number">3.1.2.</span> <span class="nav-text">线程上下文切换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中断上下文切换"><span class="nav-number">3.1.3.</span> <span class="nav-text">中断上下文切换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统上下文切换情况的查看"><span class="nav-number">3.2.</span> <span class="nav-text">系统上下文切换情况的查看</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU使用率"><span class="nav-number">4.</span> <span class="nav-text">CPU使用率</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU使用率查看"><span class="nav-number">4.1.</span> <span class="nav-text">CPU使用率查看</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU使用过高使用perf分析"><span class="nav-number">4.2.</span> <span class="nav-text">CPU使用过高使用perf分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常规方法无法找到CPU使用率问题"><span class="nav-number">4.3.</span> <span class="nav-text">常规方法无法找到CPU使用率问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进程"><span class="nav-number">5.</span> <span class="nav-text">进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#进程状态"><span class="nav-number">5.1.</span> <span class="nav-text">进程状态</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#软中断"><span class="nav-number">6.</span> <span class="nav-text">软中断</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#软中断和内核线程查看"><span class="nav-number">6.1.</span> <span class="nav-text">软中断和内核线程查看</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU性能"><span class="nav-number">7.</span> <span class="nav-text">CPU性能</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU性能指标"><span class="nav-number">7.1.</span> <span class="nav-text">CPU性能指标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU性能工具"><span class="nav-number">7.2.</span> <span class="nav-text">CPU性能工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#根据指标找工具"><span class="nav-number">7.2.1.</span> <span class="nav-text">根据指标找工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#根据工具查指标"><span class="nav-number">7.2.2.</span> <span class="nav-text">根据工具查指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能分析"><span class="nav-number">7.2.3.</span> <span class="nav-text">性能分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU性能优化"><span class="nav-number">7.3.</span> <span class="nav-text">CPU性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU优化"><span class="nav-number">7.3.1.</span> <span class="nav-text">CPU优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux内存"><span class="nav-number">7.4.</span> <span class="nav-text">Linux内存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux内存原理"><span class="nav-number">7.4.1.</span> <span class="nav-text">Linux内存原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux内存使用情况查看"><span class="nav-number">7.4.2.</span> <span class="nav-text">Linux内存使用情况查看</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

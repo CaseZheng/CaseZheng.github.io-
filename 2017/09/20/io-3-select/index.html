@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux I/O select 源码分析   select select系统调用的具体实现过程图解： select结构体依赖关系     selectselect系统调用原型：12345678910111213int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *tim">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux I&#x2F;O 复用 select源码解析">
+<meta property="og:url" content="http://www.casezheng.date/2017/09/20/io-3-select/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="Linux I/O select 源码分析   select select系统调用的具体实现过程图解： select结构体依赖关系     selectselect系统调用原型：12345678910111213int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *tim">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/select系统调用的具体实现过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/select结构体依赖关系.png">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.118Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux I&#x2F;O 复用 select源码解析">
+<meta name="twitter:description" content="Linux I/O select 源码分析   select select系统调用的具体实现过程图解： select结构体依赖关系     selectselect系统调用原型：12345678910111213int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *tim">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/select系统调用的具体实现过程.png">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/09/20/io-3-select/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux I/O 复用 select源码解析 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/09/20/io-3-select/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux I/O 复用 select源码解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-20 13:19:00" itemprop="dateCreated datePublished" datetime="2017-09-20T13:19:00+08:00">2017-09-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Linux I/O select 源码分析</p>
+<!-- vim-markdown-toc GFM -->
+<ul>
+<li><a href="#select">select</a><ul>
+<li><a href="#select系统调用的具体实现过程图解">select系统调用的具体实现过程图解：</a></li>
+<li><a href="#select结构体依赖关系">select结构体依赖关系</a></li>
+</ul>
+</li>
+</ul>
+<!-- vim-markdown-toc -->
+<h1 id="select"><a href="#select" class="headerlink" title="select"></a>select</h1><p>select系统调用原型：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> &#123;</span></span><br><span class="line">    <span class="keyword">long</span>    tv_sec;    <span class="comment">//秒</span></span><br><span class="line">    <span class="keyword">long</span>    tv_usec;    <span class="comment">//微秒 10E-6秒</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> &#123;</span></span><br><span class="line">    <span class="keyword">long</span>    tv_sec;    <span class="comment">//秒</span></span><br><span class="line">    <span class="keyword">long</span>    tv_nsec;    <span class="comment">//纳秒 10E-9秒</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> fds_bits [<span class="number">1024</span>/(<span class="number">8</span> * <span class="keyword">sizeof</span>(<span class="keyword">unsigned</span> <span class="keyword">long</span>))]; <span class="comment">//unsigned long fds_bits[32]</span></span><br><span class="line">    <span class="comment">//32*4*8 = 1024</span></span><br><span class="line">&#125;fd_set;</span><br></pre></td></tr></table></figure></p>
+<p>select实现在fs/select.c中，源码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//select主流程函数</span></span><br><span class="line">SYSCALL_DEFINE5(select, <span class="keyword">int</span>, n, fd_set __user *, inp, fd_set __user *, outp,</span><br><span class="line">fd_set __user *, <span class="built_in">exp</span>, struct timeval __user *, tvp)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">end_time</span>, *<span class="title">to</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">tv</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line">    <span class="keyword">if</span> (tvp) &#123;    <span class="comment">//超时时间非空</span></span><br><span class="line">        <span class="keyword">if</span> (copy_from_user(&amp;tv, tvp, <span class="keyword">sizeof</span>(tv)))        <span class="comment">//把超时时间从用户空间复制到内核空间</span></span><br><span class="line">            <span class="keyword">return</span> -EFAULT;</span><br><span class="line">        to = &amp;end_time;</span><br><span class="line">        <span class="comment">//计算timespec类型的超时时间</span></span><br><span class="line">        <span class="keyword">if</span> (poll_select_set_timeout(to,</span><br><span class="line">                tv.tv_sec + (tv.tv_usec / USEC_PER_SEC),</span><br><span class="line">                (tv.tv_usec % USEC_PER_SEC) * NSEC_PER_USEC))</span><br><span class="line">            <span class="keyword">return</span> -EINVAL;</span><br><span class="line">    &#125;</span><br><span class="line">    ret = core_sys_select(n, inp, outp, <span class="built_in">exp</span>, to);       <span class="comment">//select实现的核心函数</span></span><br><span class="line">    <span class="comment">//复制剩余的超时时间拷贝到用户空间</span></span><br><span class="line">    ret = poll_select_copy_remaining(&amp;end_time, tvp, <span class="number">1</span>, ret);</span><br><span class="line">    <span class="keyword">return</span> ret;    <span class="comment">//返回就绪的文件描述符的个数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>core_sys_select实现select事件监听的主要功能。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">core_sys_select</span><span class="params">(<span class="keyword">int</span> n, fd_set __user *inp, fd_set __user *outp,</span></span></span><br><span class="line"><span class="function"><span class="params">               fd_set __user *<span class="built_in">exp</span>, struct timespec *end_time)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    fd_set_bits fds;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    typedef struct &#123;</span></span><br><span class="line"><span class="comment">        unsigned long *in, *out, *ex;</span></span><br><span class="line"><span class="comment">        unsigned long *res_in, *res_out, *res_ex;</span></span><br><span class="line"><span class="comment">    &#125; fd_set_bits;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> *bits;</span><br><span class="line">    <span class="keyword">int</span> ret, max_fds;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="built_in">size</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fdtable</span> *<span class="title">fdt</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    struct fdtable &#123;    //进程的文件描述符表</span></span><br><span class="line"><span class="comment">        unsigned int max_fds;</span></span><br><span class="line"><span class="comment">        struct file ** fd;     //文件对象指针数组,长度放在max_fds中</span></span><br><span class="line"><span class="comment">        fd_set *close_on_exec;</span></span><br><span class="line"><span class="comment">        fd_set *open_fds;</span></span><br><span class="line"><span class="comment">        struct rcu_head rcu;</span></span><br><span class="line"><span class="comment">        struct fdtable *next;</span></span><br><span class="line"><span class="comment">    &#125;;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> stack_fds[SELECT_STACK_ALLOC/<span class="keyword">sizeof</span>(<span class="keyword">long</span>)];    <span class="comment">//long stack_fds[64];</span></span><br><span class="line"></span><br><span class="line">    ret = -EINVAL;</span><br><span class="line">    <span class="keyword">if</span> (n &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out_nofds;</span><br><span class="line"></span><br><span class="line">    rcu_read_lock();    <span class="comment">//加锁</span></span><br><span class="line">    <span class="comment">//取得进程中的fdtable(文件描述符表)</span></span><br><span class="line">    fdt = files_fdtable(current-&gt;files);</span><br><span class="line">    max_fds = fdt-&gt;max_fds;        <span class="comment">//取得系统当前允许的最大文件描述符</span></span><br><span class="line">    rcu_read_unlock();    <span class="comment">//解锁</span></span><br><span class="line">    <span class="keyword">if</span> (n &gt; max_fds)    <span class="comment">//如果传入的n大于当前进程最大的文件描述符，修改n</span></span><br><span class="line">        n =     max_fds;</span><br><span class="line">    <span class="built_in">size</span> = FDS_BYTES(n);    <span class="comment">//按一个文件描述符一个bit位计算一个字段所需字节数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    #define FDS_BITPERLONG    (8*sizeof(long))</span></span><br><span class="line"><span class="comment">    #define FDS_LONGS(nr)    (((nr)+FDS_BITPERLONG-1)/FDS_BITPERLONG)</span></span><br><span class="line"><span class="comment">    #define FDS_BYTES(nr)    (FDS_LONGS(nr)*sizeof(long))</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    bits = stack_fds;                <span class="comment">//bits先指向栈上空间，小对象使用栈上空间</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">size</span> &gt; <span class="keyword">sizeof</span>(stack_fds) / <span class="number">6</span>) &#123;    <span class="comment">//栈上空间不足，全部使用堆上空间，使用kmalloc申请空间</span></span><br><span class="line">        ret = -ENOMEM;</span><br><span class="line">        bits = kmalloc(<span class="number">6</span> * <span class="built_in">size</span>, GFP_KERNEL);</span><br><span class="line">        <span class="keyword">if</span> (!bits)</span><br><span class="line">            <span class="keyword">goto</span> out_nofds;</span><br><span class="line">    &#125;</span><br><span class="line">    fds.in      = bits;</span><br><span class="line">    fds.out     = bits +   <span class="built_in">size</span>;</span><br><span class="line">    fds.ex      = bits + <span class="number">2</span>*<span class="built_in">size</span>;</span><br><span class="line">    fds.res_in  = bits + <span class="number">3</span>*<span class="built_in">size</span>;</span><br><span class="line">    fds.res_out = bits + <span class="number">4</span>*<span class="built_in">size</span>;</span><br><span class="line">    fds.res_ex  = bits + <span class="number">5</span>*<span class="built_in">size</span>;</span><br><span class="line">    <span class="comment">//从用户空间拷贝fd_set到内核空间，调用copy_from_user()</span></span><br><span class="line">    <span class="keyword">if</span> ((ret = get_fd_set(n, inp, fds.in)) ||</span><br><span class="line">        (ret = get_fd_set(n, outp, fds.out)) ||</span><br><span class="line">        (ret = get_fd_set(n, <span class="built_in">exp</span>, fds.ex)))</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">    <span class="comment">//将存放返回状态的字段清0</span></span><br><span class="line">    zero_fd_set(n, fds.res_in);</span><br><span class="line">    zero_fd_set(n, fds.res_out);</span><br><span class="line">    zero_fd_set(n, fds.res_ex);</span><br><span class="line">    ret = do_select(n, &amp;fds, end_time);     <span class="comment">//核心函数</span></span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>)    <span class="comment">//有错误</span></span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">    <span class="keyword">if</span> (!ret) &#123;        <span class="comment">//ret == 0，没有设备就绪</span></span><br><span class="line">        ret = -ERESTARTNOHAND;</span><br><span class="line">        <span class="keyword">if</span> (signal_pending(current))</span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line">        ret = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//将结果从内核空间拷贝到用户空间，调用__copy_to_user()</span></span><br><span class="line">    <span class="keyword">if</span> (set_fd_set(n, inp, fds.res_in) ||</span><br><span class="line">        set_fd_set(n, outp, fds.res_out) ||</span><br><span class="line">        set_fd_set(n, <span class="built_in">exp</span>, fds.res_ex))</span><br><span class="line">        ret = -EFAULT;</span><br><span class="line">out:</span><br><span class="line">    <span class="comment">//如果申请了空间kmalloc，释放空间</span></span><br><span class="line">    <span class="keyword">if</span> (bits != stack_fds)</span><br><span class="line">        kfree(bits);</span><br><span class="line">out_nofds:</span><br><span class="line">    <span class="keyword">return</span> ret;    <span class="comment">//返回就绪的文件描述符的个数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>一些select内核实现需要了解的数据结构<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">poll_wqueues</span> &#123;</span>    <span class="comment">//非常重要，一个调用select()的应用程序只存在一个poll_wqueues结构体，                    //用来统一辅佐实现这个进程中所有待检测的fd的轮询工作</span></span><br><span class="line">    poll_table pt;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_page</span> *<span class="title">table</span>;</span>        <span class="comment">//动态申请的物理页挂在它上</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">polling_task</span>;</span>    <span class="comment">//保存当前调用select的用户进程struct task_struct结构体</span></span><br><span class="line">    <span class="comment">//struct task_struct即进程控制块PCB结构</span></span><br><span class="line">    <span class="keyword">int</span> triggered;    <span class="comment">// 当前用户进程被唤醒后置成1，以免该进程接着进睡眠</span></span><br><span class="line">    <span class="keyword">int</span> error;        <span class="comment">//错误码</span></span><br><span class="line">    <span class="keyword">int</span> inline_index;    <span class="comment">//数组inline_entries的引用下标</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> <span class="title">inline_entries</span>[<span class="title">N_INLINE_POLL_ENTRIES</span>];</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*poll_queue_proc)</span><span class="params">(struct file *, <span class="keyword">wait_queue_head_t</span> *, struct poll_table_struct *)</span></span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_struct</span> &#123;</span></span><br><span class="line">    poll_queue_proc qproc;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> key;</span><br><span class="line">&#125; poll_table;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">poll_table_page</span> &#123;</span>        <span class="comment">//申请的物理页都会将起始地址强制转换成该结构体指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_page</span> * <span class="title">next</span>;</span>        <span class="comment">//指向下一个申请的物理页</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> * <span class="title">entry</span>;</span>    <span class="comment">//指向entries[]中首个待分配(空的)poll_table_entry结构</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> <span class="title">entries</span>[0];</span>    <span class="comment">//该page页后边都是待分配的poll_table_entry结构体</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> &#123;</span>        <span class="comment">//每个fd的都有一个该结构体</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">filp</span>;</span>            <span class="comment">//指向特定fd对应的file结构体</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> key;        <span class="comment">//等待特定fd对应硬件设备的事件掩码</span></span><br><span class="line">    <span class="keyword">wait_queue_t</span> wait;        <span class="comment">//代表调用select()的应用进程，等待在fd对应设备的特定事件（读或                        //写）的等待队列头上的等待队列项</span></span><br><span class="line">    <span class="keyword">wait_queue_head_t</span> *wait_address;        <span class="comment">//设备驱动程序中特定事件的等待队列头</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> __<span class="title">wait_queue</span> <span class="title">wait_queue_t</span>;</span></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*<span class="keyword">wait_queue_func_t</span>)</span><span class="params">(<span class="keyword">wait_queue_t</span> *wait, <span class="keyword">unsigned</span> mode, <span class="keyword">int</span> flags, <span class="keyword">void</span> *key)</span></span>;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">wait_queue</span> &#123;</span>        <span class="comment">//等待队列项</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> flags;        <span class="comment">//标记该等待的进程是互斥进程还是非互斥进程</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WQ_FLAG_EXCLUSIVE    0x01        <span class="comment">//互斥进程</span></span></span><br><span class="line">    <span class="keyword">void</span> *<span class="keyword">private</span>;                <span class="comment">//指向poll_wqueues</span></span><br><span class="line">    <span class="keyword">wait_queue_func_t</span> func;        <span class="comment">//等待队列的回调函数</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">task_list</span>;</span>        <span class="comment">//链表的前向和后向指针</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">wait_queue_head</span> &#123;</span>    <span class="comment">//等待队列头</span></span><br><span class="line">    <span class="keyword">spinlock_t</span> lock;        <span class="comment">//锁</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">task_list</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> __<span class="title">wait_queue_head</span> <span class="title">wait_queue_head_t</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">next</span>, *<span class="title">prev</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">do_select</span><span class="params">(<span class="keyword">int</span> n, fd_set_bits *fds, struct timespec *end_time)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">ktime_t</span> expire, *to = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_wqueues</span> <span class="title">table</span>;</span></span><br><span class="line">    poll_table *wait;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> retval, i, timed_out = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> slack      = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    rcu_read_lock();</span><br><span class="line">    <span class="comment">//检查fds中fd的有效性（要求fd必须打开），并获取当前最大的fd</span></span><br><span class="line">    retval = max_select_fd(n, fds);</span><br><span class="line">    rcu_read_unlock();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> retval;</span><br><span class="line">    n = retval;</span><br><span class="line">    <span class="comment">//初始化table，设置函数指针table.pt.qproc为__pollwait</span></span><br><span class="line">    poll_initwait(&amp;table);</span><br><span class="line"></span><br><span class="line">    wait = &amp;table.pt;</span><br><span class="line">    <span class="comment">//超时时间设为0时</span></span><br><span class="line">    <span class="keyword">if</span> (end_time &amp;&amp; !end_time-&gt;tv_sec &amp;&amp; !end_time-&gt;tv_nsec) &#123;</span><br><span class="line">        wait = <span class="literal">NULL</span>;        <span class="comment">//不执行__pollwait</span></span><br><span class="line">        timed_out = <span class="number">1</span>;        <span class="comment">//timed_out设置为1，表示已超时。</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (end_time &amp;&amp; !timed_out)    <span class="comment">//设置的超时时间不为0</span></span><br><span class="line">        <span class="comment">//超时时间转换</span></span><br><span class="line">        slack = estimate_accuracy(end_time);</span><br><span class="line"></span><br><span class="line">    retval = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">long</span> *rinp, *routp, *rexp, *inp, *outp, *<span class="built_in">exp</span>;</span><br><span class="line">        inp = fds-&gt;in; outp = fds-&gt;out; <span class="built_in">exp</span> = fds-&gt;ex;</span><br><span class="line">        rinp = fds-&gt;res_in; routp = fds-&gt;res_out; rexp = fds-&gt;res_ex;</span><br><span class="line">        <span class="comment">//遍历所有的描述符（n个），i文件描述符  从这里可以看出select使用了遍历的方式</span></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; n; ++rinp, ++routp, ++rexp) &#123;</span><br><span class="line">            <span class="keyword">unsigned</span> <span class="keyword">long</span> in, out, ex, all_bits, <span class="built_in">bit</span> = <span class="number">1</span>, mask, j;</span><br><span class="line">            <span class="keyword">unsigned</span> <span class="keyword">long</span> res_in = <span class="number">0</span>, res_out = <span class="number">0</span>, res_ex = <span class="number">0</span>;</span><br><span class="line">            <span class="comment">//file_operations定义了一系列对字符设备的操作方法</span></span><br><span class="line">            <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">f_op</span> = <span class="title">NULL</span>;</span></span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span> = <span class="title">NULL</span>;</span></span><br><span class="line">            <span class="comment">//检查当前的位置中的描述符</span></span><br><span class="line">            in = *inp++; out = *outp++; ex = *<span class="built_in">exp</span>++;</span><br><span class="line">            all_bits = in | out | ex;    <span class="comment">//组合要监测的事件</span></span><br><span class="line">            <span class="keyword">if</span> (all_bits == <span class="number">0</span>) &#123;        <span class="comment">//没有需要监测的描述符，下一个位置</span></span><br><span class="line">                <span class="comment">// #define __NFDBITS    (8 * sizeof(unsigned long))</span></span><br><span class="line">                i += __NFDBITS;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//每次循环32次  4字节 32个位 使用位图的方式</span></span><br><span class="line">            <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; __NFDBITS; ++j, ++i, <span class="built_in">bit</span> &lt;&lt;= <span class="number">1</span>) &#123;    <span class="comment">//第一次bit==1</span></span><br><span class="line">                <span class="keyword">int</span> fput_needed;</span><br><span class="line">                <span class="keyword">if</span> (i &gt;= n)        <span class="comment">//是否超出了最大待检测的fd</span></span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="comment">//不需要监听描述符i，直接跳过</span></span><br><span class="line">                <span class="keyword">if</span> (!(<span class="built_in">bit</span> &amp; all_bits))</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                <span class="comment">//根据i指定的索引，从当前进程描述符中取得文件结构，并增加引用计数</span></span><br><span class="line">                file = fget_light(i, &amp;fput_needed);</span><br><span class="line">                <span class="keyword">if</span> (file) &#123;    <span class="comment">//file存在</span></span><br><span class="line">                    f_op = file-&gt;f_op;</span><br><span class="line">                    <span class="comment">//#define DEFAULT_POLLMASK (POLLIN | POLLOUT | POLLRDNORM | POLLWRNORM)</span></span><br><span class="line">                    mask = DEFAULT_POLLMASK;</span><br><span class="line">                    <span class="keyword">if</span> (f_op &amp;&amp; f_op-&gt;poll) &#123;</span><br><span class="line">                    <span class="comment">//设置当前fd待检测的事件掩码，wait-&gt;key</span></span><br><span class="line">                        wait_key_set(wait, in, out, <span class="built_in">bit</span>);</span><br><span class="line"></span><br><span class="line">                        <span class="comment">//获取当前的就绪状态，并添加进程到文件的对应等待队列中</span></span><br><span class="line">                        mask = (*f_op-&gt;poll)(file, wait);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">//释放通过fget_light得到的file指针，实际就是减少引用计数</span></span><br><span class="line">                    fput_light(file, fput_needed);</span><br><span class="line">                    <span class="comment">//检测文件i是否已有事件就绪</span></span><br><span class="line">                    <span class="comment">//mask是每一个 (*f_op-&gt;poll)()程序返回的设备状态掩码</span></span><br><span class="line">                    <span class="keyword">if</span> ((mask &amp; POLLIN_SET) &amp;&amp; (in &amp; <span class="built_in">bit</span>)) &#123;</span><br><span class="line">                        <span class="comment">//mask&amp;POLLIN_SET该文件是否可写，in&amp;bit应用程序是否关心该文件可写</span></span><br><span class="line">                        res_in |= <span class="built_in">bit</span>;    <span class="comment">//fd对应的设备可写</span></span><br><span class="line">                        retval++;        <span class="comment">//就绪的文件描述符个数加1</span></span><br><span class="line">                        <span class="comment">//如果已有就绪事件就不再向其他文件的等待队列中添加回调函数。</span></span><br><span class="line">                        <span class="comment">//避免重复执行__pollwait()</span></span><br><span class="line">                        wait = <span class="literal">NULL</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> ((mask &amp; POLLOUT_SET) &amp;&amp; (out &amp; <span class="built_in">bit</span>)) &#123;</span><br><span class="line">                        res_out |= <span class="built_in">bit</span>;</span><br><span class="line">                        retval++;</span><br><span class="line">                        wait = <span class="literal">NULL</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> ((mask &amp; POLLEX_SET) &amp;&amp; (ex &amp; <span class="built_in">bit</span>)) &#123;</span><br><span class="line">                        res_ex |= <span class="built_in">bit</span>;</span><br><span class="line">                        retval++;</span><br><span class="line">                        wait = <span class="literal">NULL</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//根据poll()的结果，写回到输出字段里面</span></span><br><span class="line">            <span class="keyword">if</span> (res_in)</span><br><span class="line">                *rinp = res_in;</span><br><span class="line">            <span class="keyword">if</span> (res_out)</span><br><span class="line">                *routp = res_out;</span><br><span class="line">            <span class="keyword">if</span> (res_ex)</span><br><span class="line">                *rexp = res_ex;</span><br><span class="line">            cond_resched();</span><br><span class="line">        &#125;</span><br><span class="line">        wait = <span class="literal">NULL</span>;    <span class="comment">//避免重复执行__pollwait()</span></span><br><span class="line">        <span class="comment">//有设备就绪或有异常 || 超时 || 有终止信号出现</span></span><br><span class="line">        <span class="keyword">if</span> (retval || timed_out || signal_pending(current))</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> (table.error) &#123;</span><br><span class="line">            retval = table.error;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//第一轮循环，时间的转换timespec到ktime</span></span><br><span class="line">        <span class="keyword">if</span> (end_time &amp;&amp; !to) &#123;</span><br><span class="line">            expire = timespec_to_ktime(*end_time);</span><br><span class="line">            to = &amp;expire;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//当前进程从这里进入睡眠，等待直到超时，或由注册的函数唤醒超时，返回0；被唤醒，返回-EINTR</span></span><br><span class="line">        <span class="keyword">if</span> (!poll_schedule_timeout(&amp;table, TASK_INTERRUPTIBLE,</span><br><span class="line">                       to, slack))</span><br><span class="line">            timed_out = <span class="number">1</span>;   <span class="comment">//超时后，将timed_out设为1，再遍历一次文件描述符后，退出循环</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//清除等待队列</span></span><br><span class="line">    poll_freewait(&amp;table);</span><br><span class="line">    <span class="keyword">return</span> retval;        <span class="comment">//返回就绪的文件描述符的个数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">poll_initwait</span><span class="params">(struct poll_wqueues *pwq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    init_poll_funcptr(&amp;pwq-&gt;pt, __pollwait);</span><br><span class="line">    pwq-&gt;polling_task = current;</span><br><span class="line">    pwq-&gt;triggered    = <span class="number">0</span>;</span><br><span class="line">    pwq-&gt;error        = <span class="number">0</span>;</span><br><span class="line">    pwq-&gt;table        = <span class="literal">NULL</span>;</span><br><span class="line">    pwq-&gt;inline_index = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">init_poll_funcptr</span><span class="params">(poll_table *pt, poll_queue_proc qproc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    pt-&gt;qproc = qproc;        <span class="comment">//__pollwait</span></span><br><span class="line">    pt-&gt;key   = ~<span class="number">0U</span>L; <span class="comment">/* all events enabled */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> POLLIN_SET (POLLRDNORM | POLLRDBAND | POLLIN | POLLHUP | POLLERR)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> POLLOUT_SET (POLLWRBAND | POLLWRNORM | POLLOUT | POLLERR)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> POLLEX_SET (POLLPRI)</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">wait_key_set</span><span class="params">(poll_table *wait, <span class="keyword">unsigned</span> <span class="keyword">long</span> in,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">unsigned</span> <span class="keyword">long</span> out, <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="built_in">bit</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (wait) &#123;</span><br><span class="line">        wait-&gt;key = POLLEX_SET;</span><br><span class="line">        <span class="keyword">if</span> (in &amp; <span class="built_in">bit</span>)</span><br><span class="line">            wait-&gt;key |= POLLIN_SET;</span><br><span class="line">        <span class="keyword">if</span> (out &amp; <span class="built_in">bit</span>)</span><br><span class="line">            wait-&gt;key |= POLLOUT_SET;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>poll 方法是3 个系统调用的后端:poll, epoll, 和select, 都用作查询对一个或多个文件描述符的读或写是否会阻塞.poll 方法应当返回一个位掩码指示是否非阻塞的读或写是可能的,并且,可能地,提供给内核信息用来使调用进程睡眠直到I/O 变为可能.如果一个驱动的poll 方法为NULL, 设备假定为不阻塞地可读可写.<br>首先，对可能引起设备文件状态变化的等待队列调用poll_wait(),将对应的等待队列头添加到poll_table.然后，返回表示是否能对设备进行无阻塞读写访问的掩码。把当前进程添加到wait_address参数指定的等待列表中。需要注意的是这个函数是不会引起阻塞的。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="title">int</span> <span class="params">(*poll)</span> <span class="params">(struct file *, struct poll_table_struct *)</span></span>;        <span class="comment">//设备驱动</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">evdev_poll</span><span class="params">(struct file *file, poll_table *wait)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">evdev_client</span> *<span class="title">client</span> = <span class="title">file</span>-&gt;<span class="title">private_data</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">evdev</span> *<span class="title">evdev</span>         = <span class="title">client</span>-&gt;<span class="title">evdev</span>;</span></span><br><span class="line">    poll_wait(file, &amp;evdev-&gt;wait, wait);</span><br><span class="line">    <span class="keyword">return</span> ((client-&gt;head == client-&gt;tail) ? <span class="number">0</span> : (POLLIN | POLLRDNORM)) |</span><br><span class="line">        (evdev-&gt;exist ? <span class="number">0</span> : (POLLHUP | POLLERR));</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">poll_wait</span><span class="params">(struct file * filp, <span class="keyword">wait_queue_head_t</span> * wait_address, poll_table *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (p &amp;&amp; wait_address)</span><br><span class="line">        p-&gt;qproc(filp, wait_address, p);    <span class="comment">//__pollwait</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//filp特定fd对应的file结构体指针</span></span><br><span class="line"><span class="comment">//wait 特定fd对应的硬件驱动程序中的等待队列头指针</span></span><br><span class="line"><span class="comment">//p 调用select()的应用程序中poll_wqueues结构体的poll_table项</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __pollwait(struct file *filp, <span class="keyword">wait_queue_head_t</span> *wait_address,poll_table *p)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//通过container_of宏得到结构体poll_wqueues的地址</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_wqueues</span> *<span class="title">pwq</span> = <span class="title">container_of</span>(<span class="title">p</span>, <span class="title">struct</span> <span class="title">poll_wqueues</span>, <span class="title">pt</span>);</span></span><br><span class="line">    <span class="comment">//调用poll_get_entry()得到一个poll_table_entry结构体</span></span><br><span class="line">    <span class="comment">//空间不足，动态申请物理内存页，以链表的形式挂在poll_wqueues.table上统一管理。</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> *<span class="title">entry</span> = <span class="title">poll_get_entry</span>(<span class="title">pwq</span>);</span></span><br><span class="line">    <span class="keyword">if</span> (!entry)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    get_file(filp);</span><br><span class="line">    entry-&gt;filp         = filp;         <span class="comment">// 保存对应的file结构体</span></span><br><span class="line">    entry-&gt;wait_address = wait_address; <span class="comment">// 保存来自设备驱动程序的等待队列头</span></span><br><span class="line">    entry-&gt;key          = p-&gt;key;       <span class="comment">// 保存对该fd关心的事件掩码</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化等待队列项，pollwake是唤醒该等待队列项时候调用的函数</span></span><br><span class="line">    init_waitqueue_func_entry(&amp;entry-&gt;wait, pollwake);</span><br><span class="line"></span><br><span class="line"><span class="comment">//static inline void init_waitqueue_func_entry(wait_queue_t *q,wait_queue_func_t func)</span></span><br><span class="line"><span class="comment">//&#123;</span></span><br><span class="line"><span class="comment">//    q-&gt;flags = 0;            //设为非互斥进程</span></span><br><span class="line"><span class="comment">//    q-&gt;private = NULL;</span></span><br><span class="line"><span class="comment">//    q-&gt;func = func;</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//等待队列项private指向poll_wqueues</span></span><br><span class="line">    entry-&gt;wait.<span class="keyword">private</span> = pwq;</span><br><span class="line">    <span class="comment">//将该等待队列项添加到从驱动程序中传递过来的等待队列头中去</span></span><br><span class="line">    <span class="comment">//即：设置等待的进程为非互斥进程，并将其添加进等待队列头的队头中</span></span><br><span class="line">    add_wait_queue(wait_address, &amp;entry-&gt;wait);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">poll_freewait</span><span class="params">(struct poll_wqueues *pwq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_page</span> * <span class="title">p</span> = <span class="title">pwq</span>-&gt;<span class="title">table</span>;</span></span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; pwq-&gt;inline_index; i++)</span><br><span class="line">        free_poll_entry(pwq-&gt;inline_entries + i);</span><br><span class="line">    <span class="keyword">while</span> (p) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> * <span class="title">entry</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_page</span> *<span class="title">old</span>;</span></span><br><span class="line">        entry = p-&gt;entry;</span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            entry--;</span><br><span class="line">            free_poll_entry(entry);</span><br><span class="line">        &#125; <span class="keyword">while</span> (entry &gt; p-&gt;entries);</span><br><span class="line">        old = p;</span><br><span class="line">        p   = p-&gt;next;</span><br><span class="line">        free_page((<span class="keyword">unsigned</span> <span class="keyword">long</span>) old);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll_schedule_timeout</span><span class="params">(struct poll_wqueues *pwq, <span class="keyword">int</span> state,</span></span></span><br><span class="line"><span class="function"><span class="params">              <span class="keyword">ktime_t</span> *expires, <span class="keyword">unsigned</span> <span class="keyword">long</span> slack)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> rc = -EINTR;</span><br><span class="line"></span><br><span class="line">    set_current_state(state);        <span class="comment">//设置当前进程的状态state = TASK_INTERRUPTIBLE,有可能在尚                            //未到期时由其它信号唤醒进程从而导致函数返回</span></span><br><span class="line">    <span class="keyword">if</span> (!pwq-&gt;triggered)    <span class="comment">//只要有一个fd对应的设备将当前进程唤醒，将会把triggered设置为1</span></span><br><span class="line">        rc = schedule_hrtimeout_range(expires, slack, HRTIMER_MODE_ABS);</span><br><span class="line">    __set_current_state(TASK_RUNNING);</span><br><span class="line">    set_mb(pwq-&gt;triggered, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> rc;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//唤醒的时候调用pollwake</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">pollwake</span><span class="params">(<span class="keyword">wait_queue_t</span> *wait, <span class="keyword">unsigned</span> mode, <span class="keyword">int</span> sync, <span class="keyword">void</span> *key)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_table_entry</span> *<span class="title">entry</span>;</span></span><br><span class="line">    <span class="comment">//取得文件对应的poll_table_entry</span></span><br><span class="line">    entry = container_of(wait, struct poll_table_entry, wait);</span><br><span class="line">    <span class="comment">//过滤不关心的事件,防止应用进程被误唤醒</span></span><br><span class="line">    <span class="keyword">if</span> (key &amp;&amp; !((<span class="keyword">unsigned</span> <span class="keyword">long</span>)key &amp; entry-&gt;key))</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//唤醒</span></span><br><span class="line">    <span class="keyword">return</span> __pollwake(wait, mode, sync, key);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __pollwake(<span class="keyword">wait_queue_t</span> *wait, <span class="keyword">unsigned</span> mode, <span class="keyword">int</span> sync, <span class="keyword">void</span> *key)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_wqueues</span> *<span class="title">pwq</span> = <span class="title">wait</span>-&gt;<span class="title">private</span>;</span></span><br><span class="line">    <span class="comment">//定义一个wait_queue_t类型的变量dummy_wait，并初始化</span></span><br><span class="line">    DECLARE_WAITQUEUE(dummy_wait, pwq-&gt;polling_task);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//#define __WAITQUEUE_INITIALIZER(name, tsk) &#123;                \</span></span><br><span class="line">    <span class="comment">//    .private   = tsk,                        \</span></span><br><span class="line">    <span class="comment">//    .func      = default_wake_function,            \</span></span><br><span class="line">    <span class="comment">//    .task_list = &#123; NULL, NULL &#125; &#125;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//#define DECLARE_WAITQUEUE(name, tsk)                    \</span></span><br><span class="line">    <span class="comment">//    wait_queue_t name = __WAITQUEUE_INITIALIZER(name, tsk)</span></span><br><span class="line"></span><br><span class="line">    smp_wmb();</span><br><span class="line">    pwq-&gt;triggered = <span class="number">1</span>;    <span class="comment">//标记为已触发</span></span><br><span class="line">    <span class="comment">//唤醒函数</span></span><br><span class="line">    <span class="keyword">return</span> default_wake_function(&amp;dummy_wait, mode, sync, key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="select系统调用的具体实现过程图解："><a href="#select系统调用的具体实现过程图解：" class="headerlink" title="select系统调用的具体实现过程图解："></a>select系统调用的具体实现过程图解：</h2><p><img src="/Picture/select系统调用的具体实现过程.png" alt></p>
+<h2 id="select结构体依赖关系"><a href="#select结构体依赖关系" class="headerlink" title="select结构体依赖关系"></a>select结构体依赖关系</h2><p><img src="/Picture/select结构体依赖关系.png" alt></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/09/18/io-2-multiplexing/" rel="prev" title="Linux I/O select、poll、epoll的使用方式和优缺点">
+      <i class="fa fa-chevron-left"></i> Linux I/O select、poll、epoll的使用方式和优缺点
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/09/21/io-4-poll/" rel="next" title="Linux I/O 复用 poll源码解析">
+      Linux I/O 复用 poll源码解析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#select"><span class="nav-number">1.</span> <span class="nav-text">select</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#select系统调用的具体实现过程图解："><span class="nav-number">1.1.</span> <span class="nav-text">select系统调用的具体实现过程图解：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#select结构体依赖关系"><span class="nav-number">1.2.</span> <span class="nav-text">select结构体依赖关系</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

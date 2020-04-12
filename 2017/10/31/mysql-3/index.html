@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL语句基础知识的复习与学习 SQL简介SQL是Structure Query Language（结构化查询语言）的缩写，使用关系数据模型的数据库应用语言。 SQL分类SQL语句主要分为3类 DDL（Data Definition Language）数据定义语句定义不同的数据段、数据库、数据表、列、索引等数据库对象的定义。常用关键字：create、drop、alter等。 DML（Data Ma">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL SQL语句基础">
+<meta property="og:url" content="http://www.casezheng.date/2017/10/31/mysql-3/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="SQL语句基础知识的复习与学习 SQL简介SQL是Structure Query Language（结构化查询语言）的缩写，使用关系数据模型的数据库应用语言。 SQL分类SQL语句主要分为3类 DDL（Data Definition Language）数据定义语句定义不同的数据段、数据库、数据表、列、索引等数据库对象的定义。常用关键字：create、drop、alter等。 DML（Data Ma">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-03-21T11:55:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL SQL语句基础">
+<meta name="twitter:description" content="SQL语句基础知识的复习与学习 SQL简介SQL是Structure Query Language（结构化查询语言）的缩写，使用关系数据模型的数据库应用语言。 SQL分类SQL语句主要分为3类 DDL（Data Definition Language）数据定义语句定义不同的数据段、数据库、数据表、列、索引等数据库对象的定义。常用关键字：create、drop、alter等。 DML（Data Ma">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/10/31/mysql-3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL SQL语句基础 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/10/31/mysql-3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL SQL语句基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-10-31 22:56:00" itemprop="dateCreated datePublished" datetime="2017-10-31T22:56:00+08:00">2017-10-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-03-21 19:55:00" itemprop="dateModified" datetime="2018-03-21T19:55:00+08:00">2018-03-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>SQL语句基础知识的复习与学习</p>
+<h1 id="SQL简介"><a href="#SQL简介" class="headerlink" title="SQL简介"></a>SQL简介</h1><p>SQL是Structure Query Language（结构化查询语言）的缩写，使用关系数据模型的数据库应用语言。</p>
+<h1 id="SQL分类"><a href="#SQL分类" class="headerlink" title="SQL分类"></a>SQL分类</h1><p>SQL语句主要分为3类</p>
+<h2 id="DDL（Data-Definition-Language）数据定义语句"><a href="#DDL（Data-Definition-Language）数据定义语句" class="headerlink" title="DDL（Data Definition Language）数据定义语句"></a>DDL（Data Definition Language）数据定义语句</h2><p>定义不同的数据段、数据库、数据表、列、索引等数据库对象的定义。常用关键字：create、drop、alter等。</p>
+<h2 id="DML（Data-Manipulation-Language）数据操纵语句"><a href="#DML（Data-Manipulation-Language）数据操纵语句" class="headerlink" title="DML（Data Manipulation Language）数据操纵语句"></a>DML（Data Manipulation Language）数据操纵语句</h2><p>用于添加、删除、更新和查询数据库记录，并检查数据完整性，常用的语句关键词主要包括insert、delete、update和select等。</p>
+<h2 id="DCL（Data-Control-Language）数据控制语句"><a href="#DCL（Data-Control-Language）数据控制语句" class="headerlink" title="DCL（Data Control Language）数据控制语句"></a>DCL（Data Control Language）数据控制语句</h2><p>用于控制不同数据段直接的许可和访问级别的语句。定义了数据库、表、字段、用户的访问权限和安全级别，主要的关键字包括grant、revoke等。</p>
+<h1 id="DDL"><a href="#DDL" class="headerlink" title="DDL"></a>DDL</h1><p>DDL是数据定义语言的缩写，是对数据库内部的对象进行创建、删除、修改的操作语言。和DML语言的最大区别是DML只对表内部的操作，而不涉及表的定义、结构的修改，更不会涉及到其他对象。DDL语句更多被数据库管理员（DBA）所使用。</p>
+<h2 id="数据库创建"><a href="#数据库创建" class="headerlink" title="数据库创建"></a>数据库创建</h2><p>create database dbname;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">+--------------------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [(none)]&gt; create database test;</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [(none)]&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| test               |</span><br><span class="line">+--------------------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="删除数据库"><a href="#删除数据库" class="headerlink" title="删除数据库"></a>删除数据库</h2><p>drop database dbname;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [information_schema]&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| test               |</span><br><span class="line">+--------------------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [information_schema]&gt; drop database test;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [information_schema]&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">+--------------------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="创建表"><a href="#创建表" class="headerlink" title="创建表"></a>创建表</h2><p>create table tablename(column_name_1 column_type_1 constraints, column_name_2 column_type_2 constraints, … … , column_name_n column_type_n constraints)<br>MySQL的表名以目录形式存在磁盘上，表名的字符可以使用任何目录名允许的字符。column_name是列的名字，column_type是列的数据类型，contraints是列的约束条件。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; create table student(name char(32), age int(4), sex int(2));</span><br><span class="line">Query OK, 0 rows affected (0.04 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; show tables;</span><br><span class="line">+----------------+</span><br><span class="line">| Tables_in_test |</span><br><span class="line">+----------------+</span><br><span class="line">| student        |</span><br><span class="line">+----------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(4)   | YES  |     | NULL    |       |</span><br><span class="line">| sex   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; show create table student\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: student</span><br><span class="line">Create Table: CREATE TABLE `student` (</span><br><span class="line">  `name` char(32) DEFAULT NULL,</span><br><span class="line">  `age` int(4) DEFAULT NULL,</span><br><span class="line">  `sex` int(2) DEFAULT NULL</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=latin1</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="删除表"><a href="#删除表" class="headerlink" title="删除表"></a>删除表</h2><p>drop table tablename;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; drop table student;</span><br><span class="line">Query OK, 0 rows affected (0.02 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; show tables;</span><br><span class="line">Empty set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="修改表"><a href="#修改表" class="headerlink" title="修改表"></a>修改表</h2><p>表结构的修改一般使用alter table语句。</p>
+<h3 id="修改表类型"><a href="#修改表类型" class="headerlink" title="修改表类型"></a>修改表类型</h3><p>alter table tablename modify [column] column_definition [first | after col_name]<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(4)   | YES  |     | NULL    |       |</span><br><span class="line">| sex   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line">MariaDB [test]&gt; alter table student modify age int(2);</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| sex   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="新增表字段"><a href="#新增表字段" class="headerlink" title="新增表字段"></a>新增表字段</h3><p>alter table tablename add [column] column_definition [first | after col_name]<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; alter table student add birthday date;</span><br><span class="line">Query OK, 0 rows affected (0.03 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+----------+----------+------+-----+---------+-------+</span><br><span class="line">| Field    | Type     | Null | Key | Default | Extra |</span><br><span class="line">+----------+----------+------+-----+---------+-------+</span><br><span class="line">| name     | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age      | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| sex      | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| birthday | date     | YES  |     | NULL    |       |</span><br><span class="line">+----------+----------+------+-----+---------+-------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="删除表字段"><a href="#删除表字段" class="headerlink" title="删除表字段"></a>删除表字段</h3><p>alter table tablename drop [column] column_name;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; alter table student drop column birthday;</span><br><span class="line">Query OK, 0 rows affected (0.04 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| sex   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="字段改名"><a href="#字段改名" class="headerlink" title="字段改名"></a>字段改名</h3><p>alter table tablename change [column] old_col_name column_definition [first | after col_name]<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; alter table student change sex grade int(4);</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| grade | int(4)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">3 rows in set (0.01 sec)</span><br></pre></td></tr></table></figure></p>
+<p><strong>change和modify都可以修改表定义，但change后面需要写两次列名，不方便。不过change的优点是可以修改列名称，modify则不能。</strong></p>
+<h3 id="修改字段排列顺序"><a href="#修改字段排列顺序" class="headerlink" title="修改字段排列顺序"></a>修改字段排列顺序</h3><p>字段增加和修改(add/change/modify)中，都有可选项first|after column_name，该选项可以修改字段在表中的位置，默认add增加新字段加再表的最后位置，而change/modify默认不该表字段位置。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; alter table student add sex int(2) after name;</span><br><span class="line">Query OK, 0 rows affected (0.04 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; desc student;</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| Field | Type     | Null | Key | Default | Extra |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">| name  | char(32) | YES  |     | NULL    |       |</span><br><span class="line">| sex   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| age   | int(2)   | YES  |     | NULL    |       |</span><br><span class="line">| grade | int(4)   | YES  |     | NULL    |       |</span><br><span class="line">+-------+----------+------+-----+---------+-------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="表改名"><a href="#表改名" class="headerlink" title="表改名"></a>表改名</h3><p>alter table tablename rename [to] new_tablename;<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show tables;</span><br><span class="line">+----------------+</span><br><span class="line">| Tables_in_test |</span><br><span class="line">+----------------+</span><br><span class="line">| student        |</span><br><span class="line">+----------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; alter table student rename to student_new;</span><br><span class="line">Query OK, 0 rows affected (0.02 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; show tables;</span><br><span class="line">+----------------+</span><br><span class="line">| Tables_in_test |</span><br><span class="line">+----------------+</span><br><span class="line">| student_new    |</span><br><span class="line">+----------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h1 id="DML"><a href="#DML" class="headerlink" title="DML"></a>DML</h1><p>DML操作是指对数据库中表记录的操作，主要包括表记录的插入(insert)、更新(update)、删除(delete)和查询(select)。</p>
+<h2 id="插入记录"><a href="#插入记录" class="headerlink" title="插入记录"></a>插入记录</h2><p>insert into tablename (field1, field2, ……, fieldn) values(value1, value2, ……, valuen);<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; insert into student (name, sex, age) values(&quot;haha&quot;, 1, 10);</span><br><span class="line">Query OK, 1 row affected (0.01 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    1 |   10 |  NULL |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>也可以不指定字段名称，但values的顺序要和字段排列顺序一致，且不能缺少任何一个。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; insert into student values(&quot;gaga&quot;, 2, 14, 1);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    1 |   10 |  NULL |</span><br><span class="line">| gaga |    2 |   14 |     1 |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>在MySQL中insert语句可一次插入多条记录。在插入大量记录时，节省很多网络开销，大大提高插入效率。<br>insert into tablename (field1, field2, ……, fieldn)<br>values<br>(value1_1, value1_2, ……, value1_n),<br>(value2_1, value2_2, ……, value2_n),<br>… …<br>(valuen_1, valuen_2, ……, valuen_n);<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; insert into student (name, sex, grade) values</span><br><span class="line">    -&gt; (&quot;h1&quot;, 1, 3),</span><br><span class="line">    -&gt; (&quot;h3&quot;, 0, 4),</span><br><span class="line">    -&gt; (&quot;h5&quot;, 1, 5);</span><br><span class="line">Query OK, 3 rows affected (0.01 sec)</span><br><span class="line">Records: 3  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    1 |   10 |  NULL |</span><br><span class="line">| gaga |    2 |   14 |     1 |</span><br><span class="line">| h1   |    1 | NULL |     3 |</span><br><span class="line">| h3   |    0 | NULL |     4 |</span><br><span class="line">| h5   |    1 | NULL |     5 |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="更新记录"><a href="#更新记录" class="headerlink" title="更新记录"></a>更新记录</h2><p>update tablename set field1=value1, field2=value2, ……, fieldn=valuen [where condition];<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; update student set sex=0, grade=0 where name= &apos;haha&apos;;</span><br><span class="line">Query OK, 1 row affected (0.01 sec)</span><br><span class="line">Rows matched: 1  Changed: 1  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    0 |   10 |     0 |</span><br><span class="line">| gaga |    2 |   14 |     1 |</span><br><span class="line">| h1   |    1 | NULL |     3 |</span><br><span class="line">| h3   |    0 | NULL |     4 |</span><br><span class="line">| h5   |    1 | NULL |     5 |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>MySQL中update可以同时更新多个表中数据。<br>update t1, t2, ……, tn set t1.field1=expr1, t2.field2=expr2, ……,  tn.fieldn=exprn [where condition];<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from home;</span><br><span class="line">+------+--------+</span><br><span class="line">| id   | addr   |</span><br><span class="line">+------+--------+</span><br><span class="line">|    1 | hhhhhh |</span><br><span class="line">|    2 | jjjjj  |</span><br><span class="line">+------+--------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    0 |   10 |     0 |</span><br><span class="line">| gaga |    2 |   14 |     1 |</span><br><span class="line">| h1   |    1 | NULL |     3 |</span><br><span class="line">| h3   |    0 | NULL |     4 |</span><br><span class="line">| h5   |    1 | NULL |     5 |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; update student, home set student.grade=10, home.id=20 where student.name=&apos;haha&apos;;</span><br><span class="line">Query OK, 3 rows affected (0.00 sec)</span><br><span class="line">Rows matched: 3  Changed: 3  Warnings: 0</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from home;</span><br><span class="line">+------+--------+</span><br><span class="line">| id   | addr   |</span><br><span class="line">+------+--------+</span><br><span class="line">|   20 | hhhhhh |</span><br><span class="line">|   20 | jjjjj  |</span><br><span class="line">+------+--------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| name | sex  | age  | grade |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">| haha |    0 |   10 |    10 |</span><br><span class="line">| gaga |    2 |   14 |     1 |</span><br><span class="line">| h1   |    1 | NULL |     3 |</span><br><span class="line">| h3   |    0 | NULL |     4 |</span><br><span class="line">| h5   |    1 | NULL |     5 |</span><br><span class="line">+------+------+------+-------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="删除记录"><a href="#删除记录" class="headerlink" title="删除记录"></a>删除记录</h2><p>delete from tablename [where condition];<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| hehe |    2 |</span><br><span class="line">| gaga |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; delete from student where age=2;</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| gaga |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>delete t1,t2,…tn from t1,t2,…tn [where condition];<br>如果 from 后面的表名用别名，则 delete 后面的也要用相应的别名，否则会提示语法错误。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from boy;</span><br><span class="line">+------+-------+</span><br><span class="line">| name | score |</span><br><span class="line">+------+-------+</span><br><span class="line">| haha |    10 |</span><br><span class="line">| gaga |    30 |</span><br><span class="line">+------+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| gaga |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; delete boy, s from boy, student s where s.age=1 and boy.name=s.name;</span><br><span class="line">Query OK, 2 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from boy;</span><br><span class="line">+------+-------+</span><br><span class="line">| name | score |</span><br><span class="line">+------+-------+</span><br><span class="line">| gaga |    30 |</span><br><span class="line">+------+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="查询记录"><a href="#查询记录" class="headerlink" title="查询记录"></a>查询记录</h2><p>基本语法<br>select * from tablename [where condition];</p>
+<h3 id="查询不重复记录-去重"><a href="#查询不重复记录-去重" class="headerlink" title="查询不重复记录(去重)"></a>查询不重复记录(去重)</h3><p>使用<strong>distinct关键字</strong>实现<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select age from student;</span><br><span class="line">+------+</span><br><span class="line">| age  |</span><br><span class="line">+------+</span><br><span class="line">|    3 |</span><br><span class="line">|    3 |</span><br><span class="line">|    4 |</span><br><span class="line">+------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select distinct age from student;</span><br><span class="line">+------+</span><br><span class="line">| age  |</span><br><span class="line">+------+</span><br><span class="line">|    3 |</span><br><span class="line">|    4 |</span><br><span class="line">+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="条件查询"><a href="#条件查询" class="headerlink" title="条件查询"></a>条件查询</h3><p>使用<strong>where关键字</strong>实现<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student where age=4;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| tete |    4 |</span><br><span class="line">+------+------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="排序和限制"><a href="#排序和限制" class="headerlink" title="排序和限制"></a>排序和限制</h3><p>排序使用order by关键字实现<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from tablename [where condition] [order by field1 [desc|asc] , field2 [desc|asc],......fieldn [desc|asc]]</span><br></pre></td></tr></table></figure></p>
+<p>desc 和 asc 是排序顺序关键字，desc表示按照字段进行降序排列，asc则表示升序排列，如果不写此关键字默认是升序排列。order by后面可以跟多个不同的排序字段，并 且每个排序字段可以有不同的排序顺序。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">| tete |    4 |</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">+------+------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student order by age;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">| tete |    4 |</span><br><span class="line">+------+------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student order by age , name desc;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| tete |    4 |</span><br><span class="line">+------+------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p><strong>限制显示个数使用limit关键字</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select ... ... [limit offset_start, row_count]</span><br></pre></td></tr></table></figure></p>
+<p>offset_start起始偏移量 row_count显示行数，默认情况下起始偏移量为0，只写显示行数，显示前n条记录。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student limit 2;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student limit 3, 2;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">| tete |    4 |</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">+------+------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="聚合"><a href="#聚合" class="headerlink" title="聚合"></a>聚合</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">select [field1, field2, ...... fieldn] fun_name</span><br><span class="line">from tablename</span><br><span class="line">[where wehre_contition]</span><br><span class="line">[group by field1, field2, ... fieldn]</span><br><span class="line">[with rollup]</span><br><span class="line">[having where_contition]</span><br></pre></td></tr></table></figure>
+<p>fun_name聚合操作(聚合函数)，常用的有：sum(求和)、count(总个数)、max(最大值)、min(最小值)<br>group by关键字表示要进行分类聚合的字段<br>where rollup可选语法，表示是否对分类聚合的结果进行再汇总<br>having 关键字表示对分类后的结果再进行条件的过滤</p>
+<p>having 和 where 的区别在于 having 是对聚合后的结果进行条件的过滤，而 where 是在聚合前就对记录进行过滤，如果逻辑允许，我们尽可能用 where 先过滤记录，这样因为结果集减小，将对聚合的效率大大提高，最后再根据逻辑看是否用 having 进行再过滤<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student_score;</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">| name | shuxue | yuwen | yinyu | class |</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">| gaga |      1 |     3 |     4 |     1 |</span><br><span class="line">| fef  |      9 |    23 |    21 |     2 |</span><br><span class="line">| ii   |     45 |   123 |    42 |     1 |</span><br><span class="line">| gr   |     56 |    34 |    86 |     2 |</span><br><span class="line">| ce   |     45 |    23 |    98 |     2 |</span><br><span class="line">| gr   |      1 |     3 |     4 |     3 |</span><br><span class="line">| khj  |      9 |    23 |    21 |     4 |</span><br><span class="line">| ko   |     45 |   123 |    42 |     4 |</span><br><span class="line">| po   |     56 |    34 |    86 |     5 |</span><br><span class="line">| ds   |     45 |    23 |    98 |     3 |</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">10 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select sum(shuxue), max(yinyu), min(yuwen) from student_score;</span><br><span class="line">+-------------+------------+------------+</span><br><span class="line">| sum(shuxue) | max(yinyu) | min(yuwen) |</span><br><span class="line">+-------------+------------+------------+</span><br><span class="line">|         312 |         98 |          3 |</span><br><span class="line">+-------------+------------+------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select class, sum(shuxue), sum(yinyu) from student_score group by class;</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">| class | sum(shuxue) | sum(yinyu) |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">|     1 |          46 |         46 |</span><br><span class="line">|     2 |         110 |        205 |</span><br><span class="line">|     3 |          46 |        102 |</span><br><span class="line">|     4 |          54 |         63 |</span><br><span class="line">|     5 |          56 |         86 |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">5 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select class, sum(shuxue), sum(yinyu) from student_score group by class with rollup;</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">| class | sum(shuxue) | sum(yinyu) |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">|     1 |          46 |         46 |</span><br><span class="line">|     2 |         110 |        205 |</span><br><span class="line">|     3 |          46 |        102 |</span><br><span class="line">|     4 |          54 |         63 |</span><br><span class="line">|     5 |          56 |         86 |</span><br><span class="line">|  NULL |         312 |        502 |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">6 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select class, sum(shuxue), sum(yinyu) from student_score group by class with rollup having sum(shuxue) &gt; 50;</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">| class | sum(shuxue) | sum(yinyu) |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">|     2 |         110 |        205 |</span><br><span class="line">|     4 |          54 |         63 |</span><br><span class="line">|     5 |          56 |         86 |</span><br><span class="line">|  NULL |         312 |        502 |</span><br><span class="line">+-------+-------------+------------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="表连接"><a href="#表连接" class="headerlink" title="表连接"></a>表连接</h3><p>表连接分为内连接和外连接，内连接仅选出两张表中互相存在的记录，而外连接会选出其他不匹配的记录。<br>外连接分为左连接和右连接</p>
+<ol>
+<li>左连接：包含所有的左边表中的记录甚至是右边表中没有和它匹配的记录。</li>
+<li>右连接：包含所有的右边表中的记录甚至是左边表中没有和它匹配的记录。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student;</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| haha |    3 |</span><br><span class="line">| tete |    4 |</span><br><span class="line">| haha |    1 |</span><br><span class="line">| tete |    2 |</span><br><span class="line">| fee  |    2 |</span><br><span class="line">| ko   |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">7 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student_score;</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">| name | shuxue | yuwen | yinyu | class |</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">| gaga |      1 |     3 |     4 |     1 |</span><br><span class="line">| fef  |      9 |    23 |    21 |     2 |</span><br><span class="line">| ii   |     45 |   123 |    42 |     1 |</span><br><span class="line">| gr   |     56 |    34 |    86 |     2 |</span><br><span class="line">| ce   |     45 |    23 |    98 |     2 |</span><br><span class="line">| gr   |      1 |     3 |     4 |     3 |</span><br><span class="line">| khj  |      9 |    23 |    21 |     4 |</span><br><span class="line">| ko   |     45 |   123 |    42 |     4 |</span><br><span class="line">| po   |     56 |    34 |    86 |     5 |</span><br><span class="line">| ds   |     45 |    23 |    98 |     3 |</span><br><span class="line">+------+--------+-------+-------+-------+</span><br><span class="line">10 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student, student_score where student.name=student_score.name;</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| name | age  | name | shuxue | yuwen | yinyu | class |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| gaga |    3 | gaga |      1 |     3 |     4 |     1 |</span><br><span class="line">| ko   |    3 | ko   |     45 |   123 |    42 |     4 |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student left join student_score on student.name=student_score.name;</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| name | age  | name | shuxue | yuwen | yinyu | class |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| gaga |    3 | gaga |      1 |     3 |     4 |     1 |</span><br><span class="line">| ko   |    3 | ko   |     45 |   123 |    42 |     4 |</span><br><span class="line">| haha |    3 | NULL |   NULL |  NULL |  NULL |  NULL |</span><br><span class="line">| tete |    4 | NULL |   NULL |  NULL |  NULL |  NULL |</span><br><span class="line">| haha |    1 | NULL |   NULL |  NULL |  NULL |  NULL |</span><br><span class="line">| tete |    2 | NULL |   NULL |  NULL |  NUULL |  NULL |</span><br><span class="line">| fee  |    2 | NULL |   NULL |  NULL |  NULL |  NULL |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">7 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select * from student right join student_score on student.name=student_score.name;</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| name | age  | name | shuxue | yuwen | yinyu | class |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">| gaga |    3 | gaga |      1 |     3 |     4 |     1 |</span><br><span class="line">| ko   |    3 | ko   |     45 |   123 |    42 |     4 |</span><br><span class="line">| NULL | NULL | fef  |      9 |    23 |    21 |     2 |</span><br><span class="line">| NULL | NULL | ii   |     45 |   123 |    42 |     1 |</span><br><span class="line">| NULL | NULL | gr   |     56 |    34 |    86 |     2 |</span><br><span class="line">| NULL | NULL | ce   |     45 |    23 |    98 |     2 |</span><br><span class="line">| NULL | NULL | gr   |      1 |     3 |     4 |     3 |</span><br><span class="line">| NULL | NULL | khj  |      9 |    23 |    21 |     4 |</span><br><span class="line">| NULL | NULL | po   |     56 |    34 |    86 |     5 |</span><br><span class="line">| NULL | NULL | ds   |     45 |    23 |    98 |     3 |</span><br><span class="line">+------+------+------+--------+-------+-------+-------+</span><br><span class="line">10 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="子查询"><a href="#子查询" class="headerlink" title="子查询"></a>子查询</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select * from student where name in (select name from student_score);</span><br><span class="line">+------+------+</span><br><span class="line">| name | age  |</span><br><span class="line">+------+------+</span><br><span class="line">| gaga |    3 |</span><br><span class="line">| ko   |    3 |</span><br><span class="line">+------+------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>某些情况下子查询和表连接可以相互转化</p>
+<h3 id="记录联合"><a href="#记录联合" class="headerlink" title="记录联合"></a>记录联合</h3><p>union和union all用于实现记录联合<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select name from student union all select name from student_score;</span><br><span class="line">+------+</span><br><span class="line">| name |</span><br><span class="line">+------+</span><br><span class="line">| gaga |</span><br><span class="line">| haha |</span><br><span class="line">| tete |</span><br><span class="line">| haha |</span><br><span class="line">| tete |</span><br><span class="line">| fee  |</span><br><span class="line">| ko   |</span><br><span class="line">| gaga |</span><br><span class="line">| fef  |</span><br><span class="line">| ii   |</span><br><span class="line">| gr   |</span><br><span class="line">| ce   |</span><br><span class="line">| gr   |</span><br><span class="line">| khj  |</span><br><span class="line">| ko   |</span><br><span class="line">| po   |</span><br><span class="line">| ds   |</span><br><span class="line">+------+</span><br><span class="line">17 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select name from student union select name from student_score;</span><br><span class="line">+------+</span><br><span class="line">| name |</span><br><span class="line">+------+</span><br><span class="line">| gaga |</span><br><span class="line">| haha |</span><br><span class="line">| tete |</span><br><span class="line">| fee  |</span><br><span class="line">| ko   |</span><br><span class="line">| fef  |</span><br><span class="line">| ii   |</span><br><span class="line">| gr   |</span><br><span class="line">| ce   |</span><br><span class="line">| khj  |</span><br><span class="line">| po   |</span><br><span class="line">| ds   |</span><br><span class="line">+------+</span><br><span class="line">12 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>union 和 union all的区别在于union all将结果集直接合并在一起，而union将union all的结果进行一次distinct，去除重复记录的结果。</p>
+<h1 id="DCL"><a href="#DCL" class="headerlink" title="DCL"></a>DCL</h1><p>DCL语句主要是DBA用来管理系统中的对象权限所使用的，一般开发人员很少使用。<br>grant和revoke分别授出和收回用户权限。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/10/30/mysql-1/" rel="prev" title="MySQL 简介与安装">
+      <i class="fa fa-chevron-left"></i> MySQL 简介与安装
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/12/31/rc-local/" rel="next" title="linux添加开机启动任务">
+      linux添加开机启动任务 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL简介"><span class="nav-number">1.</span> <span class="nav-text">SQL简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SQL分类"><span class="nav-number">2.</span> <span class="nav-text">SQL分类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DDL（Data-Definition-Language）数据定义语句"><span class="nav-number">2.1.</span> <span class="nav-text">DDL（Data Definition Language）数据定义语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DML（Data-Manipulation-Language）数据操纵语句"><span class="nav-number">2.2.</span> <span class="nav-text">DML（Data Manipulation Language）数据操纵语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DCL（Data-Control-Language）数据控制语句"><span class="nav-number">2.3.</span> <span class="nav-text">DCL（Data Control Language）数据控制语句</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DDL"><span class="nav-number">3.</span> <span class="nav-text">DDL</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库创建"><span class="nav-number">3.1.</span> <span class="nav-text">数据库创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除数据库"><span class="nav-number">3.2.</span> <span class="nav-text">删除数据库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建表"><span class="nav-number">3.3.</span> <span class="nav-text">创建表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除表"><span class="nav-number">3.4.</span> <span class="nav-text">删除表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修改表"><span class="nav-number">3.5.</span> <span class="nav-text">修改表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#修改表类型"><span class="nav-number">3.5.1.</span> <span class="nav-text">修改表类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新增表字段"><span class="nav-number">3.5.2.</span> <span class="nav-text">新增表字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除表字段"><span class="nav-number">3.5.3.</span> <span class="nav-text">删除表字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字段改名"><span class="nav-number">3.5.4.</span> <span class="nav-text">字段改名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改字段排列顺序"><span class="nav-number">3.5.5.</span> <span class="nav-text">修改字段排列顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#表改名"><span class="nav-number">3.5.6.</span> <span class="nav-text">表改名</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DML"><span class="nav-number">4.</span> <span class="nav-text">DML</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#插入记录"><span class="nav-number">4.1.</span> <span class="nav-text">插入记录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更新记录"><span class="nav-number">4.2.</span> <span class="nav-text">更新记录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除记录"><span class="nav-number">4.3.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查询记录"><span class="nav-number">4.4.</span> <span class="nav-text">查询记录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查询不重复记录-去重"><span class="nav-number">4.4.1.</span> <span class="nav-text">查询不重复记录(去重)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#条件查询"><span class="nav-number">4.4.2.</span> <span class="nav-text">条件查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#排序和限制"><span class="nav-number">4.4.3.</span> <span class="nav-text">排序和限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#聚合"><span class="nav-number">4.4.4.</span> <span class="nav-text">聚合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#表连接"><span class="nav-number">4.4.5.</span> <span class="nav-text">表连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#子查询"><span class="nav-number">4.4.6.</span> <span class="nav-text">子查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#记录联合"><span class="nav-number">4.4.7.</span> <span class="nav-text">记录联合</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DCL"><span class="nav-number">5.</span> <span class="nav-text">DCL</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

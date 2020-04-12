@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="字符集查看MySQL支持的字符集 show character set; 查看information_schema.character_set  123456789101112131415161718192021MariaDB [information_schema]&amp;gt; show character set;+----------+-----------------------------+">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 字符集、索引、视图">
+<meta property="og:url" content="http://www.casezheng.date/2018/03/27/mysql-7/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="字符集查看MySQL支持的字符集 show character set; 查看information_schema.character_set  123456789101112131415161718192021MariaDB [information_schema]&amp;gt; show character set;+----------+-----------------------------+">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.164Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL 字符集、索引、视图">
+<meta name="twitter:description" content="字符集查看MySQL支持的字符集 show character set; 查看information_schema.character_set  123456789101112131415161718192021MariaDB [information_schema]&amp;gt; show character set;+----------+-----------------------------+">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/03/27/mysql-7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL 字符集、索引、视图 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/03/27/mysql-7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 字符集、索引、视图
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-27 23:54:51" itemprop="dateCreated datePublished" datetime="2018-03-27T23:54:51+08:00">2018-03-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="字符集"><a href="#字符集" class="headerlink" title="字符集"></a>字符集</h1><h2 id="查看MySQL支持的字符集"><a href="#查看MySQL支持的字符集" class="headerlink" title="查看MySQL支持的字符集"></a>查看MySQL支持的字符集</h2><ol>
+<li>show character set;</li>
+<li>查看information_schema.character_set</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [information_schema]&gt; show character set;</span><br><span class="line">+<span class="comment">----------+-----------------------------+---------------------+--------+</span></span><br><span class="line">| Charset  | Description                 | Default collation   | Maxlen |</span><br><span class="line">+<span class="comment">----------+-----------------------------+---------------------+--------+</span></span><br><span class="line">| big5     | Big5 Traditional Chinese    | big5_chinese_ci     |      2 |</span><br><span class="line">| dec8     | DEC West European           | dec8_swedish_ci     |      1 |</span><br><span class="line">| cp850    | DOS West European           | cp850_general_ci    |      1 |</span><br><span class="line">| hp8      | HP West European            | hp8_english_ci      |      1 |</span><br><span class="line">| koi8r    | KOI8-R Relcom Russian       | koi8r_general_ci    |      1 |</span><br><span class="line">... ...</span><br><span class="line"></span><br><span class="line">MariaDB [information_schema]&gt; select * from information_schema.character_sets;</span><br><span class="line">+<span class="comment">--------------------+----------------------+-----------------------------+--------+</span></span><br><span class="line">| CHARACTER_SET_NAME | DEFAULT_COLLATE_NAME | DESCRIPTION                 | MAXLEN |</span><br><span class="line">+<span class="comment">--------------------+----------------------+-----------------------------+--------+</span></span><br><span class="line">| big5               | big5_chinese_ci      | Big5 Traditional Chinese    |      2 |</span><br><span class="line">| dec8               | dec8_swedish_ci      | DEC West European           |      1 |</span><br><span class="line">| cp850              | cp850_general_ci     | DOS West European           |      1 |</span><br><span class="line">| hp8                | hp8_english_ci       | HP West European            |      1 |</span><br><span class="line">| koi8r              | koi8r_general_ci     | KOI8-R Relcom Russian       |      1 |</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure>
+<p>MySQL字符集包括字符集(CHARACTER)和校对规则(COLLATION)两个概念。 字符集定义MySQL存储字符串的方式。 校对规则定义比较字符串的方式。字符串和校对规则一对多，每个字符集至少对应一个校对规则。<br>使用SHOW COLLATION; 或查看那information_schema.COLLATIONS表查看所有校对规则<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [information_schema]&gt; show COLLATION;</span><br><span class="line">+<span class="comment">--------------------------+----------+-----+---------+----------+---------+</span></span><br><span class="line">| Collation                | Charset  | Id  | Default | Compiled | Sortlen |</span><br><span class="line">+<span class="comment">--------------------------+----------+-----+---------+----------+---------+</span></span><br><span class="line">| big5_chinese_ci          | big5     |   1 | Yes     | Yes      |       1 |</span><br><span class="line">| big5_bin                 | big5     |  84 |         | Yes      |       1 |</span><br><span class="line">| dec8_swedish_ci          | dec8     |   3 | Yes     | Yes      |       1 |</span><br><span class="line">| dec8_bin                 | dec8     |  69 |         | Yes      |       1 |</span><br><span class="line">... ...</span><br><span class="line"></span><br><span class="line">MariaDB [information_schema]&gt; select * from information_schema.COLLATIONS;</span><br><span class="line">+<span class="comment">--------------------------+--------------------+-----+------------+-------------+---------+</span></span><br><span class="line">| COLLATION_NAME           | CHARACTER_SET_NAME | ID  | IS_DEFAULT | IS_COMPILED | SORTLEN |</span><br><span class="line">+<span class="comment">--------------------------+--------------------+-----+------------+-------------+---------+</span></span><br><span class="line">| big5_chinese_ci          | big5               |   1 | Yes        | Yes         |       1 |</span><br><span class="line">| big5_bin                 | big5               |  84 |            | Yes         |       1 |</span><br><span class="line">| dec8_swedish_ci          | dec8               |   3 | Yes        | Yes         |       1 |</span><br><span class="line">| dec8_bin                 | dec8               |  69 |            | Yes         |       1 |</span><br><span class="line">| cp850_general_ci         | cp850              |   4 | Yes        | Yes         |       1 |</span><br><span class="line">| cp850_bin                | cp850              |  80 |            | Yes         |       1 |</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure></p>
+<p>校对规则命名约定:以与其相关的字符集名开始，包含语言名，并且以_ci(大小写不敏感)、_cs(大小写敏感)或_bin(二元，即比较基于字符编码的值而与language无关)结束。</p>
+<h2 id="字符集设置"><a href="#字符集设置" class="headerlink" title="字符集设置"></a>字符集设置</h2><p>MySQL的字符集和校对规则有4个默认级别：服务器级、数据库级、表级、字段级。</p>
+<h3 id="服务器字符集和校对规则"><a href="#服务器字符集和校对规则" class="headerlink" title="服务器字符集和校对规则"></a>服务器字符集和校对规则</h3><p>服务器字符集和校对规则在MySQL服务启动的时候确定。</p>
+<ol>
+<li><p>my.cnf中设置</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">default-character-<span class="keyword">set</span>=gbk</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>启动选项中指定</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqld <span class="comment">--default-character_set=gdk</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编译时指定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./configure --with-charset=gbk</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>如果没有特别指定服务器字符集，默认使用latin1作为服务器字符集。如未指定校对规则，则使用字符集默认的校对规则。<br>使用show variables like ‘character_set_server’查看服务器字符集<br>使用show variables like ‘collation_server’查看服务器校对规则<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; show variables like 'character_set_server';</span><br><span class="line">+<span class="comment">----------------------+--------+</span></span><br><span class="line">| Variable_name        | Value  |</span><br><span class="line">+<span class="comment">----------------------+--------+</span></span><br><span class="line">| character_set_server | latin1 |</span><br><span class="line">+<span class="comment">----------------------+--------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [(<span class="keyword">none</span>)]&gt; <span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">'collation_server'</span>;</span><br><span class="line">+<span class="comment">------------------+-------------------+</span></span><br><span class="line">| Variable_name    | Value             |</span><br><span class="line">+<span class="comment">------------------+-------------------+</span></span><br><span class="line">| collation_server | latin1_swedish_ci |</span><br><span class="line">+<span class="comment">------------------+-------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="数据库字符集和校对规则"><a href="#数据库字符集和校对规则" class="headerlink" title="数据库字符集和校对规则"></a>数据库字符集和校对规则</h3><p>数据库字符集和校对规则在创建数据库时指定，也可通过alter database命令修改。如果数据库中已存在数据，修改字符集并不能将已有数据按照新的字符集存储<br>设置数据库字符集的规则：</p>
+<ul>
+<li>如果指定了字符集和校对规则，则使用指定的字符集和校对规则；</li>
+<li>如果指定了字符集没有指定校对规则，则使用指定字符集的默认校对规则；</li>
+<li>如果没有指定字符集和校对规则，则使用服务器字符集和校对规则作为数据库的字符集和校对规则<br>使用show variables like ‘character_set_database’查看数据库字符集<br>使用show variables like ‘collation_database’查看数据库校对规则<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show variables like 'character_set_database';</span><br><span class="line">+<span class="comment">------------------------+--------+</span></span><br><span class="line">| Variable_name          | Value  |</span><br><span class="line">+<span class="comment">------------------------+--------+</span></span><br><span class="line">| character_set_database | latin1 |</span><br><span class="line">+<span class="comment">------------------------+--------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">'collation_database'</span>;</span><br><span class="line">+<span class="comment">--------------------+-------------------+</span></span><br><span class="line">| Variable_name      | Value             |</span><br><span class="line">+<span class="comment">--------------------+-------------------+</span></span><br><span class="line">| collation_database | latin1_swedish_ci |</span><br><span class="line">+<span class="comment">--------------------+-------------------+</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="表字符集和校对规则"><a href="#表字符集和校对规则" class="headerlink" title="表字符集和校对规则"></a>表字符集和校对规则</h3><p>表的字符集和校对规则在创建表的时候指定，可以通过 alter table 命令进行修改。如果表中已有记录，修改字符集对原有的记录并没有影响，不会按照新的字符集进行存放。表的字段仍然使用原来的字符集。<br>设置表字符集的规则：</p>
+<ol>
+<li>如果指定了字符集和校对规则，使用指定的字符集和校对规则；</li>
+<li>如果指定了字符集没有指定校对规则，使用指定字符集的默认校对规则；</li>
+<li>如果没有指定字符集和校对规则，使用数据库字符集和校对规则作为表的字符集和校对规则。<br>推荐在创建表的时候明确指定字符集和校对规则，避免受到默认值的影响。要显示表的字符集和校对规则，可以使用 show create table 命令查看</li>
+</ol>
+<h3 id="列字符集和校对规则"><a href="#列字符集和校对规则" class="headerlink" title="列字符集和校对规则"></a>列字符集和校对规则</h3><p>列字符集和校对规则的定义可以在创建表时指定，或者在修改表时调整，如果在创建表的时候没有特别指定字符集和校对规则，则默认使用表的字符集和校对规则。</p>
+<h2 id="连接字符集和校对规则"><a href="#连接字符集和校对规则" class="headerlink" title="连接字符集和校对规则"></a>连接字符集和校对规则</h2><p>MySQL提供三个参数：character_set_client、character_set_connection 和 character_set_results，分别代表客户端、连接和返回结果的字符集。通常3个字符集都是相同的，保证用户写入数据正确读出。</p>
+<h2 id="字符集修改步骤"><a href="#字符集修改步骤" class="headerlink" title="字符集修改步骤"></a>字符集修改步骤</h2><ol>
+<li>导出表结构。mysqldump</li>
+<li>修改表结构中字符集。</li>
+<li>确保数据不再更新，导出所有记录。mysqlduump</li>
+<li>修改导入SQL文件中的字符集。SET NAMES。</li>
+<li>使用新字符集创建数据库。</li>
+<li>创建表。</li>
+<li>导入数据。</li>
+</ol>
+<h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>索引是数据库中用来提高性能的最常用工具。</p>
+<h2 id="索引概述"><a href="#索引概述" class="headerlink" title="索引概述"></a>索引概述</h2><p>所用MySQL列类型都可以被索引, 对相关列使用索引是提高select操作性能的最佳途径。</p>
+<h3 id="索引创建"><a href="#索引创建" class="headerlink" title="索引创建"></a>索引创建</h3><ol>
+<li><p>直接创建索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> [<span class="keyword">ONLINE</span>|<span class="keyword">OFFLINE</span>] [<span class="keyword">UNIQUE</span>|FULLTEXT|SPATIAL] <span class="keyword">INDEX</span> index_name</span><br><span class="line">    [index_type]</span><br><span class="line">    <span class="keyword">ON</span> tbl_name (index_col_name,...)</span><br><span class="line">    [index_option] ...</span><br><span class="line"></span><br><span class="line">index_col_name:</span><br><span class="line">    col_name [(<span class="keyword">length</span>)] [<span class="keyword">ASC</span> | <span class="keyword">DESC</span>]</span><br><span class="line"></span><br><span class="line">index_option:</span><br><span class="line">    KEY_BLOCK_SIZE [=] <span class="keyword">value</span></span><br><span class="line">    | index_type</span><br><span class="line">    | <span class="keyword">WITH</span> PARSER parser_name</span><br><span class="line">    | <span class="keyword">COMMENT</span> <span class="string">'string'</span></span><br><span class="line"></span><br><span class="line">index_type:</span><br><span class="line">    <span class="keyword">USING</span> &#123;BTREE | <span class="keyword">HASH</span>&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建/修改表创建索引</p>
+</li>
+</ol>
+<h3 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h3><p>DROP INDEX index_name on tbl_name;</p>
+<h3 id="显示索引"><a href="#显示索引" class="headerlink" title="显示索引"></a>显示索引</h3><ol>
+<li>show create table tbl_name查看表结构，查看概况</li>
+<li>show index from tbl_name只查看索引，查看详情</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show create table student\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: student</span><br><span class="line"><span class="keyword">Create</span> <span class="keyword">Table</span>: <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`student`</span> (</span><br><span class="line">    <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`age`</span> <span class="built_in">int</span>(<span class="number">4</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span></span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=latin1</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">create</span> <span class="keyword">index</span> name_index <span class="keyword">on</span> student (<span class="keyword">name</span>(<span class="number">20</span>)) <span class="keyword">comment</span> <span class="string">"名称索引"</span>;</span><br><span class="line">Query OK, 0 rows affected (0.11 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; show create table student\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: student</span><br><span class="line"><span class="keyword">Create</span> <span class="keyword">Table</span>: <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`student`</span> (</span><br><span class="line">    <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`age`</span> <span class="built_in">int</span>(<span class="number">4</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">     <span class="keyword">KEY</span> <span class="string">`name_index`</span> (<span class="string">`name`</span>(<span class="number">20</span>)) <span class="keyword">COMMENT</span> <span class="string">'名称索引'</span></span><br><span class="line"> ) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=latin1</span><br><span class="line"> <span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">show</span> <span class="keyword">index</span> <span class="keyword">from</span> student;</span><br><span class="line">+<span class="comment">---------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+</span></span><br><span class="line">| Table   | Non_unique | Key_name   | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | <span class="keyword">Comment</span> | Index_comment |</span><br><span class="line">+<span class="comment">---------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+</span></span><br><span class="line">| student |          <span class="number">1</span> | name_index |            <span class="number">1</span> | <span class="keyword">name</span>        | A         |           <span class="number">7</span> |       <span class="number">20</span> | <span class="literal">NULL</span>   | YES  | BTREE      |         | 名称索引      |</span><br><span class="line">+<span class="comment">---------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+</span></span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="设计索引原则"><a href="#设计索引原则" class="headerlink" title="设计索引原则"></a>设计索引原则</h2><ol>
+<li>搜索的列不一定是所要选择的列。(对where子语句或连接子句中指定的列添加索引，而不是select关键字后的列添加索引)</li>
+<li>使用唯一索引。(考虑某列中值的分布。索引的列的基数越大，索引的效果越好。)</li>
+<li>使用短索引。对字符串索引，应指定前缀长度。</li>
+<li>利用最左前缀。</li>
+<li>不要过度使用索引。(索引占用额外空间、降低写操作性能)</li>
+<li>对于InnoDB存储引擎的表，系统会按照一定顺序保存，如果有明确定义的主键，则按照主键顺序保存。如果没有主键，但是有唯一索引，那么就是按照唯一索引的顺序保存。如果既没有主键又没有唯一索引，那么表中会自动生成一个内部列，按照这个列的顺序保存。按照主键或者内部列进行的访问是最快的，所以 InnoDB 表尽量自己指定主键，当表中同时有几个列都是唯一的，都可以作为主键的时候，要选择最常作为访问条件的列作为主键，提高查询的效率。另外，还需要注意，InnoDB 表的普通索引都会保存主键的键值，所以主键要尽可能选择较短的数据类型，可以有效地减少索引的磁盘占用，提高索引的缓存效果。</li>
+</ol>
+<h2 id="索引存储分类"><a href="#索引存储分类" class="headerlink" title="索引存储分类"></a>索引存储分类</h2><p>索引在MySQL的存储引擎层实现,而不是在服务器层实现,所以每种存储引擎的索引不一定完全相同,也不是所有的存储引擎支持所有的索引类型.<br>MySQL支持的索引:</p>
+<ol>
+<li>B-Tree索引:最常见的索引类型,大部分引擎都支持B数索引</li>
+<li>HASH索引:只有Memory/Heap引擎支持,使用场景简单</li>
+<li>R-Tree索引(空间索引):空间索引是MyISAM的一个特殊索引类型,主要用于地理空间数据类型,通常使用较少</li>
+<li>Full-text(全文索引):全文索引也是MyISAM的一个特殊索引类型,主要用于全文索引,InnoDB从MySQL5.6版本开始提供对全文索引的支持</li>
+</ol>
+<p>MySQL目前不支持函数索引,但能对列的前面某一部分进行索引,可以大大缩小索引文件的大小,但在排序和分组操作的时候无法使用</p>
+<p>HASH 索引有一些重要的特征需要在使用的时候特别注意:</p>
+<ol>
+<li>只用于使用=或&lt;=&gt;操作符的等式比较。</li>
+<li>优化器不能使用 HASH 索引来加速 ORDER BY 操作。</li>
+<li>MySQL 不能确定在两个值之间大约有多少行。如果将一个 MyISAM 表改为 HASH 索引的 MEMORY 表，会影响一些查询的执行效率。</li>
+<li>只能使用整个关键字来搜索一行。</li>
+</ol>
+<p>对于 BTREE 索引，当使用&gt;、&lt;、>=、&lt;=、BETWEEN、!=或者&lt;>，或者 LIKE ‘pattern’(其中’pattern’不以通配符开始)操作符时，都可以使用相关列上的索引<br><strong>当对索引字段进行范围查询的时候，只有BTREE索引可以通过索引访问，而HASH索引实际上是全表扫描的</strong>。</p>
+<h2 id="MySQL如何使用索引"><a href="#MySQL如何使用索引" class="headerlink" title="MySQL如何使用索引"></a>MySQL如何使用索引</h2><h3 id="MySQL中能够使用索引的经典场景"><a href="#MySQL中能够使用索引的经典场景" class="headerlink" title="MySQL中能够使用索引的经典场景"></a>MySQL中能够使用索引的经典场景</h3><ol>
+<li>匹配全值,对索引中所有列都指定具体值,即是对索引中的所有列都有等值匹配的条件</li>
+<li>匹配值的范围查询,对索引的值能够进行范围查找</li>
+<li>匹配最左前缀,仅仅使用索引中的最左边列进行查找</li>
+<li>仅仅对索引进行查询,当查询的列都在索引的字段中时,查询的效率更高</li>
+<li>匹配列前缀,仅仅使用索引中的第一列,并且只包含索引第一列的开头一部分进行查询</li>
+<li>能够实现索引匹配部分精确而其他部分进行范围索引</li>
+<li>如果列名是索引,使用column_name is null就会使用索引</li>
+<li>MySQL5.6引入Index Condition Pushdown(ICP)特性,进一步优化查询,Pushdown表示操作下放,某些情况下的条件过滤操作下放到存储引擎</li>
+</ol>
+<h3 id="MySQL存在索引但不能使用索引的经典场景"><a href="#MySQL存在索引但不能使用索引的经典场景" class="headerlink" title="MySQL存在索引但不能使用索引的经典场景"></a>MySQL存在索引但不能使用索引的经典场景</h3><ol>
+<li>以%开头的LIKE查询不能够利用B-Tree索引,执行计划中key的值为NULL表示没有使用索引</li>
+<li>数据类型中出现隐式转换的时候也不能使用索引,特别是当列类型是字符串</li>
+<li>复合索引的情况下,假如查询条件不包含索引列最左部分,即不满足最左原则Leftmost,是不会使用复合索引的</li>
+<li>如果MySQL估计使用索引比全表扫描慢,则不使用索引</li>
+<li>用or分割的条件,如果or前面的条件中的列有索引,而后面的列中没有索引,则涉及的列都不会被使用(因为or后面的条件列中没有索引,那么后面的查询走全表扫描,在存在全表扫描的情况下,没必要多一次索引扫描增加I/O访问,一次全表扫描过滤条件就足够了)</li>
+</ol>
+<h2 id="查看索引使用情况"><a href="#查看索引使用情况" class="headerlink" title="查看索引使用情况"></a>查看索引使用情况</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; show status like 'Handler_read%';</span><br><span class="line">+<span class="comment">--------------------------+-------+</span></span><br><span class="line">| Variable_name            | Value |</span><br><span class="line">+<span class="comment">--------------------------+-------+</span></span><br><span class="line">| Handler_read_first       | 0     |</span><br><span class="line">| Handler_read_key         | 0     |</span><br><span class="line">| Handler_read_last        | 0     |</span><br><span class="line">| Handler_read_next        | 0     |</span><br><span class="line">| Handler_read_prev        | 0     |</span><br><span class="line">| Handler_read_rnd         | 0     |</span><br><span class="line">| Handler_read_rnd_deleted | 0     |</span><br><span class="line">| Handler_read_rnd_next    | 0     |</span><br><span class="line">+<span class="comment">--------------------------+-------+</span></span><br><span class="line">8 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<p>索引正在工作则Handler_read_key的值将很高,该值表示一个行被索引值读的次数,值很低表明增加索引得到的性能改善不高,因为索引并不经常使用.<br>Handler_read_rnd_next的值很高则意味着查询运行进行低效,并且应该建立索引补救.</p>
+<h1 id="视图"><a href="#视图" class="headerlink" title="视图"></a>视图</h1><h2 id="视图简介"><a href="#视图简介" class="headerlink" title="视图简介"></a>视图简介</h2><p>视图是虚拟存在的表，对于使用视图的用户来说基本上是透明的。视图并不在数据库中实际存在，行和列数据来自定义视图的查询中使用的表，并且是在使用视图时动态生成的。<br>视图相对普通表优势：</p>
+<ol>
+<li>简单，使用视图的用户完全不用关心后面对应的表的结构、关联条件和筛选条件，对用户来说是已经是过滤好的符合条件的结果集。</li>
+<li>安全，使用视图的用户只能访问被允许查询的结果集，对表的权限管理并不能限制到某个行某个列，但是通过视图就可以简单地实现。</li>
+<li>数据独立，视图的结构确定了，可以屏蔽表结构变化对用户的影响，源表增加列对视图无影响；源表修改列名，则可以通过修改视图来解决，不会造成对访问者的影响。</li>
+</ol>
+<h2 id="视图操作"><a href="#视图操作" class="headerlink" title="视图操作"></a>视图操作</h2><h3 id="创建、修改视图"><a href="#创建、修改视图" class="headerlink" title="创建、修改视图"></a>创建、修改视图</h3><p>创建视图需要有CREATE VIEW的权限，对查询涉及的列有SELECT权限。<br>使用CREATE OR REPLACE 或 ALTER修改视图，需要该视图的DROP权限。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span></span><br><span class="line">    [<span class="keyword">OR</span> <span class="keyword">REPLACE</span>]</span><br><span class="line">    [ALGORITHM = &#123;UNDEFINED | <span class="keyword">MERGE</span> | TEMPTABLE&#125;]</span><br><span class="line">    [DEFINER = &#123; <span class="keyword">user</span> | <span class="keyword">CURRENT_USER</span> &#125;]</span><br><span class="line">    [<span class="keyword">SQL</span> <span class="keyword">SECURITY</span> &#123; DEFINER | INVOKER &#125;]</span><br><span class="line">    <span class="keyword">VIEW</span> view_name [(column_list)]</span><br><span class="line">    <span class="keyword">AS</span> select_statement</span><br><span class="line">    [<span class="keyword">WITH</span> [<span class="keyword">CASCADED</span> | <span class="keyword">LOCAL</span>] <span class="keyword">CHECK</span> <span class="keyword">OPTION</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">ALTER</span></span><br><span class="line">    [ALGORITHM = &#123;UNDEFINED | <span class="keyword">MERGE</span> | TEMPTABLE&#125;]</span><br><span class="line">    [DEFINER = &#123; <span class="keyword">user</span> | <span class="keyword">CURRENT_USER</span> &#125;]</span><br><span class="line">    [<span class="keyword">SQL</span> <span class="keyword">SECURITY</span> &#123; DEFINER | INVOKER &#125;]</span><br><span class="line">    <span class="keyword">VIEW</span> view_name [(column_list)]</span><br><span class="line">    <span class="keyword">AS</span> select_statement</span><br><span class="line">    [<span class="keyword">WITH</span> [<span class="keyword">CASCADED</span> | <span class="keyword">LOCAL</span>] <span class="keyword">CHECK</span> <span class="keyword">OPTION</span>]</span><br></pre></td></tr></table></figure>
+<p>视图的可更新性和视图的定义有关系，以下类型视图是不可更新的：</p>
+<ol>
+<li>包含一下关键字的SQL语句：聚合函数(SUM、MIN、MAX、COUNT等)、DISTINCT、GROUP BY、HAVING、UNION或者UNION NULL</li>
+<li>常量视图</li>
+<li>SELECT中包含子查询</li>
+<li>JION</li>
+<li>FROM一个不能更新的视图</li>
+<li>WHERE子句的子查询引用了FROM子句中的表</li>
+</ol>
+<p>[WITH [CASCADED | LOCAL] CHECK OPTION] 决定是否允许更新数据使记录不再满足视图的条件。<br>LOCAL只要满足本视图的条件就可更新。<br>CASCADED必须满足所有针对该视图的所有视图的条件才尅更新。<br>如果没有明确指定LOCAL或者CASCADED则默认为CASCADED</p>
+<h3 id="删除视图"><a href="#删除视图" class="headerlink" title="删除视图"></a>删除视图</h3><p>有视图的DROP权限可一次删除一个或多个视图<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">VIEW</span> [<span class="keyword">IF</span> <span class="keyword">EXISTS</span>] view_name [, view_name] ... [RESTRICT|<span class="keyword">CASCADE</span>];</span><br></pre></td></tr></table></figure></p>
+<h3 id="查看视图定义"><a href="#查看视图定义" class="headerlink" title="查看视图定义"></a>查看视图定义</h3><ol>
+<li>show tables; 查看表名也会展示视图名</li>
+<li>show table status [from db_name][like ‘pattern’]; 查看表状态也会展示视图状态</li>
+<li>show create iew view_name; 查看视图定义</li>
+<li>select * from information_schema.views where table_name=view_name; 通过系统表information_schema.views查看视图相关信息</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/26/mysql-6/" rel="prev" title="MySQL 存储引擎">
+      <i class="fa fa-chevron-left"></i> MySQL 存储引擎
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/30/mysql-8/" rel="next" title="MySQL 存储过程和函数 触发器">
+      MySQL 存储过程和函数 触发器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#字符集"><span class="nav-number">1.</span> <span class="nav-text">字符集</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查看MySQL支持的字符集"><span class="nav-number">1.1.</span> <span class="nav-text">查看MySQL支持的字符集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符集设置"><span class="nav-number">1.2.</span> <span class="nav-text">字符集设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器字符集和校对规则"><span class="nav-number">1.2.1.</span> <span class="nav-text">服务器字符集和校对规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库字符集和校对规则"><span class="nav-number">1.2.2.</span> <span class="nav-text">数据库字符集和校对规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#表字符集和校对规则"><span class="nav-number">1.2.3.</span> <span class="nav-text">表字符集和校对规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#列字符集和校对规则"><span class="nav-number">1.2.4.</span> <span class="nav-text">列字符集和校对规则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#连接字符集和校对规则"><span class="nav-number">1.3.</span> <span class="nav-text">连接字符集和校对规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符集修改步骤"><span class="nav-number">1.4.</span> <span class="nav-text">字符集修改步骤</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#索引"><span class="nav-number">2.</span> <span class="nav-text">索引</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#索引概述"><span class="nav-number">2.1.</span> <span class="nav-text">索引概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#索引创建"><span class="nav-number">2.1.1.</span> <span class="nav-text">索引创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除索引"><span class="nav-number">2.1.2.</span> <span class="nav-text">删除索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#显示索引"><span class="nav-number">2.1.3.</span> <span class="nav-text">显示索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计索引原则"><span class="nav-number">2.2.</span> <span class="nav-text">设计索引原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引存储分类"><span class="nav-number">2.3.</span> <span class="nav-text">索引存储分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL如何使用索引"><span class="nav-number">2.4.</span> <span class="nav-text">MySQL如何使用索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL中能够使用索引的经典场景"><span class="nav-number">2.4.1.</span> <span class="nav-text">MySQL中能够使用索引的经典场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL存在索引但不能使用索引的经典场景"><span class="nav-number">2.4.2.</span> <span class="nav-text">MySQL存在索引但不能使用索引的经典场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看索引使用情况"><span class="nav-number">2.5.</span> <span class="nav-text">查看索引使用情况</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#视图"><span class="nav-number">3.</span> <span class="nav-text">视图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#视图简介"><span class="nav-number">3.1.</span> <span class="nav-text">视图简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#视图操作"><span class="nav-number">3.2.</span> <span class="nav-text">视图操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建、修改视图"><span class="nav-number">3.2.1.</span> <span class="nav-text">创建、修改视图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除视图"><span class="nav-number">3.2.2.</span> <span class="nav-text">删除视图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看视图定义"><span class="nav-number">3.2.3.</span> <span class="nav-text">查看视图定义</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

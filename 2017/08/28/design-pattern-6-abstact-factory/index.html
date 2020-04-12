@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+<meta name="keywords" content="设计模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式探秘-6-抽象工厂方法模式">
+<meta property="og:url" content="http://www.casezheng.date/2017/08/28/design-pattern-6-abstact-factory/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.039Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="设计模式探秘-6-抽象工厂方法模式">
+<meta name="twitter:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+<meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/08/28/design-pattern-6-abstact-factory/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>设计模式探秘-6-抽象工厂方法模式 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/08/28/design-pattern-6-abstact-factory/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计模式探秘-6-抽象工厂方法模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-08-28 13:40:00" itemprop="dateCreated datePublished" datetime="2017-08-28T13:40:00+08:00">2017-08-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较</p>
+<h1 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h1><p>抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。</p>
+<h2 id="抽象工厂模式优点"><a href="#抽象工厂模式优点" class="headerlink" title="抽象工厂模式优点"></a>抽象工厂模式优点</h2><ol>
+<li>封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类</li>
+<li>对象间约束关系非公开状态</li>
+</ol>
+<h2 id="抽象工厂模式缺点"><a href="#抽象工厂模式缺点" class="headerlink" title="抽象工厂模式缺点"></a>抽象工厂模式缺点</h2><p>对象扩展困难</p>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式</p>
+<h2 id="抽象工厂模式注意事项"><a href="#抽象工厂模式注意事项" class="headerlink" title="抽象工厂模式注意事项"></a>抽象工厂模式注意事项</h2><p>抽象工厂模式扩展困难时对象横向扩展困难，而纵向扩展是非常容易扩展的。</p>
+<h2 id="抽象工厂模式和工厂模式"><a href="#抽象工厂模式和工厂模式" class="headerlink" title="抽象工厂模式和工厂模式"></a>抽象工厂模式和工厂模式</h2><p>AbstractFactory模式和Factory模式的区别在于AbstractFactory模式是为创建一组（有多类）相关或依赖的对象提供创建接口，而Factory模式是为一类对象提供创建接口或延迟对象的创建到子类中实现。AbstractFactory模式通常使用Factory模式实现。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:right">工厂方法模式</th>
+<th style="text-align:center">抽象工厂模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">针对的是一个产品等级结构</td>
+<td style="text-align:center">针对的是面向多个产品等级结构</td>
+</tr>
+<tr>
+<td style="text-align:right">一个抽象产品类</td>
+<td style="text-align:center">多个抽象产品类</td>
+</tr>
+<tr>
+<td style="text-align:right">可以派生出多个具体产品类</td>
+<td style="text-align:center">每个抽象产品类可以派生出多个具体产品类</td>
+</tr>
+<tr>
+<td style="text-align:right">一个抽象工厂类，可以派生出多个具体工厂类</td>
+<td style="text-align:center">一个抽象工厂类，可以派生出多个具体工厂类</td>
+</tr>
+<tr>
+<td style="text-align:right">每个具体工厂类只能创建一个具体产品类的实例</td>
+<td style="text-align:center">每个具体工厂类可以创建多个具体产品类的实例</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="抽象工厂模式实现"><a href="#抽象工厂模式实现" class="headerlink" title="抽象工厂模式实现"></a>抽象工厂模式实现</h2><p>抽象工厂模式类图<br><img src="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000"></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li>设计模式之禅</li>
+<li>GoF+23种设计模式解析</li>
+<li><a href="http://blog.csdn.net/wyxhd2008/article/details/5597975" target="_blank" rel="noopener">http://blog.csdn.net/wyxhd2008/article/details/5597975</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/设计模式/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/08/26/vim-install/" rel="prev" title="centos7 vim8.0 编译安装">
+      <i class="fa fa-chevron-left"></i> centos7 vim8.0 编译安装
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/08/29/design-pattern-7-template/" rel="next" title="设计模式探秘-7-模板方法模式">
+      设计模式探秘-7-模板方法模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#抽象工厂模式"><span class="nav-number">1.</span> <span class="nav-text">抽象工厂模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象工厂模式优点"><span class="nav-number">1.1.</span> <span class="nav-text">抽象工厂模式优点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象工厂模式缺点"><span class="nav-number">1.2.</span> <span class="nav-text">抽象工厂模式缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景"><span class="nav-number">1.3.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象工厂模式注意事项"><span class="nav-number">1.4.</span> <span class="nav-text">抽象工厂模式注意事项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象工厂模式和工厂模式"><span class="nav-number">1.5.</span> <span class="nav-text">抽象工厂模式和工厂模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象工厂模式实现"><span class="nav-number">1.6.</span> <span class="nav-text">抽象工厂模式实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">2.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

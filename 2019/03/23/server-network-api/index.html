@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
+<meta name="keywords" content="cpp,linux,网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务器开发-网络通信API和注意事项">
+<meta property="og:url" content="http://www.casezheng.date/2019/03/23/server-network-api/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-03-23T13:41:39.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="服务器开发-网络通信API和注意事项">
+<meta name="twitter:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
+
+<link rel="canonical" href="http://www.casezheng.date/2019/03/23/server-network-api/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>服务器开发-网络通信API和注意事项 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2019/03/23/server-network-api/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务器开发-网络通信API和注意事项
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-03-23 21:41:39" itemprop="dateCreated datePublished" datetime="2019-03-23T21:41:39+08:00">2019-03-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/高性能服务器/" itemprop="url" rel="index"><span itemprop="name">高性能服务器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Linux下网络编程常用函数"><a href="#Linux下网络编程常用函数" class="headerlink" title="Linux下网络编程常用函数"></a>Linux下网络编程常用函数</h1><p>需要包含头文件<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br></pre></td></tr></table></figure></p>
+<h2 id="socket"><a href="#socket" class="headerlink" title="socket"></a>socket</h2><p>socket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符<br>成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得<br>常用协议簇 domain</p>
+<ol>
+<li>AF_UNIX 本机通信</li>
+<li>AF_INET IPV4</li>
+<li>AF_INET6 IPV6</li>
+</ol>
+<p>常用协议类型 type</p>
+<ol>
+<li>SOCK_STREAM TCP套接字</li>
+<li>SOCK_DGRAM UDP套接字</li>
+<li>SOCK_RAM 原始套接字</li>
+</ol>
+<p>协议类型的特定类型 protocol 一般置为0即可<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">socket</span><span class="params">(<span class="keyword">int</span> domain, <span class="keyword">int</span> type, <span class="keyword">int</span> protocol)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="fcntl"><a href="#fcntl" class="headerlink" title="fcntl"></a>fcntl</h2><p>fcntl函数针对文件描述符提供各种操作控制以改变已打开文件的各种属性<br>网络编程中主要使用其设置为阻塞和设置为非阻塞功能<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fcntl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> cmd, <span class="keyword">long</span> arg)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置为非阻塞</span></span><br><span class="line"><span class="keyword">int</span> flags = fcntl(sockfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置为阻塞</span></span><br><span class="line"><span class="keyword">int</span> flags = fcntl(sockfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">fcntl(sockfd, F_SETFL, flags &amp; ~O_NONBLOCK);</span><br></pre></td></tr></table></figure></p>
+<h2 id="getsockopt和setsockopt"><a href="#getsockopt和setsockopt" class="headerlink" title="getsockopt和setsockopt"></a>getsockopt和setsockopt</h2><h3 id="getsockopt"><a href="#getsockopt" class="headerlink" title="getsockopt"></a>getsockopt</h3><p>getsockopt()函数用于获取任意类型、任意状态套接口的选项当前值，并把结果存入optval<br>sockfd 套接字文件描述符<br>level 选项定义的层次<br>optname 需获取的套接字选项<br>optval 指向存放所得选项值的缓冲区<br>optlen 指向optval缓冲区的长度值<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getsockopt</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">int</span> level, <span class="keyword">int</span> optname, <span class="keyword">void</span> *optval, <span class="keyword">socklen_t</span> *optlen)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h3 id="setsockopt"><a href="#setsockopt" class="headerlink" title="setsockopt"></a>setsockopt</h3><p>setsockopt()函数用于任意类型、任意状态套接口的设置选项值。<br>sockfd 套接字文件描述符<br>level 选项定义的层次<br>optname 需获取的套接字选项<br>optval 指向存放所得选项值的缓冲区<br>optlen 指向optval缓冲区的长度值<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">setsockopt</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">int</span> level, <span class="keyword">int</span> optname, <span class="keyword">const</span> <span class="keyword">void</span> *optval, <span class="keyword">socklen_t</span> optlen)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h3 id="常用level和选项"><a href="#常用level和选项" class="headerlink" title="常用level和选项"></a>常用level和选项</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">level级别</th>
+<th style="text-align:center">optname选项名</th>
+<th style="text-align:center">选项值数据类型</th>
+<th style="text-align:center">适用函数</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">SOL_SOCKET</td>
+<td style="text-align:center">SO_ERROR</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">getsockopt</td>
+<td style="text-align:left">获取并清除套接字错误</td>
+</tr>
+<tr>
+<td style="text-align:center">SOL_SOCKET</td>
+<td style="text-align:center">SO_REUSEADDR</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">SOL_SOCKET</td>
+<td style="text-align:center">SO_REUSEPORT</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">SOL_SOCKET</td>
+<td style="text-align:center">SO_KEEPALIVE</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">SOL_SOCKET</td>
+<td style="text-align:center">SO_LINGER</td>
+<td style="text-align:center">struct linger</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">IPPROTO_TCP</td>
+<td style="text-align:center">TCP_DEFER_ACCEPT</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:center">IPPROTO_TCP</td>
+<td style="text-align:center">TCP_NODELAY</td>
+<td style="text-align:center">int</td>
+<td style="text-align:center">setsockopt</td>
+<td style="text-align:left">禁用Nagle算法</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="bind"><a href="#bind" class="headerlink" title="bind"></a>bind</h2><p>bind函数绑定套接字和地址, 成功返回0, 失败返回-1, 错误原因可以通过errno获得 地址为32位的IPv4地址或128位的IPv6地址与16位的TCP或UDP端口的组合<br>sockfd 套接字文件描述符 通过socket函数获得<br>addr 指向特定协议的地址结构的指针 绑定0.0.0.0则绑定该机器上任意网卡地址,绑定127.0.0.1则只会绑定本地回环地址127.0.0.1<br>addrlen 该地址结构的长度<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sockaddr</span> &#123;</span></span><br><span class="line">   <span class="keyword">sa_family_t</span> sa_family;</span><br><span class="line">   <span class="keyword">char</span>        sa_data[<span class="number">14</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">bind</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">const</span> struct sockaddr *addr, <span class="keyword">socklen_t</span> addrlen)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//示例</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">addr</span>;</span></span><br><span class="line"><span class="comment">/*设置sockaddr结构*/</span></span><br><span class="line">addr.sin_family=AF_INET;</span><br><span class="line">addr.sin_port=htons(SERVPORT);</span><br><span class="line">addr.sin_addr.s_addr=INADDR_ANY;</span><br><span class="line">bzero(&amp;(addr.sin_zero), <span class="number">8</span>);</span><br><span class="line">bind(sockfd,(struct sockaddr*)&amp;addr, <span class="keyword">sizeof</span>(struct sockaddr))</span><br></pre></td></tr></table></figure></p>
+<h2 id="listen"><a href="#listen" class="headerlink" title="listen"></a>listen</h2><p>listen监听函数,将一个套接字转化为监听套接字<br>sockfd 套接字文件描述符<br>backlog 连接建立完成的队列的长度<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">listen</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">int</span> backlog)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="accept"><a href="#accept" class="headerlink" title="accept"></a>accept</h2><p>accept接受连接 成功则返回建立了连接的套接字文件描述符 失败返回-1 错误原因通过查看errno获得<br>当监听的sockfd被设置为非阻塞而errno为<code>EWOULDBLOCK</code>、<code>ECONNABORTED</code>、<code>EPROTO</code>、<code>EINTR</code>时需要忽略错误<br>sockfd 套接字文件描述符<br>addr 用来保存发起连接的主机的IP和端口号<br>addrlen addr指向的长度<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">accept</span><span class="params">(<span class="keyword">int</span> sockfd, struct sockaddr *addr, <span class="keyword">socklen_t</span> *addrlen)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="connect"><a href="#connect" class="headerlink" title="connect"></a>connect</h2><p>connect用于主动建立一个连接 成功返回0 失败返回-1 错误原因可以通过errno获得<br>当发起连接的sockfd被设置为非阻塞而errno为<code>EINPROGRESS</code>表示连接操作正在进行中,但是仍未完成.然后将sockfd的加入到I/O复用中,监听sockfd是否可读或者可写,如果只可写说明连接成功,如果即可读又可写分为两种情况:</p>
+<ol>
+<li>sockfd连接错误</li>
+<li>sockfd连接成功,socket读缓冲区得到了远程主机发送的数据</li>
+</ol>
+<p>通过<code>getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void*)&amp;e, &amp;elen)</code>获取sockfd错误信息 如果e为0表示连接成功 否则连接失败<br>sockfd 套接字文件描述符<br>addr 指向特定协议的地址结构的指针<br>addrlen 该地址结构的长度<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">connect</span><span class="params">(<span class="keyword">int</span> sockfd, <span class="keyword">const</span> struct sockaddr *addr, <span class="keyword">socklen_t</span> addrlen)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h1 id="如何将一个sockfd设为非阻塞"><a href="#如何将一个sockfd设为非阻塞" class="headerlink" title="如何将一个sockfd设为非阻塞"></a>如何将一个sockfd设为非阻塞</h1><ol>
+<li><p>调用socket函数时设置</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> s = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>accept改为调用accept4设置最后的标记位为SOCK_NONBLOCK</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">accept</span><span class="params">(<span class="keyword">int</span> sockfd, struct sockaddr *addr, <span class="keyword">socklen_t</span> *addrlen)</span></span>; </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">accept4</span><span class="params">(<span class="keyword">int</span> sockfd, struct sockaddr *addr, <span class="keyword">socklen_t</span> *addrlen, <span class="keyword">int</span> flags)</span></span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>调用fcntl或ioctl函数(常用fcntl)</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, <span class="number">0</span>) | O_NONBLOCK);</span><br><span class="line">ioctl(sockfd, FIONBIO, <span class="number">1</span>);  <span class="comment">//1:非阻塞 0:阻塞</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="connect非阻塞代码编写"><a href="#connect非阻塞代码编写" class="headerlink" title="connect非阻塞代码编写"></a>connect非阻塞代码编写</h1><p>connect能立即连接成功,则返回0;如果连接操作正在进行中或连接出错,则返回-1,连接操作正在进行中可通过<code>errno</code>为<code>EINPROGRESS</code>或<code>EINTR</code>(中断)判断.然后将该sockfd放入I/O复用中进行,监听sockfd可读</p>
+<h1 id="非阻塞socket正确收发数据"><a href="#非阻塞socket正确收发数据" class="headerlink" title="非阻塞socket正确收发数据"></a>非阻塞socket正确收发数据</h1><p>非阻塞情况下recv数据</p>
+<ol>
+<li>返回值大于0表示接收数据的大小</li>
+<li>返回值等于0表示对端关闭连接</li>
+<li>返回值为-1,<code>errno</code>为<code>EWOULDBLOCK</code>或<code>EINTR</code>时接收完毕</li>
+</ol>
+<p>在epoll的ET(边缘触发)模式下,一定要循环收取数据,直到收取干净为止.</p>
+<p>非阻塞情况下send数据</p>
+<ol>
+<li>返回值大于0表示发送数据的大小</li>
+<li>返回值等于0表示对端关闭连接</li>
+<li>返回值为-1,<code>errno</code>为<code>EWOULDBLOCK</code>表示TCP窗口容量不足,<code>errno</code>为<code>EINTR</code>表示中断,继续发送数据</li>
+</ol>
+<h1 id="丢包-粘包-包不完整"><a href="#丢包-粘包-包不完整" class="headerlink" title="丢包/粘包/包不完整"></a>丢包/粘包/包不完整</h1><p>丢包:TCP是可靠的,不会丢包,也不存在包顺序错乱的问题<br>粘包:收取一个固定大小的包头信息,根据包头里面指定的包体大小收取包体大小<br>包不完整:循环接受数据,当发现包头或包体大小不够,数目数据不完整,继续等待新的数据到来</p>
+<h1 id="Nagle算法"><a href="#Nagle算法" class="headerlink" title="Nagle算法"></a>Nagle算法</h1><p>nagle是操作系统网络通信层的一种发送数据包的机制.开启nagle算法后,一次放入网卡缓冲区的数据较小时,可能不会立即发出,只有当多次send或write之后,网卡缓冲区数据足够多时,才一次性发出.操作系统利用nagle算法减少网络通信次数,提供网络利用率,对于实时性要求比较高的应用,可以禁用nagle算法.<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">long</span> noDelay = <span class="number">1</span>;</span><br><span class="line">setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,(LPSTR)&amp;noDelay, <span class="keyword">sizeof</span>(<span class="keyword">long</span>));     <span class="comment">//noDelay为1禁用nagle算法，为0启用nagle算法</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="SO-REUSEADDR和SO-REUSEPORT"><a href="#SO-REUSEADDR和SO-REUSEPORT" class="headerlink" title="SO_REUSEADDR和SO_REUSEPORT"></a>SO_REUSEADDR和SO_REUSEPORT</h1><p>套接字由相关五元组组成:协议、本地地址、本地端口、远程地址、远程端口<br>解决一个socket被系统回收以后,在一个最大存活期(MSL，大约2分钟)内,该socket绑定的地址和端口号不能被重复利用的情况</p>
+<h1 id="心跳包"><a href="#心跳包" class="headerlink" title="心跳包"></a>心跳包</h1><p>TCP协议的keepalive机制(开启<code>SO_KEEPALIVE</code>选项)<br>应用层心跳:</p>
+<ol>
+<li>定时发送心跳包(只在两端没有数据往来的N秒后才需要发送,减轻服务器压力,减少网络通信流量)</li>
+<li>由客户端发给服务端</li>
+</ol>
+<h1 id="重连"><a href="#重连" class="headerlink" title="重连"></a>重连</h1><h1 id="错误码EINTR"><a href="#错误码EINTR" class="headerlink" title="错误码EINTR"></a>错误码EINTR</h1><p>Linux网络函数(connect/send/recv/epoll_wait等)在出错时一定要检查错误是不是EINTR,如果是EINTR,操作其实只是被信号中断了,函数调用并没有出错.</p>
+<h1 id="减少系统调用"><a href="#减少系统调用" class="headerlink" title="减少系统调用"></a>减少系统调用</h1><p>系统调用伴随着从用户空间到内核空间的切换.</p>
+<h1 id="忽略SIGPIPE信息"><a href="#忽略SIGPIPE信息" class="headerlink" title="忽略SIGPIPE信息"></a>忽略SIGPIPE信息</h1><p>对一个已经收到FIN包的socket调用read方法,如果接收缓冲已空,则返回0,即连接已关闭.对一个已经收到FIN包的socket第一次调用write方法时,如果发送缓冲没问题,则write调用会返回写入的数据量,同时进行数据发送.但是发送出去的报文会导致对端发回RST报文.因为对端的socket已经调用了close进行了完全关闭,已经处于既不发送,也不接收数据的状态.所以第二次调用write方法时(假设在收到RST之后)会生成SIGPIPE信号,导致进程退出.<br>通俗点:对一个对端已经关闭的socket调用两次write,第二次将生成SIGPIPE信号.在写管道时,读进程已经终止,也将产生SIGPIPE信号<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">signal(SIGPIPE, SIG_IGN);       <span class="comment">//屏蔽SIGPIPE信号后,第二次调用write方法时,会返回-1,并设置errno为EPIPE.</span></span><br></pre></td></tr></table></figure></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/网络/" rel="tag"># 网络</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/03/15/data-structure/" rel="prev" title="数据结构">
+      <i class="fa fa-chevron-left"></i> 数据结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/03/23/server-framework/" rel="next" title="服务器开发-框架与架构概述">
+      服务器开发-框架与架构概述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux下网络编程常用函数"><span class="nav-number">1.</span> <span class="nav-text">Linux下网络编程常用函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#socket"><span class="nav-number">1.1.</span> <span class="nav-text">socket</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fcntl"><span class="nav-number">1.2.</span> <span class="nav-text">fcntl</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getsockopt和setsockopt"><span class="nav-number">1.3.</span> <span class="nav-text">getsockopt和setsockopt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#getsockopt"><span class="nav-number">1.3.1.</span> <span class="nav-text">getsockopt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#setsockopt"><span class="nav-number">1.3.2.</span> <span class="nav-text">setsockopt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用level和选项"><span class="nav-number">1.3.3.</span> <span class="nav-text">常用level和选项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bind"><span class="nav-number">1.4.</span> <span class="nav-text">bind</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#listen"><span class="nav-number">1.5.</span> <span class="nav-text">listen</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#accept"><span class="nav-number">1.6.</span> <span class="nav-text">accept</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#connect"><span class="nav-number">1.7.</span> <span class="nav-text">connect</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何将一个sockfd设为非阻塞"><span class="nav-number">2.</span> <span class="nav-text">如何将一个sockfd设为非阻塞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#connect非阻塞代码编写"><span class="nav-number">3.</span> <span class="nav-text">connect非阻塞代码编写</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#非阻塞socket正确收发数据"><span class="nav-number">4.</span> <span class="nav-text">非阻塞socket正确收发数据</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#丢包-粘包-包不完整"><span class="nav-number">5.</span> <span class="nav-text">丢包/粘包/包不完整</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Nagle算法"><span class="nav-number">6.</span> <span class="nav-text">Nagle算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SO-REUSEADDR和SO-REUSEPORT"><span class="nav-number">7.</span> <span class="nav-text">SO_REUSEADDR和SO_REUSEPORT</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#心跳包"><span class="nav-number">8.</span> <span class="nav-text">心跳包</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重连"><span class="nav-number">9.</span> <span class="nav-text">重连</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#错误码EINTR"><span class="nav-number">10.</span> <span class="nav-text">错误码EINTR</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#减少系统调用"><span class="nav-number">11.</span> <span class="nav-text">减少系统调用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#忽略SIGPIPE信息"><span class="nav-number">12.</span> <span class="nav-text">忽略SIGPIPE信息</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

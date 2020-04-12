@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="框架1. 网络通信 客户端连接检测 接受客户端连接 客户端数据检测 客户端数据接收 发送数据给客户端  连接异常检测 连接的关闭 客户端连接的发起  2. I/O复用select/poll/epoll 3. 检测网络事件4. 连接关闭(主动/被动)被动关闭连接:检测到连接异常事件(例如:EPOLLERR)或对端关闭连接(send或recv返回0)主动关闭连接:主动调用close或shutdown">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务器开发-框架与架构概述">
+<meta property="og:url" content="http://www.casezheng.date/2019/03/23/server-framework/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="框架1. 网络通信 客户端连接检测 接受客户端连接 客户端数据检测 客户端数据接收 发送数据给客户端  连接异常检测 连接的关闭 客户端连接的发起  2. I/O复用select/poll/epoll 3. 检测网络事件4. 连接关闭(主动/被动)被动关闭连接:检测到连接异常事件(例如:EPOLLERR)或对端关闭连接(send或recv返回0)主动关闭连接:主动调用close或shutdown">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-03-23T13:58:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="服务器开发-框架与架构概述">
+<meta name="twitter:description" content="框架1. 网络通信 客户端连接检测 接受客户端连接 客户端数据检测 客户端数据接收 发送数据给客户端  连接异常检测 连接的关闭 客户端连接的发起  2. I/O复用select/poll/epoll 3. 检测网络事件4. 连接关闭(主动/被动)被动关闭连接:检测到连接异常事件(例如:EPOLLERR)或对端关闭连接(send或recv返回0)主动关闭连接:主动调用close或shutdown">
+
+<link rel="canonical" href="http://www.casezheng.date/2019/03/23/server-framework/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>服务器开发-框架与架构概述 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2019/03/23/server-framework/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务器开发-框架与架构概述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-03-23 21:58:54" itemprop="dateCreated datePublished" datetime="2019-03-23T21:58:54+08:00">2019-03-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/高性能服务器/" itemprop="url" rel="index"><span itemprop="name">高性能服务器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="框架"><a href="#框架" class="headerlink" title="框架"></a>框架</h1><h2 id="1-网络通信"><a href="#1-网络通信" class="headerlink" title="1. 网络通信"></a>1. 网络通信</h2><ol>
+<li>客户端连接检测</li>
+<li>接受客户端连接</li>
+<li>客户端数据检测</li>
+<li>客户端数据接收</li>
+<li>发送数据给客户端 </li>
+<li>连接异常检测</li>
+<li>连接的关闭</li>
+<li>客户端连接的发起</li>
+</ol>
+<h2 id="2-I-O复用"><a href="#2-I-O复用" class="headerlink" title="2. I/O复用"></a>2. I/O复用</h2><p>select/poll/epoll</p>
+<h2 id="3-检测网络事件"><a href="#3-检测网络事件" class="headerlink" title="3. 检测网络事件"></a>3. 检测网络事件</h2><h2 id="4-连接关闭-主动-被动"><a href="#4-连接关闭-主动-被动" class="headerlink" title="4. 连接关闭(主动/被动)"></a>4. 连接关闭(主动/被动)</h2><p>被动关闭连接:检测到连接异常事件(例如:EPOLLERR)或对端关闭连接(send或recv返回0)<br>主动关闭连接:主动调用close或shutdown</p>
+<h2 id="5-发送缓冲区-接收缓冲区"><a href="#5-发送缓冲区-接收缓冲区" class="headerlink" title="5. 发送缓冲区/接收缓冲区"></a>5. 发送缓冲区/接收缓冲区</h2><p>发送缓冲区和接收缓冲区每一个socket连接都存在一个,应该可以动态增长,按需分配</p>
+<h2 id="6-协议设计"><a href="#6-协议设计" class="headerlink" title="6. 协议设计"></a>6. 协议设计</h2><ol>
+<li>Json<ol>
+<li>优点<ol>
+<li>跨语言</li>
+<li>文本协议 可读性好</li>
+<li>简单易用,开发成本低</li>
+</ol>
+</li>
+<li>缺点<ol>
+<li>体积大</li>
+<li>无版本检查,自己做兼容</li>
+<li>数据解析复杂</li>
+<li>文本格式,安全性差</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>Protobuf 二进制协议 可读性差 <ol>
+<li>优点<ol>
+<li>跨语言,自定义数据结构</li>
+<li>字段被编号,新添加字段不影响老结构,向后兼容</li>
+<li>简单易用,自动生成代码</li>
+<li>二进制消息,效率高,性能好,安全性高</li>
+</ol>
+</li>
+<li>缺点<ol>
+<li>二进制格式,可读性差</li>
+<li>对象冗余,字段很多,生成类较大,占用空间</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="7-服务器程序结构组织"><a href="#7-服务器程序结构组织" class="headerlink" title="7. 服务器程序结构组织"></a>7. 服务器程序结构组织</h2><h2 id="8-多进程-多线程-协程"><a href="#8-多进程-多线程-协程" class="headerlink" title="8. 多进程/多线程/协程"></a>8. 多进程/多线程/协程</h2><h2 id="9-内存管理"><a href="#9-内存管理" class="headerlink" title="9. 内存管理"></a>9. 内存管理</h2><ol>
+<li>内存分片和内存碎片 gcc默认内存管理器ptmalloc</li>
+<li>更好的内存管理器tcmalloc<ol>
+<li>tcmalloc在链接时替代标准libc中的malloc和free,不改动代码的情况下解决内存碎片问题</li>
+<li>tcmalloc的malloc和free函数速度快</li>
+<li>tcmalloc优化了小对象存储</li>
+<li>tcmalloc对多线程做了优化</li>
+</ol>
+</li>
+<li>内存池(自己管理内存)<h2 id="10-连接池"><a href="#10-连接池" class="headerlink" title="10. 连接池"></a>10. 连接池</h2><h2 id="11-线程池"><a href="#11-线程池" class="headerlink" title="11. 线程池"></a>11. 线程池</h2></li>
+</ol>
+<h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><h2 id="1-接入层"><a href="#1-接入层" class="headerlink" title="1. 接入层"></a>1. 接入层</h2><h2 id="2-负载均衡"><a href="#2-负载均衡" class="headerlink" title="2. 负载均衡"></a>2. 负载均衡</h2><ol>
+<li>求余法</li>
+<li>一致性哈希</li>
+</ol>
+<h2 id="3-缓存"><a href="#3-缓存" class="headerlink" title="3. 缓存"></a>3. 缓存</h2><h2 id="4-数据库"><a href="#4-数据库" class="headerlink" title="4. 数据库"></a>4. 数据库</h2><h2 id="5-日志上报"><a href="#5-日志上报" class="headerlink" title="5. 日志上报"></a>5. 日志上报</h2><h2 id="6-名字服务"><a href="#6-名字服务" class="headerlink" title="6. 名字服务"></a>6. 名字服务</h2><h2 id="7-配置服务"><a href="#7-配置服务" class="headerlink" title="7. 配置服务"></a>7. 配置服务</h2><h2 id="8-队列-解耦合"><a href="#8-队列-解耦合" class="headerlink" title="8. 队列(解耦合)"></a>8. 队列(解耦合)</h2><h1 id="开源组件"><a href="#开源组件" class="headerlink" title="开源组件"></a>开源组件</h1><h2 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h2><p>zooKeeper是一个分布式的，开放源码的分布式应用程序协调服务,是hadoop和hbase的重要组件,为分布式应用提供一致性服务.提供java和c的客户端.</p>
+<h2 id="etcd"><a href="#etcd" class="headerlink" title="etcd"></a>etcd</h2><p>etcd是一个开源的、分布式的键值对数据存储系统，提供共享配置、服务的注册和发现。etcd相比zookeeper是轻量级的.etcd基于HTTP+JSON的API易于使用<br>raft算法,保证数据一致性,协议简单,容易实现</p>
+<h2 id="rabbitmq"><a href="#rabbitmq" class="headerlink" title="rabbitmq"></a>rabbitmq</h2><h2 id="kafka"><a href="#kafka" class="headerlink" title="kafka"></a>kafka</h2><h2 id="mysql"><a href="#mysql" class="headerlink" title="mysql"></a>mysql</h2><h2 id="redis"><a href="#redis" class="headerlink" title="redis"></a>redis</h2><h2 id="nginx"><a href="#nginx" class="headerlink" title="nginx"></a>nginx</h2><h2 id="tcmalloc"><a href="#tcmalloc" class="headerlink" title="tcmalloc"></a>tcmalloc</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/03/23/server-network-api/" rel="prev" title="服务器开发-网络通信API和注意事项">
+      <i class="fa fa-chevron-left"></i> 服务器开发-网络通信API和注意事项
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/04/01/overflow-detection-value/" rel="next" title="数值计算溢出判断">
+      数值计算溢出判断 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#框架"><span class="nav-number">1.</span> <span class="nav-text">框架</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-网络通信"><span class="nav-number">1.1.</span> <span class="nav-text">1. 网络通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-I-O复用"><span class="nav-number">1.2.</span> <span class="nav-text">2. I/O复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-检测网络事件"><span class="nav-number">1.3.</span> <span class="nav-text">3. 检测网络事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-连接关闭-主动-被动"><span class="nav-number">1.4.</span> <span class="nav-text">4. 连接关闭(主动/被动)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-发送缓冲区-接收缓冲区"><span class="nav-number">1.5.</span> <span class="nav-text">5. 发送缓冲区/接收缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-协议设计"><span class="nav-number">1.6.</span> <span class="nav-text">6. 协议设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-服务器程序结构组织"><span class="nav-number">1.7.</span> <span class="nav-text">7. 服务器程序结构组织</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-多进程-多线程-协程"><span class="nav-number">1.8.</span> <span class="nav-text">8. 多进程/多线程/协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-内存管理"><span class="nav-number">1.9.</span> <span class="nav-text">9. 内存管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-连接池"><span class="nav-number">1.10.</span> <span class="nav-text">10. 连接池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-线程池"><span class="nav-number">1.11.</span> <span class="nav-text">11. 线程池</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#架构"><span class="nav-number">2.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-接入层"><span class="nav-number">2.1.</span> <span class="nav-text">1. 接入层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-负载均衡"><span class="nav-number">2.2.</span> <span class="nav-text">2. 负载均衡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-缓存"><span class="nav-number">2.3.</span> <span class="nav-text">3. 缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-数据库"><span class="nav-number">2.4.</span> <span class="nav-text">4. 数据库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-日志上报"><span class="nav-number">2.5.</span> <span class="nav-text">5. 日志上报</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-名字服务"><span class="nav-number">2.6.</span> <span class="nav-text">6. 名字服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-配置服务"><span class="nav-number">2.7.</span> <span class="nav-text">7. 配置服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-队列-解耦合"><span class="nav-number">2.8.</span> <span class="nav-text">8. 队列(解耦合)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#开源组件"><span class="nav-number">3.</span> <span class="nav-text">开源组件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#zookeeper"><span class="nav-number">3.1.</span> <span class="nav-text">zookeeper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#etcd"><span class="nav-number">3.2.</span> <span class="nav-text">etcd</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rabbitmq"><span class="nav-number">3.3.</span> <span class="nav-text">rabbitmq</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka"><span class="nav-number">3.4.</span> <span class="nav-text">kafka</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysql"><span class="nav-number">3.5.</span> <span class="nav-text">mysql</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis"><span class="nav-number">3.6.</span> <span class="nav-text">redis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nginx"><span class="nav-number">3.7.</span> <span class="nav-text">nginx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcmalloc"><span class="nav-number">3.8.</span> <span class="nav-text">tcmalloc</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="shared_ptrshared_ptr包装new操作符从堆上分配的动态对象，实现引用计数型的智能指针，可以被自由地拷贝和赋值，在任意地方共享它，当引用计数未0时，删除被包装的动态分配对象，可以被安全地放在标准容器中。 1. 类摘要 2. 操作函数shared_ptr用来管理new动态分配对象，重载了*和-&amp;gt;操作符模拟原始指针行为，提供隐式bool类型转化判断指针有效性，get()获得原始指">
+<meta name="keywords" content="boost,cpp,智能指针">
+<meta property="og:type" content="article">
+<meta property="og:title" content="boost 库 内存管理 shared_ptr shared_array 3">
+<meta property="og:url" content="http://www.casezheng.date/2017/06/05/boost-shared-ptr/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="shared_ptrshared_ptr包装new操作符从堆上分配的动态对象，实现引用计数型的智能指针，可以被自由地拷贝和赋值，在任意地方共享它，当引用计数未0时，删除被包装的动态分配对象，可以被安全地放在标准容器中。 1. 类摘要 2. 操作函数shared_ptr用来管理new动态分配对象，重载了*和-&amp;gt;操作符模拟原始指针行为，提供隐式bool类型转化判断指针有效性，get()获得原始指">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/shared_ptr_class_summary.jpg">
+<meta property="og:image" content="http://www.casezheng.date/Picture/shared_array_class_summary.jpg">
+<meta property="og:updated_time" content="2020-04-12T04:56:35.909Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="boost 库 内存管理 shared_ptr shared_array 3">
+<meta name="twitter:description" content="shared_ptrshared_ptr包装new操作符从堆上分配的动态对象，实现引用计数型的智能指针，可以被自由地拷贝和赋值，在任意地方共享它，当引用计数未0时，删除被包装的动态分配对象，可以被安全地放在标准容器中。 1. 类摘要 2. 操作函数shared_ptr用来管理new动态分配对象，重载了*和-&amp;gt;操作符模拟原始指针行为，提供隐式bool类型转化判断指针有效性，get()获得原始指">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/shared_ptr_class_summary.jpg">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/06/05/boost-shared-ptr/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>boost 库 内存管理 shared_ptr shared_array 3 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/05/boost-shared-ptr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          boost 库 内存管理 shared_ptr shared_array 3
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-05 14:52:00" itemprop="dateCreated datePublished" datetime="2017-06-05T14:52:00+08:00">2017-06-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cpp/" itemprop="url" rel="index"><span itemprop="name">cpp</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="shared-ptr"><a href="#shared-ptr" class="headerlink" title="shared_ptr"></a>shared_ptr</h1><p>shared_ptr包装new操作符从堆上分配的动态对象，实现引用计数型的智能指针，可以被自由地拷贝和赋值，在任意地方共享它，当引用计数未0时，删除被包装的动态分配对象，可以被安全地放在标准容器中。</p>
+<h2 id="1-类摘要"><a href="#1-类摘要" class="headerlink" title="1. 类摘要"></a>1. 类摘要</h2><p><img src="/Picture/shared_ptr_class_summary.jpg" alt="shared_ptr类摘要"></p>
+<h2 id="2-操作函数"><a href="#2-操作函数" class="headerlink" title="2. 操作函数"></a>2. 操作函数</h2><p>shared_ptr用来管理new动态分配对象，重载了*和-&gt;操作符模拟原始指针行为，提供隐式bool类型转化判断指针有效性，get()获得原始指针，未提供指针算数操作。<br>shared_ptr有各种形式的构造函数</p>
+<ul>
+<li>无参的shared_ptr()创建持有空指针的shared_ptr。</li>
+<li><code>shared_ptr(Y *)</code>获得指向类型T的指针p的管理权，同时引用计数置为1。要求Y类型必须能够转化为T类型。</li>
+<li><code>shared_ptr(shared_ptr const &amp;r)</code>从另一个shared_ptr获得指针的管理权，同时引用计数加1，两个shared_ptr共享一个指针的管理权。</li>
+<li><code>shared_ptr(std::auto_ptr&lt;Y&gt; &amp;r)</code>从一个<code>auto_ptr</code>获得指针管理权，引用计数置为1，<code>auto_ptr</code>自动失去管理权。</li>
+<li>operator=赋值操作符从另一个shared_ptr或者<code>auto_ptr</code>获得指针管理权。</li>
+<li><code>shared_ptr(Y *p, D d)</code>，参数d指定析构时的定制删除器，而不是简单的delete。</li>
+</ul>
+<p>shared_ptr的<code>reset()</code>函数将引用计数减1，停止对指针的共享，除非引用计数为0，否则不会发生删除操作。带参数的<code>reset()</code>对原指针引用计数减1，同时改为管理另一指针。<br>shared_ptr中<code>unique()</code>和<code>use_count()</code>检查引用计数，<code>unique()</code>在shared_ptr是指针的唯一拥有者时返回true，<code>use_count()</code>返回当前指针的引用计数。<code>use_count()</code>不提供高效率的操作，有时候不可用(极少数情况)。<code>unique()</code>总是可用的，而且速度比<code>use_count()==1</code>速度更快。<br>shared_ptr支持比较运算，等于、不等于、小于，基于内部保存的指针，shared_ptr可以被用于标准关联容器(set和map)。<br>shared_ptr指针转化<code>static_pointer_cast&lt;T&gt;()</code>、<code>const_pointer_cast&lt;T&gt;()</code>、<code>dynamic_pointer_cast&lt;T&gt;()</code>，和标准的转型操作<code>static_cast&lt;T&gt;</code>、<code>const_cast&lt;T&gt;</code>、<code>dynamic_cast&lt;T&gt;</code>类似，但返回的是转型后的shared_ptr。<br>shared_ptr支持流输出操作符<code>operator&lt;&lt;</code>，输出内部的指针值，方便调试。<br>shared_ptr提供基本的线程安全保证。</p>
+<h2 id="3-用法"><a href="#3-用法" class="headerlink" title="3. 用法"></a>3. 用法</h2><h2 id="4-工厂函数"><a href="#4-工厂函数" class="headerlink" title="4. 工厂函数"></a>4. 工厂函数</h2><p>shared_ptr在<code>&lt;boost/make_shared.hpp&gt;</code>中提供了自由工厂函数<code>make_shared&lt;T&gt;()</code>，消除显示new的调用。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>, <span class="title">class</span>... <span class="title">Argss</span>&gt;</span></span><br><span class="line"><span class="class">    <span class="title">shared_ptr</span>&lt;T&gt; <span class="title">make_shared</span>(<span class="title">Args</span> &amp;&amp; .. <span class="title">args</span>);</span></span><br></pre></td></tr></table></figure></p>
+<p><code>make_shared()</code>函数最多可以接受10个参数，传递给类型T的构造函数，<code>创建shared_ptr&lt;T&gt;</code>的对象并返回。<code>make_shared()</code>函数比直接创建shared_ptr对象的方式快且高效，因为它内部仅分配一次内存。<br><code>allocate_shared()</code>比<code>make_shared()</code>多接受一个定制的内存分配器类型参数，其它方面相同。</p>
+<h2 id="5-应用于标准容器"><a href="#5-应用于标准容器" class="headerlink" title="5. 应用于标准容器"></a>5. 应用于标准容器</h2><ul>
+<li>将容器作为shared_ptr管理的对象。</li>
+<li>将shared_ptr作为容器的元素。</li>
+</ul>
+<h2 id="6-应用于桥接模式"><a href="#6-应用于桥接模式" class="headerlink" title="6. 应用于桥接模式"></a>6. 应用于桥接模式</h2><p>桥接模式(brideg)是一种结构型设计模式，把类的具体实现细节对用于隐藏起来，达到类之间的最小耦合关系。可以将头文件的依赖关系降到最小，减少编译事件，而且可以不使用虚函数实现多态。</p>
+<h2 id="7-应用于工厂模式"><a href="#7-应用于工厂模式" class="headerlink" title="7. 应用于工厂模式"></a>7. 应用于工厂模式</h2><p>工厂模式是一种创建性设计模式，包装new操作符的使用，让对象的创建集中在工程类或者工厂函数中，更容易的适应变化。</p>
+<h2 id="8-定制删除器"><a href="#8-定制删除器" class="headerlink" title="8. 定制删除器"></a>8. 定制删除器</h2><p><code>shared_ptr(Y *p, D d)</code>第一个参数是被管理的指针，第二个删除器参数d则告诉shared_ptr在析构时不是使用delete操作指针p，而是要用d来操作，即把delte p换成d(p)。删除器d可以是函数对象、函数指针，只要能够像函数一样调用使得d(p)成立即可。对删除器的要求是必须是可拷贝的，不能抛出异常。shared_ptr提供自由函数<code>get_deleter(shared_ptr&lt;T&gt; const &amp;p)</code>，返回删除器指针。有了删除器可以实现管理任意资源。只要该资源提供它的释放操作，shared_ptr保证自动释放。</p>
+<h2 id="9-高级议题"><a href="#9-高级议题" class="headerlink" title="9. 高级议题"></a>9. 高级议题</h2><h3 id="shared-ptr-1"><a href="#shared-ptr-1" class="headerlink" title="shared_ptr"></a>shared_ptr<void></void></h3><p><code>shared_ptr&lt;void&gt;</code>可以存储<code>void*</code>的指针，<code>而void*</code>型指针可以指向任意类型，因此<code>shared_ptr&lt;void&gt;</code>拥有了容纳任意类型的能力。但将指针存储为<code>void*</code>会丧失原来的类型信息，在使用时使用转型函数转为原来的指针，但这设计运行时动态类型转换，使代码不够安全，建议不要这样使用。</p>
+<h3 id="删除器的高级用法"><a href="#删除器的高级用法" class="headerlink" title="删除器的高级用法"></a>删除器的高级用法</h3><p>基于<code>shared_ptr&lt;void&gt;</code>和定制删除器，shared_ptr可以实现退出作用域调用任意函数。</p>
+<h3 id="其它高级用法"><a href="#其它高级用法" class="headerlink" title="其它高级用法"></a>其它高级用法</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span>     //让<span class="title">C</span>代理<span class="title">B</span>，对<span class="title">B</span>的方法做一次封装</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">B</span>;</span></span><br><span class="line">    boost::<span class="built_in">shared_ptr</span>&lt;B&gt; p;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    C();</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span>:</span>:B</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"B ctor :"</span>&lt;&lt;<span class="keyword">this</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">C::C():p(<span class="keyword">new</span> B)&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">C::print</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    p-&gt;print();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">E</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    E()&#123;<span class="built_in">cout</span>&lt;&lt;<span class="string">"E ctor"</span>&lt;&lt;<span class="built_in">endl</span>;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">f</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">g</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~E()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"E dtor"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">F</span> :</span> <span class="keyword">public</span> E</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">f</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"class F f"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">g</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"class F g"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">E* <span class="title">create1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (E*)(<span class="keyword">new</span> F);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">boost::<span class="built_in">shared_ptr</span>&lt;E&gt; <span class="title">create2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> boost::<span class="built_in">shared_ptr</span>&lt;E&gt;(<span class="keyword">new</span> F);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">G</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    G()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"ctor G :"</span>&lt;&lt;<span class="keyword">this</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ~G()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"dtor G :"</span>&lt;&lt;<span class="keyword">this</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">DeleteG</span><span class="params">(G *g)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(g != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"delete G :"</span>&lt;&lt;g&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">delete</span> g;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AryF</span><span class="params">(<span class="keyword">void</span> * p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"AryF"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">TestSharedPtr</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">boost::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">sp1</span><span class="params">(<span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">10</span>))</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 unique :"</span>&lt;&lt;sp1.unique()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 use_count :"</span>&lt;&lt;sp1.use_count()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">boost::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">sp2</span><span class="params">(sp1)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 unique :"</span>&lt;&lt;sp1.unique()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 use_count :"</span>&lt;&lt;sp1.use_count()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp2 unique :"</span>&lt;&lt;sp2.unique()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp2 use_count :"</span>&lt;&lt;sp2.use_count()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    sp2.reset();</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp2 reset after"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 unique :"</span>&lt;&lt;sp1.unique()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp1 use_count :"</span>&lt;&lt;sp1.use_count()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp2 unique :"</span>&lt;&lt;sp2.unique()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"sp2 use_count :"</span>&lt;&lt;sp2.use_count()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">boost::<span class="built_in">shared_ptr</span>&lt;A&gt; <span class="title">spA1</span><span class="params">(<span class="keyword">new</span> A())</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"spA :"</span>&lt;&lt;spA1.get()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//工厂函数</span></span><br><span class="line">    boost::<span class="built_in">shared_ptr</span>&lt;A&gt; spA2 = boost::make_shared&lt;A&gt;();</span><br><span class="line"></span><br><span class="line">    boost::<span class="built_in">shared_ptr</span>&lt;A&gt; spA3 = boost::make_shared&lt;A, <span class="keyword">int</span>, <span class="keyword">int</span>&gt;(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//应用于标准容器</span></span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;boost::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt;&gt; <span class="title">v</span><span class="params">(<span class="number">3</span>)</span></span>;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span>&amp; it : v)</span><br><span class="line">    &#123;</span><br><span class="line">        it = boost::make_shared&lt;<span class="keyword">int</span>&gt;(++i);</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;*(it)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    boost::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">int</span>&gt; sp3 = v[<span class="number">2</span>];</span><br><span class="line">    *sp3 = <span class="number">100</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;*v[<span class="number">2</span>]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//应用于桥接模式</span></span><br><span class="line">    C c;</span><br><span class="line">    c.print();</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//应用于工厂模式</span></span><br><span class="line">        E * E1 = create1();</span><br><span class="line">        boost::<span class="built_in">shared_ptr</span>&lt;E&gt; E2 = create2();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">delete</span> (F*)E1;              <span class="comment">//E1必须手动调用delete 而E2在出作用域后自动调用 E的析构函数是protected的，所需需要转型为F再delete</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"桥接模式结束"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//定制删除器</span></span><br><span class="line">    <span class="function">boost::<span class="built_in">shared_ptr</span>&lt;G&gt; <span class="title">pg</span><span class="params">(<span class="keyword">new</span> G(), DeleteG)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">boost::<span class="built_in">shared_ptr</span>&lt;<span class="keyword">void</span>&gt; <span class="title">pv</span><span class="params">(<span class="literal">NULL</span>, AryF)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="shared-array"><a href="#shared-array" class="headerlink" title="shared_array"></a>shared_array</h1><p>包装<code>new[]</code>操作符在堆上分配的动态数组，使用引用计数机制为动态数组提供代理，可在程序的生命周期里长期存在，直到没有任何引用后才释放内存。</p>
+<h2 id="类摘要"><a href="#类摘要" class="headerlink" title="类摘要"></a>类摘要</h2><p><img src="/Picture/shared_array_class_summary.jpg" alt></p>
+<ul>
+<li>shared_array构造函数接受的指针必须是new[]的结果</li>
+<li>提供operator[]操作符重载</li>
+<li>析构函数使用delete[]，释放资源</li>
+</ul>
+<h2 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h2><p>最好使用<code>shared_ptr&lt;std::vector&gt;</code> 或者 <code>std::vector&lt;shared_ptr&gt;</code>来替代</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/boost/" rel="tag"># boost</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/智能指针/" rel="tag"># 智能指针</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/06/05/boost-scoped-ptr/" rel="prev" title="boost 库 内存管理 scoped_ptr scoped_array 2">
+      <i class="fa fa-chevron-left"></i> boost 库 内存管理 scoped_ptr scoped_array 2
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/06/06/boost-weak-ptr/" rel="next" title="boost 库 内存管理 weak_ptr intrusive_ptr 4">
+      boost 库 内存管理 weak_ptr intrusive_ptr 4 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#shared-ptr"><span class="nav-number">1.</span> <span class="nav-text">shared_ptr</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-类摘要"><span class="nav-number">1.1.</span> <span class="nav-text">1. 类摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-操作函数"><span class="nav-number">1.2.</span> <span class="nav-text">2. 操作函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-用法"><span class="nav-number">1.3.</span> <span class="nav-text">3. 用法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工厂函数"><span class="nav-number">1.4.</span> <span class="nav-text">4. 工厂函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-应用于标准容器"><span class="nav-number">1.5.</span> <span class="nav-text">5. 应用于标准容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-应用于桥接模式"><span class="nav-number">1.6.</span> <span class="nav-text">6. 应用于桥接模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-应用于工厂模式"><span class="nav-number">1.7.</span> <span class="nav-text">7. 应用于工厂模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-定制删除器"><span class="nav-number">1.8.</span> <span class="nav-text">8. 定制删除器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-高级议题"><span class="nav-number">1.9.</span> <span class="nav-text">9. 高级议题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#shared-ptr-1"><span class="nav-number">1.9.1.</span> <span class="nav-text">shared_ptr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除器的高级用法"><span class="nav-number">1.9.2.</span> <span class="nav-text">删除器的高级用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其它高级用法"><span class="nav-number">1.9.3.</span> <span class="nav-text">其它高级用法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#shared-array"><span class="nav-number">2.</span> <span class="nav-text">shared_array</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#类摘要"><span class="nav-number">2.1.</span> <span class="nav-text">类摘要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用法"><span class="nav-number">2.2.</span> <span class="nav-text">用法</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

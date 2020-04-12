@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="算法——图图结构图的基本概念图是由顶点的非空集合V(有n&amp;gt;0个顶点组成)与边的集合E(顶点之间的关系)构成,常用G表示,可形式化定义如下:G=(V,E)如果图中的边集E中每一条边都没有方向性,则该图为无向图；如果E中的边具有方向性,则表示该图为有向图。无序图的边表示为无序偶对(Vi, Vj), 所以(Vi, Vj)和(Vj, Vi)是同一条边。有向图的表示的是顶点的有序偶对,边$\langl">
+<meta name="keywords" content="算法,图">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法 图相关知识">
+<meta property="og:url" content="http://www.casezheng.date/2018/01/12/algorithm-chart/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="算法——图图结构图的基本概念图是由顶点的非空集合V(有n&amp;gt;0个顶点组成)与边的集合E(顶点之间的关系)构成,常用G表示,可形式化定义如下:G=(V,E)如果图中的边集E中每一条边都没有方向性,则该图为无向图；如果E中的边具有方向性,则表示该图为有向图。无序图的边表示为无序偶对(Vi, Vj), 所以(Vi, Vj)和(Vj, Vi)是同一条边。有向图的表示的是顶点的有序偶对,边$\langl">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/无向图和有向图.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/图的邻接矩阵存储.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/图的邻接表存储.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/DAG.png">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.144Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="算法 图相关知识">
+<meta name="twitter:description" content="算法——图图结构图的基本概念图是由顶点的非空集合V(有n&amp;gt;0个顶点组成)与边的集合E(顶点之间的关系)构成,常用G表示,可形式化定义如下:G=(V,E)如果图中的边集E中每一条边都没有方向性,则该图为无向图；如果E中的边具有方向性,则表示该图为有向图。无序图的边表示为无序偶对(Vi, Vj), 所以(Vi, Vj)和(Vj, Vi)是同一条边。有向图的表示的是顶点的有序偶对,边$\langl">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/无向图和有向图.png">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/01/12/algorithm-chart/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>算法 图相关知识 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/01/12/algorithm-chart/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法 图相关知识
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-01-12 23:18:03" itemprop="dateCreated datePublished" datetime="2018-01-12T23:18:03+08:00">2018-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/基础/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="算法——图"><a href="#算法——图" class="headerlink" title="算法——图"></a>算法——图</h1><h2 id="图结构"><a href="#图结构" class="headerlink" title="图结构"></a>图结构</h2><h3 id="图的基本概念"><a href="#图的基本概念" class="headerlink" title="图的基本概念"></a>图的基本概念</h3><p>图是由顶点的非空集合V(有n&gt;0个顶点组成)与边的集合E(顶点之间的关系)构成,常用G表示,可形式化定义如下:G=(V,E)<br>如果图中的边集E中每一条边都没有方向性,则该图为无向图；如果E中的边具有方向性,则表示该图为有向图。无序图的边表示为无序偶对(Vi, Vj), 所以(Vi, Vj)和(Vj, Vi)是同一条边。<br>有向图的表示的是顶点的有序偶对,边$\langle$Vi, Vj$\rangle$和$\langle$Vj, Vi$\rangle$是两条不一样的边。</p>
+<ol>
+<li>度<br>一个顶点的度指依附于某顶点V的边的条数，通常记为TD(V)</li>
+<li>路径<br>顶点的路径是指一个顶点Vi到另一个顶点Vj之间所经过的存在边的顶点的序列。<br>举例来说，如果存在顶点序列 V1, V2, V3, V4, …, Vm，使得顶点偶对(Vi, Vi+1) $\in$ (i=1, 2, 3, …, m–1),则称该顶点序列为顶点V1到Vm之间的一条路径。如果V1=Vm，则该路径成为回路或环。</li>
+<li>子图<br>图G=(V, E)和G’=(V’, E’)，如果存在V’$\in$V 且 E’ $\in$ E，则称G’为G的一个子图</li>
+<li>图的连通<br>在无向图中，如果顶点Vi到Vj（i!=j)存在路径，则称Vi和Vj是连通的。如果某无向图中任意两个顶点都是连通的，则称该无向图是连通图，否则为非连通图。无向图中的极大连通子图为该图的连通分量。<br>在有向图中，如果任意两个不同的顶点都是连通的，则称该有向图为强连通图，其极大连通子图为强连通分量。<br><img src="/Picture/无向图和有向图.png" alt><br>无向图和有向图</li>
+</ol>
+<h3 id="图的存储结构"><a href="#图的存储结构" class="headerlink" title="图的存储结构"></a>图的存储结构</h3><p>图主要有邻接表存储结构和邻接矩阵存储结构两种。</p>
+<h4 id="邻接矩阵存储"><a href="#邻接矩阵存储" class="headerlink" title="邻接矩阵存储"></a>邻接矩阵存储</h4><p>邻接矩阵存储(数组存储法),核心思想是使用两个数组存储一个图。具体定义如下：一个具有n个顶点的图，将每个顶点存储在数组Vertex[0…n-1]中，另定义一个二维数组E[0…n-1][0…n-1]存储相邻顶点见的关系，该二维矩阵称为邻接矩阵。<br>在数组Vertex中的下标来表示一个顶点，则邻接数组元素E[i][j]就表示Vi和Vj之间的关系，如果存在边，则为1，如不存在则为0。<br>无向图的矩阵是一个对称矩阵，矩阵中的值表示两者之间有直接边可到达。如果是有权图则数组存储权值，无边的顶点之间权值为$\infty$.<br>邻接矩阵不适合存储稀疏图，会有很多存储空间是空值，浪费空间。</p>
+<p>图a使用邻接矩阵表示:<br><img src="/Picture/图的邻接矩阵存储.png" alt><br>图的邻接矩阵存储</p>
+<h4 id="邻接表存储"><a href="#邻接表存储" class="headerlink" title="邻接表存储"></a>邻接表存储</h4><p>邻接表存储利用链表的优势，解决了邻接矩阵不适合存储稀疏图的问题。<br>邻接表存储法为每个顶点建立一条线性链表，如果图中有n个顶点，则其邻接表结构有n个线性表组成，每个链表设置一个头结点，称为顶点结点。<br>每一个链表中的结点称为边结点。</p>
+<p>图b使用邻接表表示:<br><img src="/Picture/图的邻接表存储.png" alt><br>图的邻接表存储</p>
+<h2 id="图的遍历"><a href="#图的遍历" class="headerlink" title="图的遍历"></a>图的遍历</h2><h3 id="深度优先遍历"><a href="#深度优先遍历" class="headerlink" title="深度优先遍历"></a>深度优先遍历</h3><p>图的深度优先遍历（Deepth First Search，DFS），从顶点v出发，首先将顶点v自己标记为已到达顶点，然后选择一个和v邻近的顶点u，如果u不存在则停止遍历，如果顶点存在则将u顶点标记为已到达，选择一个顶点u的未到达顶点w开始新一轮DFS。</p>
+<h3 id="广度优先遍历"><a href="#广度优先遍历" class="headerlink" title="广度优先遍历"></a>广度优先遍历</h3><p>图的广度优先遍历，从顶点v出发，访问v之后依次访问v的各个未被访问的邻接点，然后从这些邻接点出发访问其它未被访问过的点，直到所有点访问完成。</p>
+<p><a href="https://github.com/CaseZheng/Study/tree/master/Algorithm/Chart" target="_blank" rel="noopener">示例代码 <strong>https://github.com/CaseZheng/Study/tree/master/Algorithm/Chart</strong></a></p>
+<h1 id="图的高级算法"><a href="#图的高级算法" class="headerlink" title="图的高级算法"></a>图的高级算法</h1><h2 id="拓扑排序"><a href="#拓扑排序" class="headerlink" title="拓扑排序"></a>拓扑排序</h2><p>拓扑排序是有向无环图的重要应用，将单向连接的事件按照其关系方向排列成一个具有先后顺序的线性结构。</p>
+<ol>
+<li>偏序。偏序是一种<strong>非自反性</strong>的传递关系。用R表示元素间的关系，偏序的定义是非自反性，即不存在sRs的关系，如果sRt表示存在s到t的关系R，则必不存在tRs，说明<strong>偏序具有非对称性</strong>。如果存在关系sRt，tRu，则必存在sRu，说明<strong>偏序具有关系传递性</strong>。拓扑排序是在有向无环图这种偏序关系上的一种算法。</li>
+<li>全序。全序关系T是一个偏序，并且对于集合中所有的元素s$\neq$t，sTt和tTs只能取其一。</li>
+<li>有向无环图（DAG图）。一种特殊的有向图，从该图的任一结点出发，经过若干条边，无法回到该顶点。这样的图是无环的。</li>
+</ol>
+<p>拓扑排序是在有向无环图上进行的操作，对于一个有向无环图G，拓扑排序将图G的所有顶点排成一个线性序列，使图中任意一对顶点v和u，满足如果图中存在关系v-&gt;u，则排序后顶点v必在u的左边。<br><img src="/Picture/DAG.png" alt></p>
+<p><a href="https://github.com/CaseZheng/Study/tree/master/Algorithm/Chart" target="_blank" rel="noopener">示例代码 <strong>https://github.com/CaseZheng/Study/tree/master/Algorithm/Chart</strong></a></p>
+<h2 id="最小生成树"><a href="#最小生成树" class="headerlink" title="最小生成树"></a>最小生成树</h2><p>算法描述：最小生成树是指在一个具有N个顶点的带权连通图G中，如果存在某个子图G’,其包含图G的所有顶点和一部分边，且不形成回路，并且子图G’的个边权值最小，则称图G’是图G的最小生成树。</p>
+<h3 id="最小生成树-1"><a href="#最小生成树-1" class="headerlink" title="最小生成树"></a>最小生成树</h3><ol>
+<li>最小生成树不能有环</li>
+<li>最小生成树不一定唯一，在一个图中最小生成树可以有一个或多个</li>
+<li>最小生成树边的个数等于顶点数减一，即|E|=|V|-1</li>
+<li>最小生成树的边的权值最小</li>
+</ol>
+<h3 id="Kruskal算法"><a href="#Kruskal算法" class="headerlink" title="Kruskal算法"></a>Kruskal算法</h3><p>核心思想：在带权连通图中，不断地在边集中找到最小的边，如果该边满足得到最小生成树的条件，就将其构造，直到最后得到一颗最小生成树。</p>
+<h3 id="Prim算法"><a href="#Prim算法" class="headerlink" title="Prim算法"></a>Prim算法</h3><p>核心思想：在带权连通图中，图的顶点集合为V，从图中某个顶点v开始，得到集合U={v},重复执行下述操作：在所有u$\in$U,w$\in$V-E的边(u,w)$\in$E中找到最小的边，将(u,w)这条边加入到已找到的边集合，并将点w加入到集合U中，当U=C时，就找到了最小生成树。</p>
+<h1 id="参考书籍"><a href="#参考书籍" class="headerlink" title="参考书籍"></a>参考书籍</h1><ol>
+<li>妙趣横生的算法（C++语言实现）</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/算法/" rel="tag"># 算法</a>
+              <a href="/tags/图/" rel="tag"># 图</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/12/31/rc-local/" rel="prev" title="linux添加开机启动任务">
+      <i class="fa fa-chevron-left"></i> linux添加开机启动任务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/02/08/algorithm-sorting/" rel="next" title="排序算法">
+      排序算法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#算法——图"><span class="nav-number">1.</span> <span class="nav-text">算法——图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#图结构"><span class="nav-number">1.1.</span> <span class="nav-text">图结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#图的基本概念"><span class="nav-number">1.1.1.</span> <span class="nav-text">图的基本概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#图的存储结构"><span class="nav-number">1.1.2.</span> <span class="nav-text">图的存储结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#邻接矩阵存储"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">邻接矩阵存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#邻接表存储"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">邻接表存储</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#图的遍历"><span class="nav-number">1.2.</span> <span class="nav-text">图的遍历</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#深度优先遍历"><span class="nav-number">1.2.1.</span> <span class="nav-text">深度优先遍历</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#广度优先遍历"><span class="nav-number">1.2.2.</span> <span class="nav-text">广度优先遍历</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#图的高级算法"><span class="nav-number">2.</span> <span class="nav-text">图的高级算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#拓扑排序"><span class="nav-number">2.1.</span> <span class="nav-text">拓扑排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最小生成树"><span class="nav-number">2.2.</span> <span class="nav-text">最小生成树</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#最小生成树-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">最小生成树</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kruskal算法"><span class="nav-number">2.2.2.</span> <span class="nav-text">Kruskal算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Prim算法"><span class="nav-number">2.2.3.</span> <span class="nav-text">Prim算法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考书籍"><span class="nav-number">3.</span> <span class="nav-text">参考书籍</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

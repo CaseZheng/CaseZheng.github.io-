@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="复习下网络相关知识，包括TCP/IP协议族题解结构和主要协议介绍、封装、复用、ARP协议、IP协议、TCP协议、IP模块工作流程、TCP网络连接的建立和状态转移、DNS服务、HTTP服务的介绍。 浏览器网页访问的过程简介 浏览器分析链接指向的URL 浏览器向DNS请求解析域名的IP地址(DNS协议基于UDP协议) UDP(用户数据报)协议 不可靠、无连接、基于数据报 IP协议 不可靠(不保证IP数">
+<meta name="keywords" content="网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络相关知识复习">
+<meta property="og:url" content="http://www.casezheng.date/2017/09/16/network-review/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="复习下网络相关知识，包括TCP/IP协议族题解结构和主要协议介绍、封装、复用、ARP协议、IP协议、TCP协议、IP模块工作流程、TCP网络连接的建立和状态转移、DNS服务、HTTP服务的介绍。 浏览器网页访问的过程简介 浏览器分析链接指向的URL 浏览器向DNS请求解析域名的IP地址(DNS协议基于UDP协议) UDP(用户数据报)协议 不可靠、无连接、基于数据报 IP协议 不可靠(不保证IP数">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP-IP协议族体系结构及主要协议.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/ICMP报文格式.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/传输层和网络层的区别.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/封装.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP报文段封装过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/以太网帧.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/以太网分用过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/以太网ARP请求或应答报文.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/ARP通信过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/IP报文.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/IP头部信息结构体格式.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/IP模块工作流程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/路由表.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/ICMP重定向报文.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP-UDP发送接收.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP头部结构.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP头部选项的一般结构.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/7种TCP选项.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP报文段伪首部.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP三次握手四次挥手.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/TCP状态转移过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/DNS查询和应答报文.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/DNS报文头部的标志字段.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/DNS查询问题格式和资源记录格式.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/HTTP.png">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.108Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="网络相关知识复习">
+<meta name="twitter:description" content="复习下网络相关知识，包括TCP/IP协议族题解结构和主要协议介绍、封装、复用、ARP协议、IP协议、TCP协议、IP模块工作流程、TCP网络连接的建立和状态转移、DNS服务、HTTP服务的介绍。 浏览器网页访问的过程简介 浏览器分析链接指向的URL 浏览器向DNS请求解析域名的IP地址(DNS协议基于UDP协议) UDP(用户数据报)协议 不可靠、无连接、基于数据报 IP协议 不可靠(不保证IP数">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/TCP-IP协议族体系结构及主要协议.png">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/09/16/network-review/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>网络相关知识复习 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/09/16/network-review/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网络相关知识复习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-16 12:06:00" itemprop="dateCreated datePublished" datetime="2017-09-16T12:06:00+08:00">2017-09-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/基础/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>复习下网络相关知识，包括TCP/IP协议族题解结构和主要协议介绍、封装、复用、ARP协议、IP协议、TCP协议、IP模块工作流程、TCP网络连接的建立和状态转移、DNS服务、HTTP服务的介绍。</p>
+<h1 id="浏览器网页访问的过程简介"><a href="#浏览器网页访问的过程简介" class="headerlink" title="浏览器网页访问的过程简介"></a>浏览器网页访问的过程简介</h1><ol>
+<li>浏览器分析链接指向的URL</li>
+<li>浏览器向DNS请求解析域名的IP地址(DNS协议基于UDP协议)<ol>
+<li>UDP(用户数据报)协议 不可靠、无连接、基于数据报</li>
+<li>IP协议 不可靠(不保证IP数据报准确到达接收端)、无连接、无状态(简单、高效)</li>
+<li>封装 DNS报文 + UDP头部 -&gt; UDP数据报 + IP头部 -&gt; IP数据报 + 以太网头部 + 以太网尾部 -&gt; 以太网帧</li>
+<li>传输<ol>
+<li>传输层端对端</li>
+<li>网络层 选路和转发 使用IP地址寻址</li>
+<li>数据链路层 网络驱动程序 使用物理地址寻址 (ARP协议 IP地址转为物理地址) (RARP协议 物理地址转化为IP地址)</li>
+<li>分片:帧的最大传输单元(MTU),受到网络类型的限制,以太网帧的MTU1500字节,过长的IP数据报可能会被分片传输.分片只有在最终目标机器上才会被内核IP模块重新组装.</li>
+</ol>
+</li>
+<li>分用 以太网帧到目的主机后,根据各层协议头,将报文逐层解析,最终将处理后的数据交给目标应用程序</li>
+</ol>
+</li>
+<li>DNS获取域名的IP地址,并返回解析到的IP地址<ol>
+<li>递归查询(一般采用方式) 主机 -&gt; 本地域名服务器 -&gt; 根域名服务器 -&gt; 本地域名服务器 -&gt; 顶级域名服务器 -&gt; 本地域名服务器 -&gt; 权限域名服务器 -&gt; 本地域名服务器 -&gt; 主机</li>
+<li>迭代查询 主机 -&gt; 本地域名服务器 -&gt; 根域名服务器 -&gt; 顶级域名服务器 -&gt; 权限域名服务器 -&gt; 顶级域名服务器 -&gt; 根域名服务器 -&gt; 本地域名服务器 -&gt; 主机</li>
+</ol>
+</li>
+<li>浏览器和服务器建立TCP链接(TCP三次握手)<ol>
+<li>TCP(传输控制)协议 可靠(发送应答机制,超时重传机制,乱序/重复IP报文重排/整理机制)、面向连接(保存状态占用内核资源,全双工)、基于流(数据的发送和接收没有边界限制)</li>
+<li>浏览器(CLOSED-&gt;SYN_SENT)发送SYN到服务器</li>
+<li>服务器(LISTEN-&gt;SYN_RECV)接收SYN并发送SYN和ACK到浏览器</li>
+<li>浏览器(SYN_SENT-&gt;ESTABLISHED)接收ACK并发送ACK到服务器(SYN_RECV-&gt;ESTABLISHED)</li>
+</ol>
+</li>
+<li>浏览器发出命令<ol>
+<li>HTTP协议 无连接,无状态</li>
+<li>封装</li>
+<li>传输<ol>
+<li>拥塞窗口</li>
+<li>慢开始</li>
+<li>拥塞避免</li>
+<li>慢开始门限(拥塞窗口)</li>
+<li>快重传</li>
+<li>快恢复</li>
+<li>发送窗口(拥塞窗口和对方给出接收窗口中较小的那一个)</li>
+<li>路由器的尾部丢弃和随机丢弃策略</li>
+<li>糊涂窗口综合症</li>
+<li>滑动窗口</li>
+</ol>
+</li>
+<li>分用</li>
+</ol>
+</li>
+<li>服务器给出响应</li>
+<li>浏览器关闭释放TCP连接(TCP四次挥手)<ol>
+<li>浏览器(ESTABLISHED-&gt;FIN_WAIT_1)发送FIN到服务器</li>
+<li>服务器(ESTABLISHED-&gt;CLOSE_WAIT)接收FIN并发送ACK到浏览器,浏览器(FIN_WAIT_1-&gt;FIN_WAIT_2)接收ACK</li>
+<li>服务器(CLOSE_WAIT-&gt;LAST_ACK)发送FIN到浏览器</li>
+<li>浏览器(FIN_WAIT_2-&gt;TIME_WAIT)接收FIN,并发送ACK到服务器,服务器(LAST_ACK-&gt;CLOSED)接收ACK 先关闭链接的一方进入TIME_WAIT状态,TIME_WAIT状态需要等待2MSL(TCP报文段最大生存时间):<ol>
+<li>可靠的终止链接(重发ACK)</li>
+<li>保证让迟来的TCP报文段有足够时间被识别并丢弃</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>浏览器显示返回结果</li>
+</ol>
+<h1 id="TCP-IP协议族"><a href="#TCP-IP协议族" class="headerlink" title="TCP/IP协议族"></a>TCP/IP协议族</h1><p>Internet（因特网）主流协议族是TCP/IP协议族。<br>TCP/IP协议族是一个<strong>多层、多协议</strong>的通信协议。</p>
+<h2 id="TCP-IP协议族体系结构和主要结构"><a href="#TCP-IP协议族体系结构和主要结构" class="headerlink" title="TCP/IP协议族体系结构和主要结构"></a>TCP/IP协议族体系结构和主要结构</h2><p>TCP/IP协议是<strong>四层</strong>协议系统，从底到上分别是<strong>数据链路层、传输层、网络层、应用层</strong>。<br>每层完成不同的功能，通过若干协议来实现，<strong>上层协议使用下层协议提供的服务</strong>。<br><img src="/Picture/TCP-IP协议族体系结构及主要协议.png" alt="TCP/IP协议族体系结构和主要结构"></p>
+<h3 id="网络链路层"><a href="#网络链路层" class="headerlink" title="网络链路层"></a>网络链路层</h3><p>网络链路层实现网卡接口的<strong>网络驱动程序</strong>，处理数据在物理媒介（比如以太网、令牌环等）上的传输。<strong>不同的物理网络具有不同的电气特性</strong>，网络驱动程序隐藏了这些细节，为上层协议提供了一个统一的接口。<br>数据链路层主要协议：</p>
+<ol>
+<li><strong>ARP协议（地址解析协议）  将IP地址转换为物理地址</strong>（通常为MAC地址，以太网、令牌环、802.11无线网络都是用MAC地址）。</li>
+<li><strong>RARP协议（逆地址解析协议）  将物理地址转化为IP地址</strong>，利用网卡上的物理地址向网络管理者（服务器或网络管理软件）查询自身的IP地址，RARP协议仅用于网络上的某些无盘工作站,无盘工作站缺乏存储设备，所以无法记住自身的地址。运行RARP服务的网络管理者通常存有该网路上所有及其的物理地址到IP地址的映射。</li>
+</ol>
+<p><strong>数据链路层使用物理地址来寻址一台机器，而网络层使用IP地址寻找一台机器。</strong></p>
+<h3 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h3><p>网络层实现数据包的<strong>选路和转发</strong>。WAN（广域网）通常使用众多分级的路由器来连接分散的主机或LAN（局域网），因此，通信的两台主机一般不是直接相连的，而是通过多个中间节点（路由器）相连，<strong>网络层的任务就是选择这些中间节点，以确认主机之间的通信路径</strong>。<br>网络层对上层协议<strong>隐藏网络拓扑连接的细节</strong>，使得在传输层和网络应用程序看来，通信的双方是直接相连的。</p>
+<p><strong>网络层核心协议：IP协议（因特网协议）</strong><br>IP协议通过数据包的目的IP地址来决定如何投递它。如果数据包不能直接发送给目的主机，那么IP协议就为它寻找一个和合适的下一跳路由器，并将数据包交付给该路由器来转发。多次重复该过程，数据包最终到达目标主机，或者因为发送失败而被丢弃。<br>IP协议使用<strong>逐跳</strong>的方式确定通信路径。<br>网络层重要协议<strong>ICMP协议（因特网控制报文协议），IP协议的重要补充，主要用来检测网络连接</strong>。</p>
+<p><strong>ICMP协议并不是严格意义上的网络层协议</strong>，因为它使用处于同一层的IP协议提供的服务。<br><img src="/Picture/ICMP报文格式.png" alt="ICMP报文格式"><br>8位类型，用来区分报文类型</p>
+<ol>
+<li><strong>差错报文</strong>，主要用来回应网络错误，比如目标不可达（类型值为3）和重定向（类型值为5）。</li>
+<li><strong>查询报文</strong>，主要用来查询网络信息，比如ping程序使用ICMP报文查看目标是否可达（类型值为8）。</li>
+</ol>
+<p>8位代码，进一步区分不同的条件，比如重定向报文使用代码值0表示对网络重定向，用代码值1标识对主机重定向。<br>16位校验和，对<strong>整个报文（包括头部和内容部分）进行循环冗余检验（CRC）</strong>，以检验报文在传输过程中是否损坏，不同的ICMP报文类型具有不同的正文内容。</p>
+<h3 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h3><p>传输层为两台主机上的应用程序提供<strong>端到端的通信</strong>，传输层只关心通信的<strong>起始端和目的端</strong>，而<strong>不关心数据包的中转过程</strong>。<br>传输层协议主要有三个：<strong>TCP协议，UDP协议和SCTP协议</strong>。</p>
+<ol>
+<li><strong>TCP协议（传输控制协议）</strong>为应用层提供<strong>可靠的、面向连接的和基于流的</strong>服务。</li>
+<li><strong>UDP协议（用户数据报协议）</strong>为应用层提供<strong>不可靠的、无连接的和基于数据报的</strong>服务。</li>
+<li>SCTP协议（流控制传输协议）相对较新的传输层协议，为了在因特网上传输电话信号而设计。<br><img src="/Picture/传输层和网络层的区别.png" alt="传输层和网络层的区别"><br>图中垂直实线箭头表示TCP/IP协议族之间的实体通信（数据包确实沿着这些线路传递），水平虚线箭头表示逻辑通信线路。<br>数据链路层（驱动程序）封装了物理网路的电气细节；网络层封装了网络连接的细节；传输层为应用程序封装了一条端到端的逻辑通信链路，负责数据的收发、链路的超时重连等。</li>
+</ol>
+<h3 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h3><p>应用层负责处理应用程序的<strong>逻辑</strong>。数据链路层、网络层、传输层负责处理<strong>网络通信细节</strong>，这些部分必须<strong>既稳定又高效</strong>，因此它们都在<strong>内核空间</strong>中实现。应用层在用户空间实现，因为它处理众多逻辑，比如文件传输、名称查询、网络管理等。如果应用层实现在内核中，内核会变得非常庞大。应用层实现在内核中，内存不用在用户空间和内核空间中来回切换（主要是数据复制），可以提高工作效率，但实现复杂、不够灵活、不方便移植。<br>应用层协议众多：</p>
+<ol>
+<li>ping是应用程序，而是不协议，<strong>利用ICMP报文检测网络连接</strong>，是调试网络环境的必备工具。</li>
+<li>telent协议是一种远程登陆协议，使我们能在本地完成远程任务。</li>
+<li>OSPF（开放最短路径优先）协议是一种动态路由更新协议，用于路由器之间通信，以告知对方各自的路由信息。</li>
+<li><strong>DNS（域名服务）协议提供及其域名到IP地址的转换</strong>。</li>
+</ol>
+<p>应用层协议（或程序）可以跳过传输层直接使用网络层提供的服务，比如ping程序和OSPF协议。<br>应用层协议（或程序）通常<strong>既可以使用TCP服务，又可以使用UDP协议</strong>，比如DNS协议。</p>
+<h2 id="封装"><a href="#封装" class="headerlink" title="封装"></a>封装</h2><p>应用程序数据在发送到物理网络上之前，先沿着协议栈从上向下传递，<strong>每层协议都在上层数据的基础上加上自己的头部信息（有时还包括尾部信息）</strong>，以实现该层的功能，这个过程叫做<strong>封装</strong>。<br><img src="/Picture/封装.png" alt="封装"><br>经过TCP封装获得数据成为<strong>TCP报文段</strong>（TCP段）。<br>TCP协议为通信双方维持一个连接，并且在内核中存储相关数据。当发送端应用程序使用send（或者write）函数向一个TCP连接写入数据时，内核中TCP模块首先将这些数据复制到与该连接相对应的TCP内核发送缓存区中，然后TCP模块调用IP模块提供的服务，传递的参数包括<strong>TCP头部信息和TCP内核缓存区（发送缓存区或接收缓存区）数据一起构成TCP报文段</strong>。<br><img src="/Picture/TCP报文段封装过程.png" alt="TCP报文段封装过程"><br>经过UDP封装后的数据称为<strong>UDP数据报</strong>。UDP对应用程序数据的封装与TCP类似。UDP无须为应用层数据保存副本，提供不可靠的服务。当一个UDP数据报被成功发送后，UDP内核缓存区中的该数据报就被丢弃了。如果应用程序检测到该数据报未被接收端正确接收，并打算重发这个数据报，则应用程序需要重新从用户空间将该数据报拷贝到UDP内核发送缓存区。<br>经过IP封装后的数据称为<strong>IP数据报</strong>，IP数据报也包括<strong>头部信息和数据部分</strong>，其中数据部分就是一个TCP报文段、UDP数据报或着ICMP报文。<br>经过数据链路层封装的数据成为<strong>帧</strong>，传输媒介不同，帧的类型也不同。比如，以太网上是以太网帧，令牌环网络为令牌环帧。<br>以太网帧如下图所示：<br><img src="/Picture/以太网帧.png" alt="以太网帧"><br>以太网帧使用6字节的目的物理地址和6字节的源物理地址来表示通信的双方。<br>2字节类型字段用来标识上层协议。<br>4字节CRC字段对帧的其他部分提供循环冗余教研。<br>帧的最大传输单元（MTU），集帧最多携带多少上层协议数据，通常受到网络类型的限制，<strong>以太网帧的MTU是1500字节</strong>，过长的IP数据报可能需要被<strong>分片</strong>传输。<br><strong>帧才是最终在物理网络上传输的字节序列</strong>。</p>
+<h2 id="分用"><a href="#分用" class="headerlink" title="分用"></a>分用</h2><p>当帧到达目的主机后，将沿着协议栈自底向上依次传递，各层协议以此处理帧中本层负责的头部信息获取所需的信息，并最终将处理后的数据交给目标应用程序，这个过程叫做分用。<br><img src="/Picture/以太网分用过程.png" alt="以太网分用过程"><br>分用是依靠<strong>头部信息中的类型字段</strong>来实现的。<br>帧中用2字节类型字段区分上层协议，即IP协议、ARP协议或RARP协议。<br>类型字段为0x800，即帧的数据部分为IP数据报。<br>类型字段为0x806，即帧的数据部分为ARP请求或应答报文。<br>类型字段为0x835，即帧的数据部分为RARP请求或应答报文。<br>IP数据报的头部采用16位的协议字段来区分ICMP协议、TCP协议和UDP协议。<br>TCP报文段和UDP报文段则通过其头部中的16位端口号字段来区分上层应用程序。</p>
+<h2 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h2><p><strong>ARP协议实现任意网络层地址到物理层地址的转换</strong>。<br>IP地址到以太网地址（MAC）的转换。<br>工作原理：主机向自己所在的网络<strong>广播</strong>一个ARP请求，该请求包含目标机器的网络地址。此网络上的其他机器都将收到这个请求，但<strong>只有被请求的目标机器会回应一个ARP应答</strong>，其中包含自己的物理地址。<br><img src="/Picture/以太网ARP请求或应答报文.png" alt="以太网ARP请求或应答报文"><br>硬件类型：定义物理地址的类型，值为1表示MAC地址。<br>协议类型：表示要映射的协议地址类型，值为0x800表示IP地址。<br>硬件地址长度和协议地址长度：单位为字节。MAC地址长度为6,IP(v4)地址长度为4。<br>操作类型：4种操作类型。ARP请求（1）、ARP应答（2）、RARP请求（3）、RARP应答（4）。<br>最后四个字段指定通信双方的以太网地址（MAC）和IP地址。<br>发送端填充除了目的端以太网地址之外的其他3个字段，以构建ARP请求并发送。<br>接收端发送请求的目的端IP地址是自己，就把自己的以太网地址填充进取，然后交换两个目的端地址和两个发送端地址，以构建ARP应答并返回。<br>ARP请求/应答报文长度为28字节，加上以太网头部和尾部的18字节，一个携带ARP请求/应答的以太网帧帧长度为46字节，有的实现要求以太网数据长度至少为46字节，此时ARP请求/应答报文会增加一些填充字节，满足该要求，这样携带ARP请求/应答报文的以太网帧为64字节。<br><strong>ARP维护一个高速缓存</strong>，其中包含经常访问（比如网关地址）或最近访问的机器的IP地址到物理地址的映射。<strong>避免了重复的ARP请求，提高了发送数据报的速度</strong>。ARP高速缓存是<strong>动态变化</strong>的。<br><strong>每个ARP广播中都包含发送方的IP地址到物理地址的绑定，接收方在处理ARP分组前，先更新缓存中IP到物理地址的绑定信息</strong>。<br><img src="/Picture/ARP通信过程.png" alt="ARP通信过程"></p>
+<h2 id="IP协议"><a href="#IP协议" class="headerlink" title="IP协议"></a>IP协议</h2><p>IP协议是TCP/IP协议的动力，为上层提供<strong>无状态、无连接、不可靠的服务</strong>。<br>无状态：IP通信双方<strong>不同步传输数据的状态信息</strong>。  优点：<strong>简单、高效</strong>。<br>无连接：IP通信双方<strong>不长久地维持双方的任何信息</strong>。上层协议每次发送数据的时候，都必须明确制定对方的IP地址。<br>不可靠：Ip协议<strong>不保证IP数据报准确地到达接收端</strong>。<br><img src="/Picture/IP报文.png" alt="IP报文"></p>
+<p>选项：</p>
+<ol>
+<li>记录路由，告诉数据报途径的所有路由器都将自己的IP地址填入IP头部的选项部分，用于跟踪数据报的传递路径。</li>
+<li>时间戳，告诉每个路由器都将数据报转发的时间填入IP头部的选项部分，测量途径路由之间的数据报传输时间。</li>
+<li>松散源路由选择，指定一个路由器IP地址列表，数据报发送过程中必须经过所有的路由器。</li>
+<li>严格源路由选择，和松散源路由选择类似，不过数据报只能经过被指定的路由器。</li>
+</ol>
+<p>当IP数据报的长度超过帧的MTU时，将被分片传输。分片可以发送在发送端，也可以发生在中转路由器上，而且在传输过程中可能被多次分片，但只有在最终的目的机器上，这些分片才会被内核中IP模块重新组装。<br>IP头部中的数据报标识、标志和片偏移三个字段给IP的分片和组装提供了足够的信息，一个IP数据报的每个分片都具有自己的IP头部，具有相同的标识符，但具有不同的片偏移。并且除了最后一个分片外，每个分片都将设置MF标志，每个分片的IP头部的总长度字段将被设置为该分片的长度。<br><img src="/Picture/IP头部信息结构体格式.png" alt="IP头部信息结构体格式"></p>
+<h2 id="IP模块工作流程"><a href="#IP模块工作流程" class="headerlink" title="IP模块工作流程"></a>IP模块工作流程</h2><p><img src="/Picture/IP模块工作流程.png" alt><br>IP输出队列中存放的是所有等待发送的IP数据报，其中除了需要转发的IP数据报外，还包括本机上层数据（ICMP报文、TCP报文段和UDP报文段）的IP数据报。<br>从IP输入队列中取出一个IP数据报：</p>
+<ol>
+<li>对该IP数据报的头部做CRC校验，确认无误后分析其头部的具体信息。</li>
+<li>如果该IP数据报的头部设置了源站选路选项（松散源路由选择或严格源路由选择），则IP模块调用数据报转发子模块来处理该数据报。</li>
+<li>如果该IP数据报的头部中目标IP地址是本机的某个IP地址或者广播地址，即该数据报是发送给本机的，则IP模块根据数据报头部的协议字段来句町将它分派给那个上层应用（分用）。否则该数据报不是发送给本机的，将其交给转发子模块来处理。</li>
+<li>数据报转发子模块将首先检测系统是否允许转发，如果不允许，IP模块就丢弃该数据报。如果允许，数据报转发子模块就对该数据报执行一些操作，然后将其交给IP数据报输出子模块。</li>
+</ol>
+<p><strong>IP数据报应该发送至下一跳路由（或者目标机器），以及经过哪个网卡来发送，就是IP路由过程</strong>。<br><strong>IP模块实现数据报路由的核心数据结构是路由表</strong>，这个表按照数据报的目标IP分类，同一类型的IP数据报就被发往相同的下一跳路由器（或目标机器）。<br>虚线箭头显示路由表更新的过程，这一过程是指通过路由协议或者route命令调整路由表，使之更适应最新的网络拓扑结构，成为IP路由测策略。<br><img src="/Picture/路由表.png" alt><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Picture]$ route</span><br><span class="line">Kernel IP routing table</span><br><span class="line">Destination     Gateway         Genmask         Flags Metric Ref    Use Iface</span><br><span class="line">default         gateway         0.0.0.0         UG    100    0        0 enp2s0</span><br><span class="line">192.168.0.0     0.0.0.0         255.255.255.0   U     100    0        0 enp2s0</span><br><span class="line">192.168.122.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0</span><br></pre></td></tr></table></figure></p>
+<p>IP路由机制：</p>
+<ol>
+<li>查找路由表中和数据报中的目的IP地址完全匹配的主机IP地址，如果找到，就是用该路由项，没找到则转步骤2。</li>
+<li>查找路由表中和数据报中目标IP地址具有相同网路ID的网络IP地址。如果找到，就是用该路由项，没找到则转步骤3。</li>
+<li>选择默认路由，通常表示网关。</li>
+</ol>
+<p>路由器更新：<br>路由器必须能够更新，以反映网络连接的变化，这样IP模块才能准确、高效地转发数据报。</p>
+<ol>
+<li>通过route命令或者其他工具手动修改路由表，是静态的路由更新方式。</li>
+<li>对大型路由器，通过BGP（边际网关协议）、RIP（路由信息协议）、OSFP等协议来发现路径，并更新自己的路由表。这种方式是动态的、自动的。</li>
+<li>ICMP重定向报文。</li>
+</ol>
+<p>IP转发：</p>
+<ol>
+<li>检测数据报头部的TTL值，如果TTL值已经为0,则丢弃该数据报。</li>
+<li>查看数据报头部的严格源路由选择选项，如果该选项被设置，则检测数据报的目标IP地址是否是本机的某个IP地址，如果不是，则发送一个ICMP源站路由失败报文给发送端。</li>
+<li>如果有必要，则给源端发送一个ICMP重定向报文，告诉它一个更合理的下一跳路由器。</li>
+<li>将TTL值减1。</li>
+<li>处理IP头部选项。</li>
+<li>如果有必要，则执行IP分片。</li>
+</ol>
+<p>一般来说，主机只接收ICMP重定向报文，路由器只能发送ICMP重定向报文。<br>ICMP重定向报文的类型值为5，代码字段有4个可选值，用来区分不同的重定向类型。<br>主机重定向代码值为1。<br>更新路由表通常是更新路由表缓存，而不是直接更改路由表。<br><img src="/Picture/ICMP重定向报文.png" alt></p>
+<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><p><strong>TCP服务：面向连接、字节流和可靠传输</strong>。<br>面向连接：使用TCP通信的双方必须先<strong>建立连接</strong>，然后才可以开始数据的读写。双方必须为该连接分配必要的<strong>内核资源</strong>，以管理连接的状态和连接上的传输。TCP连接是<strong>全双工</strong>的，即双方的数据读写可以通过一个连接进行，完成数据交换后，通信双方必须断开连接以释放系统资源。TCP连接是<strong>一对一</strong>的，所以基于广播和多播的应用程序不能使用TCP连接。而无连接协议UDP协议则非常适合于广播和多播。<br>字节流：发送端执行的写操作次数和接收端执行的读操作次数没有任何数量关系，应用程序对<strong>数据的发送和接受没有边界限制</strong>。<br>可靠连接：</p>
+<ol>
+<li><strong>发送应答机制</strong>，发送端发送的每个TCP报文段都必须得到接收方的应答，才认为这个TCP报文段传输成功。</li>
+<li><strong>超时重传机制</strong>，发送端在发送一个TCP报文后启动定时器，如果定时器时间内未收到应答，将重新发送该报文段。</li>
+<li>TCP报文段最终以IP数据报发送，而IP数据报到达接收端可能是<strong>乱序、重复</strong>的，所以TCP协议会对接收到的IP报文<strong>重排、整理</strong>，再交给应用层。</li>
+</ol>
+<p>由于TCP使用两个端点来标识连接，一个机器上的某个TCP端口可以被多个连接所共享。<br><img src="/Picture/TCP-UDP发送接收.png" alt></p>
+<p>TCP头部结构如下图所示<br><img src="/Picture/TCP头部结构.png" alt><br>16位端口号，告知主机该数据报来自哪个（源端口）以及传给哪个上层协议或应用程序（目的端口）的。进行TCP通信时，客户端使用系统自动选择的临时端口号，而服务器则使用知名服务端口号。<br>32位序列号，一次TCP通信（从TCP连接建立到断开）过程中某个传输方向上的字节流的每个字节的编号。<br>32位确认号，对于另一方发送来的TCP报文段的响应，其值是收到的TCP报文段的序号家1。<br>4位头部长度，表示该TCP头部有多少个32bit（4字节）。<br>6位标志位：</p>
+<ol>
+<li>URG，紧急指针是否有效。</li>
+<li>ACK，表示确认号是否有效，携带ACK标志的TCP报文段为确认报文段。</li>
+<li>PSH，提示接收端应用程序应该立即从TCP接收缓存区读走数据，为后续数据腾出空间。</li>
+<li>RST，要求对方重新建立连接，携带RST标志的TCP报文段位复位报文段。</li>
+<li>SYN，要求建立一个连接，携带SYN标志的TCP报文段位同步报文段。</li>
+<li>FIN，通知对方本端要关闭了，携带FIN标志的TCP的报文段为结束报文段。</li>
+</ol>
+<p>16位窗口大小，是TCP流量控制的一个手段，指接收通告窗口，告诉对方本端的TCP接收缓存区还能容纳多少字节的数据，对方据此控制发送数据的速度。<br>16位校验和，由发送端填充，接收端对TCP报文段执行CRC算法以校验TCP报文段在传输过程中是否损坏，注意：检验<strong>包括头部和数据部分</strong>。是TCP可靠传输的一个保障。<br>16位紧急指针，一个正的偏移量，它和序号字段的值相加表示最后一个紧急数据的下一个字节的序号。该字段，实际是紧急指针相对当前序号的偏移，紧急偏移。TCP的紧急指针的发送端向接收端发送紧急数据的方法。<br>紧急指针指出紧急数据在报文段中的结束位置。</p>
+<p><img src="/Picture/TCP头部选项的一般结构.png" alt><br>TCP头部的最后一个字段选项是可变长的可选信息，最多包含40个字节。<br>kind说明选项类型，常见的TCP选项有7种。<br>length说明该选项的长度。<br>info是选项的具体信息。<br><img src="/Picture/7种TCP选项.png" alt><br>kind=0,选项表结束选项。<br>kind=1,空操作选项，没有特殊含义，一般用于将TCP选项的长度填充为4字节的整数倍。<br>kind=2,最大报文段长度选项。<br>kind=3,窗口扩大引子选项。<br>kind=4,选择性确认（SACK）选项。<br>kind=5,SACK实际工作的选项。<br>kind=8,时间戳选项。</p>
+<p>TCP报文段伪首部，用于TCP校验和计算。<br><img src="/Picture/TCP报文段伪首部.png" alt><br>TCP确认信息指出了接收方期望收到的下一个报文组的序号。<br><strong>拥塞窗口</strong>:拥塞窗口发送方使用,用来控制发送速率,避免发的过多.<br><strong>慢开始</strong>：在启动新连接的传输或者在拥塞之后增加通信量时，仅以一个报文段作为拥塞窗口的初始值，而每收到一个确认后，将拥塞窗口大小加1,使用慢开始算法后，每经过一个往返时间RTT，拥塞窗口的值就加倍。<br><strong>拥塞避免算法</strong>：让拥塞窗口缓慢增加，每经过一个往返时间RTT就把发送窗口的拥塞窗口加1,而不是加倍。<br><strong>慢开始门限</strong>：</p>
+<ol>
+<li>拥塞窗口小于慢开始门限，使用慢开始算法。</li>
+<li>拥塞窗口大于慢开始门限，使用拥塞避免算法。</li>
+<li>拥塞窗口等于慢开始门限，即可使用慢开始算法，也可使用拥塞避免算法。<br><strong>滑动窗口</strong>:控制接收和同步数据,通知接收方目前接收的数据范围,用于流量控制,接收端使用.<br><strong>快重传</strong>：接收方每收到一个失序的报文段就立即发出重复确认，而不是等待自己发送数据时才进行捎带确认。当发送方一次收到3个重复确认就应立即重传对方尚未收到的报文段。<br><strong>快恢复</strong>:当发送方连续收到三个重复确认时，就执行“乘法减小算法”，把快启动门限减半，把拥塞窗口设置为慢开始门限减半后的数值，然后开始执行拥塞避免算法。<br>发送方的发送窗口一定不能超过对方给出的接收窗口值。<strong>发送窗口</strong>的取值为<strong>拥塞窗口和对方给出的接收窗口中较小的那一个</strong>。<br><strong>路由器的尾部丢弃策略</strong>：如果数据报到达时输入队列已被填满，则丢弃该数据报。<br>可能会丢弃来自多个TCP连接的一个数据报，而不是来自一个连接的多个数据报，造成全局性的同步，丢失数据报的多个TCP连接同时进入慢开始状态。<br><strong>路由器的随机丢弃策略（RED）</strong>：当数据报到达时，如果输入队列已满，则丢弃这个数据报，如果输入队列未满，但大小超过了上限阀值，则通过按概率p丢弃数据报来避免同步。<br><strong>糊涂窗口综合症</strong>：发送方应用进程产生数据很慢或者接收端应用程序处理接收缓冲区数据很慢，或者二者皆有；就会导致应用进程间传送的报文很小；极端情况下，有效载荷可能只有1个字节，传输开销有40个字节（20个字节的IP头和20字节的TCP头）这种现象。<br>接收方避免糊涂窗口综合症的策略：通告0窗口后，要等缓冲区可用空间至少达到宗空间的一半或达到最大报文段长度后才发送更新的窗口通告。<br>实现接收方避免糊涂窗口综合症的策略可使用两种手段：</li>
+<li>TCP对收到的报文段进行确认，但要等到窗口空间达到启发式策略所指定的限度之后才发出窗口增大的通告。</li>
+<li>在窗口大小不足以避免该症的策略所指定的限度时，则延迟发送确认。TCP标准推荐延迟发送确认。<ol>
+<li>延迟确认技术优点：降低通信量并提高吞吐量</li>
+<li>延迟确认技术缺点：当接收方的确认延迟太大时，发送方会进行报文段的重传（浪费网络宽带，降低了吞吐量，加重了收发双方的计算负载）。推迟确认造成了估算值的混乱并增大了重传时间。TCP实现确认推迟时间最多推迟500ms，TCP标准推荐接收方按照至少每隔一个报文段使用正常的方式对报文段进行确认。<br>发送方避免糊涂窗口综合症的策略：在一个连接上已经传输的数据还未收到确认的情况下，发送方的应用程序又生成了后续数据，并照常将数据送到输出缓冲区中，但这时并不发送后续报文段，而是等数据足以填满一个达最大长度的报文段之后再把缓冲区的数据发送出去，该策略适用于任何情况，包括推操作在内。<br>现行的TCP要求收发双方实现避免糊涂窗口综合症的启发式策略。<strong>接收方要避免小窗口通告，而接收方要使用自适应机制来推迟传送，以便将数据组块形成较长的大报文段</strong>。</li>
+</ol>
+</li>
+</ol>
+<h2 id="TCP网络连接"><a href="#TCP网络连接" class="headerlink" title="TCP网络连接"></a>TCP网络连接</h2><p>TCP通信双方建立TCP连接的一般过程。如下图：<br><img src="/Picture/TCP三次握手四次挥手.png" alt></p>
+<p>TCP通信双方的各种状态变化如下图所示：<br><img src="/Picture/TCP状态转移过程.png" alt></p>
+<h1 id="DNS协议"><a href="#DNS协议" class="headerlink" title="DNS协议"></a>DNS协议</h1><p>DNS是一套分布式的域名服务系统，每个DNS服务器上都存放着大量的机器名和IP地址的映射，并且时动态更新的。众多网络客户端程序使用DNS协议来向服务器查询目标主机的IP地址。<br>DNS报文格式如下：<br><img src="/Picture/DNS查询和应答报文.png" alt><br>16位标识：用来标记一对DNS查询和应答，以此区分一个DNS应答是哪个DNS查询的回应。<br>16位标志：用来协商具体的通信方式和反馈通信状态<br><img src="/Picture/DNS报文头部的标志字段.png" alt><br>16位问题个数、16位应答资源记录个数、16位授权资源记录数目和16位额外的资源记录数目分别指出DNS报文的最后四个字段的资源记录数目。<br>对查询报文，一般包含一个查询问题，而应答资源记录数、授权资源记录数和额外资源记录数则为0。<br>对应答报文，应答资源记录数则至少为1,而授权资源记录数和额外资源记录数可为0或非0。<br><img src="/Picture/DNS查询问题格式和资源记录格式.png" alt></p>
+<h1 id="HTTP协议"><a href="#HTTP协议" class="headerlink" title="HTTP协议"></a>HTTP协议</h1><p><img src="/Picture/HTTP.png" alt></p>
+<h1 id="HTTP协议-1"><a href="#HTTP协议-1" class="headerlink" title="HTTP协议"></a>HTTP协议</h1><p>HTTPS是以安全为目标的HTTP通道,是HTTP的安全版本,即HTTP+SSL层,HTTPS的安全基础是SSL.<br>HTTPS协议的主要作用:</p>
+<ol>
+<li>建立一个信息安全通道,确保数据传输安全</li>
+<li>确保网站真实性</li>
+</ol>
+<p>HTTP以明文方式发送内容,不提供任何方式的数据加密</p>
+<h2 id="HTTP和HTTPS区别"><a href="#HTTP和HTTPS区别" class="headerlink" title="HTTP和HTTPS区别"></a>HTTP和HTTPS区别</h2><ol>
+<li>HTTP是明文传输,HTTPS具有安全性的SSL加密传输协议</li>
+<li>HTTPS需要CA申请证书,免费证书少,需要一定费用,HTTP则不需要</li>
+<li>HTTP和HTTPS使用完全不同的连接方式,HTTP默认80端口,HTTPS默认443端口</li>
+<li>HTTP连接无状态,HTTPS协议由HTTP+SSL协议构建,可进行加密传输、身份认证的网络协议,安全性高于HTTP</li>
+</ol>
+<h2 id="HTTPS优缺点"><a href="#HTTPS优缺点" class="headerlink" title="HTTPS优缺点"></a>HTTPS优缺点</h2><ol>
+<li>优点:<ol>
+<li>使用HTTPS协议认证用户的服务器,确保数据发送到正确的客户机和服务器</li>
+<li>HTTPS有SSL+HTTP协议构建的可进行加密传输、身份认证的网络协议,比HTTP协议安全,可防止数据在传输过程中不被窃取、改变,确保数据的安全和完整.</li>
+</ol>
+</li>
+<li>缺点:<ol>
+<li>HTTPS握手阶段耗时多</li>
+<li>SSL证书需要钱</li>
+<li>HTTPS的协议加密范围有限,</li>
+</ol>
+</li>
+</ol>
+<h1 id="面试问题"><a href="#面试问题" class="headerlink" title="面试问题"></a>面试问题</h1><h2 id="TCP三次握手-客户端发送的最后确认的ACK丢失-服务端会怎么样-服务器在没有收到第二个ACK时-客户端发送数据-被服务端接收到-服务端怎么处理-客户端在回复ACK的同时携带数据服务器会怎么处理"><a href="#TCP三次握手-客户端发送的最后确认的ACK丢失-服务端会怎么样-服务器在没有收到第二个ACK时-客户端发送数据-被服务端接收到-服务端怎么处理-客户端在回复ACK的同时携带数据服务器会怎么处理" class="headerlink" title="TCP三次握手,客户端发送的最后确认的ACK丢失,服务端会怎么样? 服务器在没有收到第二个ACK时,客户端发送数据,被服务端接收到,服务端怎么处理? 客户端在回复ACK的同时携带数据服务器会怎么处理?"></a>TCP三次握手,客户端发送的最后确认的ACK丢失,服务端会怎么样? 服务器在没有收到第二个ACK时,客户端发送数据,被服务端接收到,服务端怎么处理? 客户端在回复ACK的同时携带数据服务器会怎么处理?</h2><ol>
+<li>TCP三次握手,如果第2个ACK丢失,此时服务端状态为SYN_RECV,等段时间后会触发超时重传,依次等待时间为3s,6s,12s,24s,48s,之后重发SYN+ACK包(服务端重发SYN+ACK包的次数可通过<code>/proc/sys/net/ipv4/tcp_synack_retries</code>修改,默认为5次),让客户端重发ACK.如果重发指定次数的SYN+ACK后仍然未收到ACK应答,过一段时间,Server将自动关闭这个连接.</li>
+<li>虽然第二个ACK丢失,但客户端在发出ACK后即确认连接建立,此时发送数据到服务端,服务端将发送RST,让客户端断开这个异常连接.</li>
+<li>客户端在第二个ACK携带数据,服务端会正常建立连接,并处理数据</li>
+</ol>
+<h2 id="主动关闭TCP连接的一方进入TIME-WAIT状态-还是被动关闭的一方进入-TIME-WAIT状态有何特殊之处-为什么"><a href="#主动关闭TCP连接的一方进入TIME-WAIT状态-还是被动关闭的一方进入-TIME-WAIT状态有何特殊之处-为什么" class="headerlink" title="主动关闭TCP连接的一方进入TIME_WAIT状态,还是被动关闭的一方进入?TIME_WAIT状态有何特殊之处,为什么?"></a>主动关闭TCP连接的一方进入TIME_WAIT状态,还是被动关闭的一方进入?TIME_WAIT状态有何特殊之处,为什么?</h2><ol>
+<li>主动关闭的一方进入TIME_WAIT状态</li>
+<li>TIME_WAIT状态需要等待2MSL(TCP报文段最大生存时间),才会完全关闭<ol>
+<li>可靠地终止TCP连接,当被动关闭的一方发出FIN,在等待一段时间后未收到ACK,此时会重发FIN,令主动关闭的一方重发ACK.</li>
+<li>保证来迟的TCP报文段有足够的时间被识别并丢弃</li>
+</ol>
+</li>
+</ol>
+<h2 id="关闭TCP连接时-如果通信双方同时发出了FIN会怎么样"><a href="#关闭TCP连接时-如果通信双方同时发出了FIN会怎么样" class="headerlink" title="关闭TCP连接时,如果通信双方同时发出了FIN会怎么样?"></a>关闭TCP连接时,如果通信双方同时发出了FIN会怎么样?</h2><ul>
+<li>同时发出FIN则都先进入FIN_WAIT_1状态,在收到对方的FIN后进入CLOSING状态,并发出自己的ACK,等收到对方的ACK后,再进入TIME_WAIT状态</li>
+</ul>
+<h2 id="被动关闭一方在LAST-ACK收不到ACK如何关闭"><a href="#被动关闭一方在LAST-ACK收不到ACK如何关闭" class="headerlink" title="被动关闭一方在LAST_ACK收不到ACK如何关闭?"></a>被动关闭一方在LAST_ACK收不到ACK如何关闭?</h2><p>如果超时未收到ACK则会重发FIN,此时:</p>
+<ol>
+<li>主动关闭一方仍处于TIME_WAIT状态,则会发送ACK,被动关闭方收到ACK则顺利从LAST_ACK进入CLOSED.</li>
+<li>主动断开的一方经过2MSL已经进入了CLOSED状态,此时会返回RST给被动关闭方,被断开方收到后从LAST_ACK进入CLOSED.</li>
+</ol>
+<h2 id="四次挥手可能变成三次挥手吗"><a href="#四次挥手可能变成三次挥手吗" class="headerlink" title="四次挥手可能变成三次挥手吗?"></a>四次挥手可能变成三次挥手吗?</h2><ul>
+<li>当被动关闭方在收到FIN后,回复ACK的时候,可能由于TCP延迟确认,延迟发送这个ACK,此时被动关闭一方也关闭了连接,被动关闭一方将同时发送FIN和ACK给主动关闭一方,被动关闭方由CLOSE_WAIT状态直接到LAST_ACK状态,而主动关闭一方由FIN_WAIT_1状态直接进入TIME_WAIT状态.此时TCP四次挥手,变为三次挥手</li>
+</ul>
+<h2 id="四次挥手-被动关闭一方何时发送FIN"><a href="#四次挥手-被动关闭一方何时发送FIN" class="headerlink" title="四次挥手,被动关闭一方何时发送FIN?"></a>四次挥手,被动关闭一方何时发送FIN?</h2><ul>
+<li>被动关闭一方收到FIN并回复ACK后不会理解发送FIN,需要等待应用层关闭连接后才会发送FIN</li>
+</ul>
+<h2 id="为什么是三次握手-四次挥手"><a href="#为什么是三次握手-四次挥手" class="headerlink" title="为什么是三次握手,四次挥手?"></a>为什么是三次握手,四次挥手?</h2><ol>
+<li><strong>三次握手,为了防止已经失效的连接请求报文段突然又传到服务端,因而产生错误.</strong> 例如:客户端发送一个连接请求给服务端,这个请求并没有丢失,但由于未知原因在某个网络节点,导致延迟到连接释放的某个时间点到达服务端,这是一个本已失效的报文段,但服务端再收到报文后,会误以为A再次发出了一个新的连接请求,服务端向客户端发送确认报文,确认连接成功,但客户端并没有发出建立连接的请求,服务端等不到客户端的消息,也不会结束连接,白白浪费服务器资源</li>
+<li><strong>四次挥手是因为TCP连接是全双工的</strong>,允许同时通信的双方同时进行数据的收发,也运行收发的两个方向的连接被独立关闭,避免客户端数据发送完毕,向服务端发送FIN关闭连接,而服务端还有发送到客户端的数据没有发送完毕的情况.所以关闭TCP连接需要四次,每次关闭一个方向上的连接需要FIN和ACK两次.</li>
+</ol>
+<h2 id="什么是半打开、半关闭、半连接"><a href="#什么是半打开、半关闭、半连接" class="headerlink" title="什么是半打开、半关闭、半连接?"></a>什么是半打开、半关闭、半连接?</h2><ol>
+<li>半打开,一方已经关闭或者异常终止连接,而另一方却不知道,这样的连接称为半打开</li>
+<li>半关闭,TCP是全双工的,其在关闭写后,仍然可以读取对方发送的数据称为半关闭</li>
+<li>半连接,客户端向服务端发起TCP连接发送SYN,服务端正常回复SYN和ACK,但客户端未回复ACK</li>
+</ol>
+<h2 id="close和shutdown的区别"><a href="#close和shutdown的区别" class="headerlink" title="close和shutdown的区别"></a>close和shutdown的区别</h2><ul>
+<li>单进程、单线程、多线程在使用close时行为是一致的,都会真正的关闭连接,而多进程下调用close函数只是对其引用计数减一,只有当引用计数为0时才会真正的关闭连接,如果多进程共享同一个socket则需要都调用close才会真正关闭连接</li>
+<li>shutdown则和多进程、多线程无关,只要调用shutdown都会去真正的关闭连接.shutdown可以通过标志位选择关闭读(对端发送过来的消息丢弃掉)、关闭写(发送FIN)、关闭读写</li>
+</ul>
+<h2 id="listen函数的第二个参数的含义是什么"><a href="#listen函数的第二个参数的含义是什么" class="headerlink" title="listen函数的第二个参数的含义是什么?"></a>listen函数的第二个参数的含义是什么?</h2><ul>
+<li>TCP在三次握手时,服务端维护了两个队列,一个是连接尚未建立完成的队列(SYN队列,即收到SYN,回复SYN+ACK后,尚未收到ACK),一个是连接建立完成的队列(ACCEPT队列,即收到SYN,回复SYN+ACK后,收到ACK),listen函数第二个参数的含义即为连接建立完成的队列的长度,一般设置为5-10,因为服务器处理能力优先,而且维护队列需要消耗资源</li>
+</ul>
+<h2 id="TCP的定时器有哪些"><a href="#TCP的定时器有哪些" class="headerlink" title="TCP的定时器有哪些?"></a>TCP的定时器有哪些?</h2><ol>
+<li>建立连接定时器 TCP建立连接客户端发送第一个SYN后,起一个定时器(默认3s),如果SYN丢失,定时器到后会重发SYN,配置<code>/proc/sys/net/ipv4/tcp_syn_retries</code>查看重传次数,时间倍数递增</li>
+<li>重传定时器 TCP发出数据时设定,超时未收到ACK则重传</li>
+<li>延迟应答定时器 延迟应答时使用,延迟应答是为了提高网络传输的效率(糊涂窗口综合症)</li>
+<li>坚持定时器 专门为对付零窗口通告而设立,发送端收到零窗口通告则启动,发送探测报文段</li>
+<li>保活定时器 收到消息则重置保活定时器,如果超时(通常是2小时),则每75s(发送10次)发送一个探测报文段,若收不到响应则终止连接</li>
+<li>FIN_WAIT_2定时器 主动断开连接一方发送FIN收到ACK后进入FIN_WAIT_2状态,此时启动该定时器,当对端一直不发送数据,超时后终止连接</li>
+<li>TIME_WAIT定时器 2MSL定时器,主动关闭方进入TIME_WAIT状态时启动,定时器设定为1分钟,TCP控制块被删除,端口号可重用</li>
+</ol>
+<h2 id="大端和小端的区别"><a href="#大端和小端的区别" class="headerlink" title="大端和小端的区别"></a>大端和小端的区别</h2><ul>
+<li>大端和小端都是指主机字节序,网络字节序采用大端的方式</li>
+<li>小端将低位字节存放在内存的低地址端,高位字节存放在内存的高地址端</li>
+<li>大端将低地字节存放在内存的高地址端,高位字节存放在内存的低地址段<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">栈  由高地址向低地址增长 <span class="number">1</span>的<span class="number">16</span>进制为 <span class="number">0x00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span></span><br><span class="line">|----|          高地址</span><br><span class="line">|<span class="number">0x00</span>|</span><br><span class="line">|----|</span><br><span class="line">|<span class="number">0x00</span>|</span><br><span class="line">|----|</span><br><span class="line">|<span class="number">0x00</span>|</span><br><span class="line">|----|</span><br><span class="line">|<span class="number">0x01</span>|&lt;---&amp;x p  低地址</span><br><span class="line">|----|</span><br><span class="line">|    |</span><br><span class="line">|----|</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//方法1</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> x = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> *p = (<span class="keyword">unsigned</span> <span class="keyword">char</span>*)(&amp;x);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; (((<span class="keyword">int</span>)(*p) == <span class="number">1</span>) ? <span class="string">"小端"</span> : <span class="string">"大端"</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//方法2</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        <span class="keyword">unsigned</span> i;</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> c;</span><br><span class="line">    &#125;un;</span><br><span class="line">    un.i = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; ((un.c == <span class="number">1</span>) ? <span class="string">"小端"</span> : <span class="string">"大端"</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li>Linux高性能服务器编程</li>
+<li><a href="https://blog.csdn.net/zerooffdate/article/details/79359726" target="_blank" rel="noopener">TCP三次握手的第二个ack丢了会怎样</a></li>
+<li><a href="https://yq.aliyun.com/articles/15118/" target="_blank" rel="noopener">TCP连接建立的三次握手过程可以携带数据吗？</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/网络/" rel="tag"># 网络</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/09/12/design-pattern-27/" rel="prev" title="设计模式探秘-27-比较总结">
+      <i class="fa fa-chevron-left"></i> 设计模式探秘-27-比较总结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/09/18/io-1/" rel="next" title="Linux I/O 阻塞、非阻塞、同步、异步的理解">
+      Linux I/O 阻塞、非阻塞、同步、异步的理解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#浏览器网页访问的过程简介"><span class="nav-number">1.</span> <span class="nav-text">浏览器网页访问的过程简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TCP-IP协议族"><span class="nav-number">2.</span> <span class="nav-text">TCP/IP协议族</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-IP协议族体系结构和主要结构"><span class="nav-number">2.1.</span> <span class="nav-text">TCP/IP协议族体系结构和主要结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络链路层"><span class="nav-number">2.1.1.</span> <span class="nav-text">网络链路层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络层"><span class="nav-number">2.1.2.</span> <span class="nav-text">网络层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#传输层"><span class="nav-number">2.1.3.</span> <span class="nav-text">传输层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用层"><span class="nav-number">2.1.4.</span> <span class="nav-text">应用层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#封装"><span class="nav-number">2.2.</span> <span class="nav-text">封装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分用"><span class="nav-number">2.3.</span> <span class="nav-text">分用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP协议"><span class="nav-number">2.4.</span> <span class="nav-text">ARP协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IP协议"><span class="nav-number">2.5.</span> <span class="nav-text">IP协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IP模块工作流程"><span class="nav-number">2.6.</span> <span class="nav-text">IP模块工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP协议"><span class="nav-number">2.7.</span> <span class="nav-text">TCP协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP网络连接"><span class="nav-number">2.8.</span> <span class="nav-text">TCP网络连接</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DNS协议"><span class="nav-number">3.</span> <span class="nav-text">DNS协议</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HTTP协议"><span class="nav-number">4.</span> <span class="nav-text">HTTP协议</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HTTP协议-1"><span class="nav-number">5.</span> <span class="nav-text">HTTP协议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP和HTTPS区别"><span class="nav-number">5.1.</span> <span class="nav-text">HTTP和HTTPS区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS优缺点"><span class="nav-number">5.2.</span> <span class="nav-text">HTTPS优缺点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#面试问题"><span class="nav-number">6.</span> <span class="nav-text">面试问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP三次握手-客户端发送的最后确认的ACK丢失-服务端会怎么样-服务器在没有收到第二个ACK时-客户端发送数据-被服务端接收到-服务端怎么处理-客户端在回复ACK的同时携带数据服务器会怎么处理"><span class="nav-number">6.1.</span> <span class="nav-text">TCP三次握手,客户端发送的最后确认的ACK丢失,服务端会怎么样? 服务器在没有收到第二个ACK时,客户端发送数据,被服务端接收到,服务端怎么处理? 客户端在回复ACK的同时携带数据服务器会怎么处理?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主动关闭TCP连接的一方进入TIME-WAIT状态-还是被动关闭的一方进入-TIME-WAIT状态有何特殊之处-为什么"><span class="nav-number">6.2.</span> <span class="nav-text">主动关闭TCP连接的一方进入TIME_WAIT状态,还是被动关闭的一方进入?TIME_WAIT状态有何特殊之处,为什么?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关闭TCP连接时-如果通信双方同时发出了FIN会怎么样"><span class="nav-number">6.3.</span> <span class="nav-text">关闭TCP连接时,如果通信双方同时发出了FIN会怎么样?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#被动关闭一方在LAST-ACK收不到ACK如何关闭"><span class="nav-number">6.4.</span> <span class="nav-text">被动关闭一方在LAST_ACK收不到ACK如何关闭?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四次挥手可能变成三次挥手吗"><span class="nav-number">6.5.</span> <span class="nav-text">四次挥手可能变成三次挥手吗?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四次挥手-被动关闭一方何时发送FIN"><span class="nav-number">6.6.</span> <span class="nav-text">四次挥手,被动关闭一方何时发送FIN?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么是三次握手-四次挥手"><span class="nav-number">6.7.</span> <span class="nav-text">为什么是三次握手,四次挥手?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是半打开、半关闭、半连接"><span class="nav-number">6.8.</span> <span class="nav-text">什么是半打开、半关闭、半连接?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#close和shutdown的区别"><span class="nav-number">6.9.</span> <span class="nav-text">close和shutdown的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#listen函数的第二个参数的含义是什么"><span class="nav-number">6.10.</span> <span class="nav-text">listen函数的第二个参数的含义是什么?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP的定时器有哪些"><span class="nav-number">6.11.</span> <span class="nav-text">TCP的定时器有哪些?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#大端和小端的区别"><span class="nav-number">6.12.</span> <span class="nav-text">大端和小端的区别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">7.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

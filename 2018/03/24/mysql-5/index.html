@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="运算符算数运算符    运算符 作用     + 加法   - 减法   * 乘法   /，DIV 除法，返回商   %，MOD 除法，返回余数     1234567MariaDB [test]&amp;gt; select 1/0, 100%0, 1 div 0, MOD(100, 0), 3/2, 3 DIV 2, 3%2, mod(3, 2), 5.3/2, 5.3 DIV 2, 5.3%2, m">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 运算符 常用函数">
+<meta property="og:url" content="http://www.casezheng.date/2018/03/24/mysql-5/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="运算符算数运算符    运算符 作用     + 加法   - 减法   * 乘法   /，DIV 除法，返回商   %，MOD 除法，返回余数     1234567MariaDB [test]&amp;gt; select 1/0, 100%0, 1 div 0, MOD(100, 0), 3/2, 3 DIV 2, 3%2, mod(3, 2), 5.3/2, 5.3 DIV 2, 5.3%2, m">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.159Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL 运算符 常用函数">
+<meta name="twitter:description" content="运算符算数运算符    运算符 作用     + 加法   - 减法   * 乘法   /，DIV 除法，返回商   %，MOD 除法，返回余数     1234567MariaDB [test]&amp;gt; select 1/0, 100%0, 1 div 0, MOD(100, 0), 3/2, 3 DIV 2, 3%2, mod(3, 2), 5.3/2, 5.3 DIV 2, 5.3%2, m">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/03/24/mysql-5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL 运算符 常用函数 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/03/24/mysql-5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 运算符 常用函数
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-03-24 16:48:05" itemprop="dateCreated datePublished" datetime="2018-03-24T16:48:05+08:00">2018-03-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h1><h2 id="算数运算符"><a href="#算数运算符" class="headerlink" title="算数运算符"></a>算数运算符</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">运算符</th>
+<th style="text-align:center">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">+</td>
+<td style="text-align:center">加法</td>
+</tr>
+<tr>
+<td style="text-align:center">-</td>
+<td style="text-align:center">减法</td>
+</tr>
+<tr>
+<td style="text-align:center">*</td>
+<td style="text-align:center">乘法</td>
+</tr>
+<tr>
+<td style="text-align:center">/，DIV</td>
+<td style="text-align:center">除法，返回商</td>
+</tr>
+<tr>
+<td style="text-align:center">%，MOD</td>
+<td style="text-align:center">除法，返回余数</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select 1/0, 100%0, 1 div 0, MOD(100, 0), 3/2, 3 DIV 2, 3%2, mod(3, 2), 5.3/2, 5.3 DIV 2, 5.3%2, mod(5.3, 2), 5.3 mod 2;</span><br><span class="line">+------+-------+---------+-------------+--------+---------+------+-----------+---------+-----------+-------+-------------+-----------+</span><br><span class="line">| 1/0  | 100%0 | 1 div 0 | MOD(100, 0) | 3/2    | 3 DIV 2 | 3%2  | mod(3, 2) | 5.3/2   | 5.3 DIV 2 | 5.3%2 | mod(5.3, 2) | 5.3 mod 2 |</span><br><span class="line">+------+-------+---------+-------------+--------+---------+------+-----------+---------+-----------+-------+-------------+-----------+</span><br><span class="line">| NULL |  NULL |    NULL |        NULL | 1.5000 |       1 |    1 |         1 | 2.65000 |         2 |   1.3 |         1.3 |       1.3 |</span><br><span class="line">+------+-------+---------+-------------+--------+---------+------+-----------+---------+-----------+-------+-------------+-----------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h2 id="比较运算符"><a href="#比较运算符" class="headerlink" title="比较运算符"></a>比较运算符</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">运算符</th>
+<th style="text-align:center">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">=</td>
+<td style="text-align:center">等于</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>&lt;&gt;</code>或!=</td>
+<td style="text-align:center">不等于</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>&lt;=&gt;</code></td>
+<td style="text-align:center">NULL 安全的等于(NULL-safe)</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>&lt;</code></td>
+<td style="text-align:center">小于</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>&lt;=</code></td>
+<td style="text-align:center">小于等于</td>
+</tr>
+<tr>
+<td style="text-align:center">&gt;</td>
+<td style="text-align:center">大于</td>
+</tr>
+<tr>
+<td style="text-align:center">&gt;=</td>
+<td style="text-align:center">大于等于</td>
+</tr>
+<tr>
+<td style="text-align:center">BETWEEN</td>
+<td style="text-align:center">存在与指定范围</td>
+</tr>
+<tr>
+<td style="text-align:center">IN</td>
+<td style="text-align:center">存在于指定集合</td>
+</tr>
+<tr>
+<td style="text-align:center">IS NULL</td>
+<td style="text-align:center">为 NULL</td>
+</tr>
+<tr>
+<td style="text-align:center">IS NOT NULL</td>
+<td style="text-align:center">不为 NULL</td>
+</tr>
+<tr>
+<td style="text-align:center">LIKE</td>
+<td style="text-align:center">通配符匹配</td>
+</tr>
+<tr>
+<td style="text-align:center">REGEXP 或 RLIKE</td>
+<td style="text-align:center">正则表达式</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ol>
+<li>=、<code>&lt;&gt;</code>、!=不能用于NULL比较</li>
+<li><code>&lt;=&gt;</code>安全的等于运算符，即使操作数为NULL也可以正确比较</li>
+<li><code>BETWEEN</code>运算符的使用格式为”a BETWEEN min AND max”，当 a 大于等于 min 并且小于等于 max，则返回值为 1，否则返回 0;当操作数 a、min、max 类型相同时，此表达式等价于（<code>a&gt;=min and a&lt;=max</code>），当操作数类型不同时，比较时会遵循类型转换原则进行转换后，再进行比较运算。</li>
+<li>“IN”运算符的使用格式为”a IN (value1, value2, … …)”,当 a 的值存在于列表中时，则整个比较表达式返回的值为 1，否则返回 0。</li>
+<li>“IS NULL”运算符的使用格式为”a IS NULL”,当 a 的值为 NULL，则返回值为 1，否则返回 0。</li>
+<li>“IS NOT NULL”运算符的使用格式为”a IS NOT NULL”。和”IS NULL”相反，当 a 的值不为 NULL，则返回值为 1，否则返回 0。 </li>
+<li><strong>“LIKE”运算符的使用格式为”a LIKE %123%”,当 a 中含有字符串”123”时，则返回值为 1，否则返回 0。</strong> </li>
+<li><strong>“REGEXP”运算符的使用格式为”str REGEXP str-pat”,当 str 字符串中含有 str-pat 相匹配的字符串时，则返回值为 1，否则返回 0。</strong></li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select 1=0, 1=1, NULL=NULL, 1&lt;&gt;0, 1&lt;&gt;1, NULL&lt;&gt;NULL, 1&lt;=&gt;1, 2&lt;=&gt;0, NULL&lt;=&gt;NULL;</span><br><span class="line">+<span class="comment">-----+-----+-----------+------+------+------------+-------+-------+-------------+</span></span><br><span class="line">| 1=0 | 1=1 | NULL=NULL | 1&lt;&gt;0 | 1&lt;&gt;1 | NULL&lt;&gt;NULL | 1&lt;=&gt;1 | 2&lt;=&gt;0 | NULL&lt;=&gt;NULL |</span><br><span class="line">+<span class="comment">-----+-----+-----------+------+------+------------+-------+-------+-------------+</span></span><br><span class="line">|   0 |   1 |      NULL |    1 |    0 |       NULL |     1 |     0 |           1 |</span><br><span class="line">+<span class="comment">-----+-----+-----------+------+------+------------+-------+-------+-------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">select</span> <span class="string">'123'</span> <span class="keyword">like</span> <span class="string">'%123%'</span>, <span class="string">'123456'</span> <span class="keyword">like</span> <span class="string">'%123%'</span>, <span class="string">'0123123'</span> <span class="keyword">like</span> <span class="string">'%123%'</span>, <span class="string">'01 23'</span> <span class="keyword">like</span> <span class="string">'%123%'</span>;</span><br><span class="line">+<span class="comment">--------------------+-----------------------+------------------------+----------------------+</span></span><br><span class="line">| '123' like '%123%' | '123456' like '%123%' | '0123123' like '%123%' | '01 23' like '%123%' |</span><br><span class="line">+<span class="comment">--------------------+-----------------------+------------------------+----------------------+</span></span><br><span class="line">|                  1 |                     1 |                      1 |                    0 |</span><br><span class="line">+<span class="comment">--------------------+-----------------------+------------------------+----------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">select</span> <span class="string">'abcdef'</span> regexp <span class="string">'ab'</span>, <span class="string">'abcdef'</span> regexp <span class="string">'k'</span>, <span class="string">'a bcdef'</span> regexp <span class="string">'ab'</span>;</span><br><span class="line">+<span class="comment">----------------------+---------------------+-----------------------+</span></span><br><span class="line">| 'abcdef' regexp 'ab' | 'abcdef' regexp 'k' | 'a bcdef' regexp 'ab' |</span><br><span class="line">+<span class="comment">----------------------+---------------------+-----------------------+</span></span><br><span class="line">|                    1 |                   0 |                     0 |</span><br><span class="line">+<span class="comment">----------------------+---------------------+-----------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">运算符</th>
+<th style="text-align:center">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">NOT 或 !</td>
+<td style="text-align:center">逻辑非</td>
+</tr>
+<tr>
+<td style="text-align:center">AND 或 &amp;&amp;</td>
+<td style="text-align:center">逻辑与</td>
+</tr>
+<tr>
+<td style="text-align:center">OR 或  &#124;&#124;</td>
+<td style="text-align:center">逻辑或</td>
+</tr>
+<tr>
+<td style="text-align:center">XOR</td>
+<td style="text-align:center">逻辑异或</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="位运算符"><a href="#位运算符" class="headerlink" title="位运算符"></a>位运算符</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">运算符</th>
+<th style="text-align:center">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">&amp;</td>
+<td style="text-align:center">位与（位 AND）</td>
+</tr>
+<tr>
+<td style="text-align:center">&#124;</td>
+<td style="text-align:center">位或 （位 OR ）</td>
+</tr>
+<tr>
+<td style="text-align:center">^</td>
+<td style="text-align:center">位异或（位 XOR）</td>
+</tr>
+<tr>
+<td style="text-align:center">~</td>
+<td style="text-align:center">位取反</td>
+</tr>
+<tr>
+<td style="text-align:center">&gt;&gt;</td>
+<td style="text-align:center">位右移</td>
+</tr>
+<tr>
+<td style="text-align:center">&lt;&lt;</td>
+<td style="text-align:center">位左移</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="运算符优先级"><a href="#运算符优先级" class="headerlink" title="运算符优先级"></a>运算符优先级</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">优先级顺序</th>
+<th style="text-align:center">运算符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">:=</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">&#124;&#124; , OR, XOR</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">&amp;&amp;, AND</td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center">NOT</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center">BETWEEN, CASE, WHEN, THEN, ELSE</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">=, &lt;=&gt;, &gt;=, &gt;, &lt;=, &lt;, &lt;&gt;, !=, IS, LIKE, REGEXP, IN</td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">&#124;</td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center">&amp;</td>
+</tr>
+<tr>
+<td style="text-align:center">9</td>
+<td style="text-align:center">&lt;&lt;, &gt;&gt;</td>
+</tr>
+<tr>
+<td style="text-align:center">10</td>
+<td style="text-align:center">-, +</td>
+</tr>
+<tr>
+<td style="text-align:center">11</td>
+<td style="text-align:center">*, /, DIV, %, MOD</td>
+</tr>
+<tr>
+<td style="text-align:center">12</td>
+<td style="text-align:center">^</td>
+</tr>
+<tr>
+<td style="text-align:center">13</td>
+<td style="text-align:center">- (一元减号), ~ (一元比特反转)</td>
+</tr>
+<tr>
+<td style="text-align:center">14</td>
+<td style="text-align:center">!</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h1><h2 id="字符串函数"><a href="#字符串函数" class="headerlink" title="字符串函数"></a>字符串函数</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">函数</th>
+<th style="text-align:center">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">CONCAT(S1,S2,…Sn)</td>
+<td style="text-align:center">连接S1,S2,…Sn为一个字符串</td>
+</tr>
+<tr>
+<td style="text-align:center">INSERT(str,x,y,instr)</td>
+<td style="text-align:center">将字符串str从第x位置开始，y个字符长的子串替换为字符串instr</td>
+</tr>
+<tr>
+<td style="text-align:center">LOWER(str)</td>
+<td style="text-align:center">将字符串str中所有字符变为小写</td>
+</tr>
+<tr>
+<td style="text-align:center">UPPER(str)</td>
+<td style="text-align:center">将字符串str中所有字符变为大写</td>
+</tr>
+<tr>
+<td style="text-align:center">LEFT(str,x)</td>
+<td style="text-align:center">返回字符串str最左边的x个字符</td>
+</tr>
+<tr>
+<td style="text-align:center">RIGHT(str,x)</td>
+<td style="text-align:center">返回字符串str最右边的x个字符</td>
+</tr>
+<tr>
+<td style="text-align:center">LPAD(str,n,pad)</td>
+<td style="text-align:center">用字符串pad对str最左边进行填充，直到长度为n个字符长度</td>
+</tr>
+<tr>
+<td style="text-align:center">RPAD(str,n,pad)</td>
+<td style="text-align:center">用字符串pad对str最右边进行填充，直到长度为n个字符长度</td>
+</tr>
+<tr>
+<td style="text-align:center">LTRIM(str)</td>
+<td style="text-align:center">去掉字符串str左侧的空格</td>
+</tr>
+<tr>
+<td style="text-align:center">RTRIM(str)</td>
+<td style="text-align:center">去掉字符串str行尾的空格</td>
+</tr>
+<tr>
+<td style="text-align:center">REPEAT(str,x)</td>
+<td style="text-align:center">返回str重复x次的结果</td>
+</tr>
+<tr>
+<td style="text-align:center">REPLACE(str,a,b)</td>
+<td style="text-align:center">用字符串b替换字符串str中所有出现的字符串a</td>
+</tr>
+<tr>
+<td style="text-align:center">STRCMP(s1,s2)</td>
+<td style="text-align:center">比较字符串s1和s2</td>
+</tr>
+<tr>
+<td style="text-align:center">TRIM(str)</td>
+<td style="text-align:center">去掉字符串行尾和行头的空格</td>
+</tr>
+<tr>
+<td style="text-align:center">SUBSTRING(str,x,y)</td>
+<td style="text-align:center">返回从字符串strx位置起y个字符长度的字串</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="数值函数"><a href="#数值函数" class="headerlink" title="数值函数"></a>数值函数</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">函数</th>
+<th style="text-align:center">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">ABS(x)</td>
+<td style="text-align:center">返回x的绝对值</td>
+</tr>
+<tr>
+<td style="text-align:center">CEIL(x)</td>
+<td style="text-align:center">返回大于x的最大整数值</td>
+</tr>
+<tr>
+<td style="text-align:center">FLOOR(x)</td>
+<td style="text-align:center">返回小于x的最大整数值</td>
+</tr>
+<tr>
+<td style="text-align:center">MOD(x，y)</td>
+<td style="text-align:center">返回x/y的模</td>
+</tr>
+<tr>
+<td style="text-align:center">RAND()</td>
+<td style="text-align:center">返回0到1内的随机值</td>
+</tr>
+<tr>
+<td style="text-align:center">ROUND(x,y)</td>
+<td style="text-align:center">返回参数x的四舍五入的有y位小数的值</td>
+</tr>
+<tr>
+<td style="text-align:center">TRUNCATE(x,y)</td>
+<td style="text-align:center">返回数字x截断为y位小数的结果</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="日期和时间函数"><a href="#日期和时间函数" class="headerlink" title="日期和时间函数"></a>日期和时间函数</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">函数</th>
+<th style="text-align:center">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">CURDATE()</td>
+<td style="text-align:center">返回当前日期</td>
+</tr>
+<tr>
+<td style="text-align:center">CURTIME()</td>
+<td style="text-align:center">返回当前时间</td>
+</tr>
+<tr>
+<td style="text-align:center">NOW()</td>
+<td style="text-align:center">返回当前的日期和时间</td>
+</tr>
+<tr>
+<td style="text-align:center">UNIX_TIMESTAMP(date)</td>
+<td style="text-align:center">返回日期date的UNIX时间戳</td>
+</tr>
+<tr>
+<td style="text-align:center">FROM_UNIXTIME</td>
+<td style="text-align:center">返回UNIX时间戳的日期值</td>
+</tr>
+<tr>
+<td style="text-align:center">WEEK(date)</td>
+<td style="text-align:center">返回日期date为一年中的第几周</td>
+</tr>
+<tr>
+<td style="text-align:center">YEAR(date)</td>
+<td style="text-align:center">返回日期date的年份</td>
+</tr>
+<tr>
+<td style="text-align:center">HOUR(time)</td>
+<td style="text-align:center">返回time的小时值</td>
+</tr>
+<tr>
+<td style="text-align:center">MINUTE(time)</td>
+<td style="text-align:center">返回time的分钟值</td>
+</tr>
+<tr>
+<td style="text-align:center">MONTHNAME(date)</td>
+<td style="text-align:center">返回date的月份名</td>
+</tr>
+<tr>
+<td style="text-align:center">DATE_FORMAT(date,fmt)</td>
+<td style="text-align:center">返回按字符串fmt格式化日期date值</td>
+</tr>
+<tr>
+<td style="text-align:center">DATE_ADD(date,INTERVALexprtype)</td>
+<td style="text-align:center">返回一个日期或时间值加上一个时间间隔的时间值</td>
+</tr>
+<tr>
+<td style="text-align:center">DATEDIFF(expr,expr2)</td>
+<td style="text-align:center">返回起始时间expr和结束时间expr2之间的天数</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; select CURDATE(), CURTIME(), NOW(), UNIX_TIMESTAMP(now()), FROM_UNIXTIME(1521907408),</span><br><span class="line">    -&gt; WEEK(now()), YEAR(now()), HOUR(CURTIME()), MINUTE(CURTIME()),  MONTHNAME(now())\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">                CURDATE(): 2018-03-25</span><br><span class="line">                CURTIME(): 00:13:13</span><br><span class="line">                    NOW(): 2018-03-25 00:13:13</span><br><span class="line">    UNIX_TIMESTAMP(now()): 1521907993</span><br><span class="line">FROM_UNIXTIME(1521907408): 2018-03-25 00:03:28</span><br><span class="line">              WEEK(now()): 12</span><br><span class="line">              YEAR(now()): 2018</span><br><span class="line">          HOUR(CURTIME()): 0</span><br><span class="line">        MINUTE(CURTIME()): 13</span><br><span class="line">         MONTHNAME(now()): March</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">MariaDB [test]&gt; select DATE_FORMAT(now(),&apos;%M,%D,%Y&apos;),</span><br><span class="line">    -&gt; now() current,</span><br><span class="line">    -&gt; date_add(now(),INTERVAL 31 day) after31days,</span><br><span class="line">    -&gt; date_add(now(),INTERVAL &apos;1_2&apos; year_month) after_oneyear_twomonth,</span><br><span class="line">    -&gt; date_add(now(),INTERVAL -31 day) before31days,</span><br><span class="line">    -&gt; date_add(now(),INTERVAL &apos;-1_-2&apos; year_month) before_oneyear_twomonth\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">DATE_FORMAT(now(),&apos;%M,%D,%Y&apos;): March,25th,2018</span><br><span class="line">                      current: 2018-03-25 00:36:15</span><br><span class="line">                  after31days: 2018-04-25 00:36:15</span><br><span class="line">       after_oneyear_twomonth: 2019-05-25 00:36:15</span><br><span class="line">                 before31days: 2018-02-22 00:36:15</span><br><span class="line">      before_oneyear_twomonth: 2017-01-25 00:36:15</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="DATE-FORMAT"><a href="#DATE-FORMAT" class="headerlink" title="DATE_FORMAT"></a>DATE_FORMAT</h3><p>DATE_FORMAT(date,fmt)函数：按字符串fmt格式化日期date值，此函数能够按指定的格式显示日期</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">格式符</th>
+<th style="text-align:center">格式说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">%S,%s</td>
+<td style="text-align:center">两位数字形式的秒（00,01,…,59）</td>
+</tr>
+<tr>
+<td style="text-align:center">%i</td>
+<td style="text-align:center">两位数字形式的分（00,01,…,59）</td>
+</tr>
+<tr>
+<td style="text-align:center">%H</td>
+<td style="text-align:center">两位数字形式的小时，24 小时（00,01,…,23）</td>
+</tr>
+<tr>
+<td style="text-align:center">%h,%I</td>
+<td style="text-align:center">两位数字形式的小时，12 小时（01,02,…,12）</td>
+</tr>
+<tr>
+<td style="text-align:center">%k</td>
+<td style="text-align:center">数字形式的小时，24 小时（0,1,…,23）</td>
+</tr>
+<tr>
+<td style="text-align:center">%l</td>
+<td style="text-align:center">数字形式的小时，12 小时（1,2,…,12）</td>
+</tr>
+<tr>
+<td style="text-align:center">%T</td>
+<td style="text-align:center">24 小时的时间形式（hh:mm:ss）</td>
+</tr>
+<tr>
+<td style="text-align:center">%r</td>
+<td style="text-align:center">12 小时的时间形式（hh:mm:ssAM 或 hh:mm:ssPM）</td>
+</tr>
+<tr>
+<td style="text-align:center">%p</td>
+<td style="text-align:center">AM 或 PM</td>
+</tr>
+<tr>
+<td style="text-align:center">%W</td>
+<td style="text-align:center">一周中每一天的名称（Sunday,Monday,…,Saturday）</td>
+</tr>
+<tr>
+<td style="text-align:center">%a</td>
+<td style="text-align:center">一周中每一天名称的缩写（Sun,Mon,…,Sat）</td>
+</tr>
+<tr>
+<td style="text-align:center">%d</td>
+<td style="text-align:center">两位数字表示月中的天数（00,01,…,31）</td>
+</tr>
+<tr>
+<td style="text-align:center">%e</td>
+<td style="text-align:center">数字形式表示月中的天数（1,2，…,31）</td>
+</tr>
+<tr>
+<td style="text-align:center">%D</td>
+<td style="text-align:center">英文后缀表示月中的天数（1st,2nd,3rd,…）</td>
+</tr>
+<tr>
+<td style="text-align:center">%w</td>
+<td style="text-align:center">以数字形式表示周中的天数（0=Sunday,1=Monday,…,6=Saturday）</td>
+</tr>
+<tr>
+<td style="text-align:center">%j</td>
+<td style="text-align:center">以 3 位数字表示年中的天数（001,002,…,366）</td>
+</tr>
+<tr>
+<td style="text-align:center">%U</td>
+<td style="text-align:center">周（0,1,52），其中 Sunday 为周中的第一天</td>
+</tr>
+<tr>
+<td style="text-align:center">%u</td>
+<td style="text-align:center">周（0,1,52），其中 Monday 为周中的第一天</td>
+</tr>
+<tr>
+<td style="text-align:center">%M</td>
+<td style="text-align:center">月名（January,February,…,December）</td>
+</tr>
+<tr>
+<td style="text-align:center">%b</td>
+<td style="text-align:center">缩写的月名（January,February,…,December）</td>
+</tr>
+<tr>
+<td style="text-align:center">%m</td>
+<td style="text-align:center">两位数字表示的月份（01,02,…,12）</td>
+</tr>
+<tr>
+<td style="text-align:center">%c</td>
+<td style="text-align:center">数字表示的月份（1,2,…,12）</td>
+</tr>
+<tr>
+<td style="text-align:center">%Y</td>
+<td style="text-align:center">4 位数字表示的年份</td>
+</tr>
+<tr>
+<td style="text-align:center">%y</td>
+<td style="text-align:center">两位数字表示的年份</td>
+</tr>
+<tr>
+<td style="text-align:center">%%</td>
+<td style="text-align:center">直接值“%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="DATE-ADD"><a href="#DATE-ADD" class="headerlink" title="DATE_ADD"></a>DATE_ADD</h3><p>DATE_ADD(date,INTERVAL expr type)函数：返回与所给日期date相差INTERVAL时间段的日期<br>其中INTERVAL是间隔类型关键字，expr是一个表达式，这个表达式对应后面的类型，type是间隔类型</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">表达式类型</th>
+<th style="text-align:center">描述</th>
+<th style="text-align:center">格式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">HOUR</td>
+<td style="text-align:center">小时</td>
+<td style="text-align:center">hh</td>
+</tr>
+<tr>
+<td style="text-align:center">MINUTE</td>
+<td style="text-align:center">分</td>
+<td style="text-align:center">mm</td>
+</tr>
+<tr>
+<td style="text-align:center">SECOND</td>
+<td style="text-align:center">秒</td>
+<td style="text-align:center">ss</td>
+</tr>
+<tr>
+<td style="text-align:center">YEAR</td>
+<td style="text-align:center">年</td>
+<td style="text-align:center">YY</td>
+</tr>
+<tr>
+<td style="text-align:center">MONTH</td>
+<td style="text-align:center">月</td>
+<td style="text-align:center">MM</td>
+</tr>
+<tr>
+<td style="text-align:center">DAY</td>
+<td style="text-align:center">日</td>
+<td style="text-align:center">DD</td>
+</tr>
+<tr>
+<td style="text-align:center">YEAR_MONTH</td>
+<td style="text-align:center">年和月</td>
+<td style="text-align:center">YY-MM</td>
+</tr>
+<tr>
+<td style="text-align:center">DAY_HOUR</td>
+<td style="text-align:center">日和小时</td>
+<td style="text-align:center">DD hh</td>
+</tr>
+<tr>
+<td style="text-align:center">DAY_MINUTE</td>
+<td style="text-align:center">日和分钟</td>
+<td style="text-align:center">DD hh:mm</td>
+</tr>
+<tr>
+<td style="text-align:center">DAY_SECOND</td>
+<td style="text-align:center">日和秒</td>
+<td style="text-align:center">DD hh:mm:ss</td>
+</tr>
+<tr>
+<td style="text-align:center">HOUR_MINUTE</td>
+<td style="text-align:center">小时和分</td>
+<td style="text-align:center">hh:mm</td>
+</tr>
+<tr>
+<td style="text-align:center">HOUR_SECOND</td>
+<td style="text-align:center">小时和秒</td>
+<td style="text-align:center">hh:ss</td>
+</tr>
+<tr>
+<td style="text-align:center">MINUTE_SECOND</td>
+<td style="text-align:center">分钟和秒</td>
+<td style="text-align:center">mm:ss</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="流程函数"><a href="#流程函数" class="headerlink" title="流程函数"></a>流程函数</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">函数</th>
+<th style="text-align:center">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">IF(value,t f)</td>
+<td style="text-align:center">如果 value 是真，返回 t；否则返回 f</td>
+</tr>
+<tr>
+<td style="text-align:center">IFNULL(value1,value2)</td>
+<td style="text-align:center">如果 value1 不为空返回 value1，否则返回 value2</td>
+</tr>
+<tr>
+<td style="text-align:center">CASE WHEN [value1] THEN[result1]…ELSE[default]END</td>
+<td style="text-align:center">如果 value1 是真，返回 result1，否则返回 default</td>
+</tr>
+<tr>
+<td style="text-align:center">CASE [expr] WHEN [value1] THEN[result1]…ELSE[default]END</td>
+<td style="text-align:center">如果 expr 等于 value1，返回 result1，否则返回 default</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="其他常用函数"><a href="#其他常用函数" class="headerlink" title="其他常用函数"></a>其他常用函数</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">函数</th>
+<th style="text-align:center">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">DATABASE()</td>
+<td style="text-align:center">返回当前数据库名</td>
+</tr>
+<tr>
+<td style="text-align:center">VERSION()</td>
+<td style="text-align:center">返回当前数据库版本</td>
+</tr>
+<tr>
+<td style="text-align:center">USER()</td>
+<td style="text-align:center">返回当前登录用户名</td>
+</tr>
+<tr>
+<td style="text-align:center">INET_ATON(IP)</td>
+<td style="text-align:center">返回IP地址的数字表示</td>
+</tr>
+<tr>
+<td style="text-align:center">INET_NTOA(num)</td>
+<td style="text-align:center">返回数字代表的IP地址</td>
+</tr>
+<tr>
+<td style="text-align:center">PASSWORD(str)</td>
+<td style="text-align:center">返回字符串str的加密版本</td>
+</tr>
+<tr>
+<td style="text-align:center">MD5()</td>
+<td style="text-align:center">返回字符串str的MD5值</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/22/mysql-4/" rel="prev" title="MySQL 数据类型">
+      <i class="fa fa-chevron-left"></i> MySQL 数据类型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/24/markdown/" rel="next" title="markdown小知识">
+      markdown小知识 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#运算符"><span class="nav-number">1.</span> <span class="nav-text">运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#算数运算符"><span class="nav-number">1.1.</span> <span class="nav-text">算数运算符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#比较运算符"><span class="nav-number">1.2.</span> <span class="nav-text">比较运算符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#逻辑运算符"><span class="nav-number">1.3.</span> <span class="nav-text">逻辑运算符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#位运算符"><span class="nav-number">1.4.</span> <span class="nav-text">位运算符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运算符优先级"><span class="nav-number">1.5.</span> <span class="nav-text">运算符优先级</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用函数"><span class="nav-number">2.</span> <span class="nav-text">常用函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#字符串函数"><span class="nav-number">2.1.</span> <span class="nav-text">字符串函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数值函数"><span class="nav-number">2.2.</span> <span class="nav-text">数值函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#日期和时间函数"><span class="nav-number">2.3.</span> <span class="nav-text">日期和时间函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DATE-FORMAT"><span class="nav-number">2.3.1.</span> <span class="nav-text">DATE_FORMAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DATE-ADD"><span class="nav-number">2.3.2.</span> <span class="nav-text">DATE_ADD</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流程函数"><span class="nav-number">2.4.</span> <span class="nav-text">流程函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他常用函数"><span class="nav-number">2.5.</span> <span class="nav-text">其他常用函数</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

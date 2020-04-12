@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="优化SQL步骤了解SQL的执行频率1show [session|global] status; 执行命令提供服务器状态信息，session表示显示session(当前连接)级别的统计结果，global表示显示global(从服务器启动至今)级别的统计结果，默认为session级别。1234567891011MariaDB [(none)]&amp;gt; show global status like &apos;">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 优化">
+<meta property="og:url" content="http://www.casezheng.date/2018/04/01/mysql-9/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="优化SQL步骤了解SQL的执行频率1show [session|global] status; 执行命令提供服务器状态信息，session表示显示session(当前连接)级别的统计结果，global表示显示global(从服务器启动至今)级别的统计结果，默认为session级别。1234567891011MariaDB [(none)]&amp;gt; show global status like &apos;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-03-31T16:01:39.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL 优化">
+<meta name="twitter:description" content="优化SQL步骤了解SQL的执行频率1show [session|global] status; 执行命令提供服务器状态信息，session表示显示session(当前连接)级别的统计结果，global表示显示global(从服务器启动至今)级别的统计结果，默认为session级别。1234567891011MariaDB [(none)]&amp;gt; show global status like &apos;">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/04/01/mysql-9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL 优化 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/04/01/mysql-9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-04-01 00:01:39" itemprop="dateCreated datePublished" datetime="2018-04-01T00:01:39+08:00">2018-04-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="优化SQL步骤"><a href="#优化SQL步骤" class="headerlink" title="优化SQL步骤"></a>优化SQL步骤</h1><h2 id="了解SQL的执行频率"><a href="#了解SQL的执行频率" class="headerlink" title="了解SQL的执行频率"></a>了解SQL的执行频率</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> [<span class="keyword">session</span>|<span class="keyword">global</span>] <span class="keyword">status</span>;</span><br></pre></td></tr></table></figure>
+<p>执行命令提供服务器状态信息，session表示显示session(当前连接)级别的统计结果，global表示显示global(从服务器启动至今)级别的统计结果，默认为session级别。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; show global status like 'Com_%';</span><br><span class="line">+<span class="comment">----------------------------+-------+</span></span><br><span class="line">| Variable_name              | Value |</span><br><span class="line">+<span class="comment">----------------------------+-------+</span></span><br><span class="line">| Com_admin_commands         | 1     |</span><br><span class="line">| Com_alter_db               | 0     |</span><br><span class="line">| Com_alter_db_upgrade       | 0     |</span><br><span class="line">| Com_alter_event            | 0     |</span><br><span class="line">| Com_alter_function         | 0     |</span><br><span class="line">| Com_alter_procedure        | 0     |</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure></p>
+<p>Com_xxx表示每个xxx语句执行的次数：</p>
+<ul>
+<li>Com_select:执行select操作的次数，一次查询只累加1</li>
+<li>Com_insert:执行insert操作的次数，对于批量插入的insert操作，只累计一次</li>
+<li>Com_update:执行update操作的次数</li>
+<li>Com_delete:执行delete操作的次数</li>
+</ul>
+<p>Com_select、Com_insert、Com_update、Com_delete对所有存储引擎都进行累计。</p>
+<p>只准对InnoDB存储引擎：</p>
+<ul>
+<li>Innodb_rows_read:select查询返回的行数</li>
+<li>Innodb_rows_inserted:执行insert操作插入的行数</li>
+<li>Innodb_rows_updated:执行update操作插入的行数</li>
+<li>Innodb_rows_deleted:执行delete操作删除的行数</li>
+</ul>
+<p>对于更新操作的计数，是对执行次数的计数，不论提交还是回滚都会进行累计</p>
+<p>Com_commit和Com_rollback可以了解事物提交和回滚的情况，对于回滚操作非常频繁的数据库，意味着程序编写存在问题。</p>
+<p>了解数据库基本情况:</p>
+<ul>
+<li>Connections:试图连接MySQL服务器的次数</li>
+<li>Uptime:服务器工作时间</li>
+<li>Slow_queries:慢查询的次数</li>
+</ul>
+<h2 id="定位执行效率较低的SQL语句"><a href="#定位执行效率较低的SQL语句" class="headerlink" title="定位执行效率较低的SQL语句"></a>定位执行效率较低的SQL语句</h2><ol>
+<li>通过慢查询日志定位</li>
+<li>show processlist命令查看当前MySQL在进行的线程,包括线程的状态、是否锁表等,可以实时地查看SQL的执行情况,通过对一些锁表操作优化</li>
+</ol>
+<h2 id="通过EXPLAIN分析低效SQL的执行计划"><a href="#通过EXPLAIN分析低效SQL的执行计划" class="headerlink" title="通过EXPLAIN分析低效SQL的执行计划"></a>通过EXPLAIN分析低效SQL的执行计划</h2><p>查询到低效的SQL语句后,通过EXPLAIN或者DESC命令获取MySQL如何执行SELECT语句的信息,包括在SELECT语句执行过程中表如何连接和连接的顺序.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; desc select * from test_int;</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">| id   | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">|    1 | SIMPLE      | test_int | ALL  | NULL          | NULL | NULL    | NULL |    4 |       |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> test_int;</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">| id   | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">|    1 | SIMPLE      | test_int | ALL  | NULL          | NULL | NULL    | NULL |    4 |       |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+-------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>select_type:表示select查询的类型,常见的取值有SIMPLE(简单表,即不使用表连接或子查询)、PRIMARY(主查询,即外层的查询)、UNION(UNION中的第二个或后面的查询语句)、SUBQUERY(子查询中的第一个SELECT)等</li>
+<li>table:数据结果集的表</li>
+<li>type:表示MySQL在表中找到所需行的方式,或者叫访问类型.</li>
+<li>possible_keys:表示查询时可能使用的索引</li>
+<li>key:表示实际使用的索引</li>
+<li>key_len:使用到索引字段的长度</li>
+<li>rows:扫描行的数量</li>
+<li>Extra:执行情况的说明和描述,包括不适合在其他列中显示但是对执行计划非常重要的额外信息</li>
+</ul>
+<p>type类型,从左至右,性能由最差到最好<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-----+-------+-------+-----+--------+--------------+------+</span></span><br><span class="line">| ALL | index | range | ref | eq_ref | const,system | NULL |</span><br><span class="line">+<span class="comment">-----+-------+-------+-----+--------+--------------+------+</span></span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>ALL 全表扫描,MySQL遍历全表来找到匹配的行</li>
+<li>index 索引全扫描,MySQL遍历整个索引来查询匹配的行</li>
+<li>range 索引范围扫描,常见于\&lt;、\&lt;=、&gt;、&gt;=、between等操作符</li>
+<li>ref 使用非唯一索引扫描或唯一索引的前缀扫描,返回匹配某个单独值的记录行</li>
+<li>eq_ref 类似ref,区别就在使用的索引是唯一索引,对于每个索引键值,表中只有一条记录记录匹配;简单说,多表连接中使用primary key或者unique index作为关联条件</li>
+<li>const/system 单表中最多有一个匹配行,查询起来非常迅速,所以这个匹配行中的其他列的值可以被优化器在当前查询中当错常量来处理</li>
+<li>NULL MySQL不用访问表或索引,直接就能够得到结果</li>
+</ol>
+<p>通过explain extended命令和show warnings可以看到SQL真正被执行之前优化器做了哪些SQL改写.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; explain extended select * from test_int;</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+----------+-------+</span></span><br><span class="line">| id   | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+----------+-------+</span></span><br><span class="line">|    1 | SIMPLE      | test_int | ALL  | NULL          | NULL | NULL    | NULL |    4 |   100.00 |       |</span><br><span class="line">+<span class="comment">------+-------------+----------+------+---------------+------+---------+------+------+----------+-------+</span></span><br><span class="line">1 row in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">show</span> <span class="keyword">warnings</span>;</span><br><span class="line">+<span class="comment">-------+------+-----------------------------------------------------------------------------------------+</span></span><br><span class="line">| Level | Code | Message                                                                                 |</span><br><span class="line">+<span class="comment">-------+------+-----------------------------------------------------------------------------------------+</span></span><br><span class="line">| Note  | 1003 | <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`test_int`</span>.<span class="string">`a`</span> <span class="keyword">AS</span> <span class="string">`a`</span>,<span class="string">`test`</span>.<span class="string">`test_int`</span>.<span class="string">`b`</span> <span class="keyword">AS</span> <span class="string">`b`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`test_int`</span> |</span><br><span class="line">+<span class="comment">-------+------+-----------------------------------------------------------------------------------------+</span></span><br></pre></td></tr></table></figure></p>
+<p>filtered<br>通过warning的message字段可以看到优化器优化后的SQL. 碰到复杂SQL时,可以利用explain extended的结果迅速获取更清晰易读的SQL</p>
+<h2 id="通过show-profile分析SQL"><a href="#通过show-profile分析SQL" class="headerlink" title="通过show profile分析SQL"></a>通过show profile分析SQL</h2><p>通过have_profiling参数可以看到当前MySQL是否支持profile:<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; select @@have_profiling;</span><br><span class="line">+<span class="comment">------------------+</span></span><br><span class="line">| @@have_profiling |</span><br><span class="line">+<span class="comment">------------------+</span></span><br><span class="line">| YES              |</span><br><span class="line">+<span class="comment">------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>通过profiling参数可以看到当前profiling是否打开<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; select @@profiling;</span><br><span class="line">+<span class="comment">-------------+</span></span><br><span class="line">| @@profiling |</span><br><span class="line">+<span class="comment">-------------+</span></span><br><span class="line">|           0 |</span><br><span class="line">+<span class="comment">-------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>通过set语句在session级别开启profiling<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; set profiling=1;</span><br><span class="line">Query OK, 0 rows affected (0.04 sec)</span><br></pre></td></tr></table></figure></p>
+<p>通过profile可以清楚地了解SQL执行的过程.<br>在执行完SQL后,使用show profiles.查看执行SQL的Query_ID,再使用show profile for query查看执行过程中线程的每个状态和消耗时间.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show profiles;</span><br><span class="line">+<span class="comment">----------+------------+------------------------+</span></span><br><span class="line">| Query_ID | Duration   | Query                  |</span><br><span class="line">+<span class="comment">----------+------------+------------------------+</span></span><br><span class="line">|        1 | 0.00007221 | <span class="keyword">select</span> * <span class="keyword">from</span> test_int |</span><br><span class="line">|        <span class="number">2</span> | <span class="number">0.00012501</span> | <span class="keyword">SELECT</span> <span class="keyword">DATABASE</span>()      |</span><br><span class="line">|        <span class="number">3</span> | <span class="number">0.00029614</span> | <span class="keyword">show</span> <span class="keyword">databases</span>         |</span><br><span class="line">|        <span class="number">4</span> | <span class="number">0.00014315</span> | <span class="keyword">show</span> <span class="keyword">tables</span>            |</span><br><span class="line">|        <span class="number">5</span> | <span class="number">0.00038331</span> | <span class="keyword">select</span> * <span class="keyword">from</span> test_int |</span><br><span class="line">+<span class="comment">----------+------------+------------------------+</span></span><br><span class="line"><span class="number">5</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">show</span> profile <span class="keyword">for</span> <span class="keyword">query</span> <span class="number">5</span>;</span><br><span class="line">+<span class="comment">----------------------+----------+</span></span><br><span class="line">| Status               | Duration |</span><br><span class="line">+<span class="comment">----------------------+----------+</span></span><br><span class="line">| starting             | 0.000058 |</span><br><span class="line">| checking permissions | 0.000011 |</span><br><span class="line">| Opening tables       | 0.000026 |</span><br><span class="line">| After opening tables | 0.000023 |</span><br><span class="line">| System <span class="keyword">lock</span>          | <span class="number">0.000006</span> |</span><br><span class="line">| <span class="keyword">Table</span> <span class="keyword">lock</span>           | <span class="number">0.000043</span> |</span><br><span class="line">| <span class="keyword">After</span> <span class="keyword">table</span> <span class="keyword">lock</span>     | <span class="number">0.000009</span> |</span><br><span class="line">| init                 | <span class="number">0.000021</span> |</span><br><span class="line">| optimizing           | <span class="number">0.000011</span> |</span><br><span class="line">| <span class="keyword">statistics</span>           | <span class="number">0.000025</span> |</span><br><span class="line">| preparing            | <span class="number">0.000015</span> |</span><br><span class="line">| executing            | <span class="number">0.000005</span> |</span><br><span class="line">| Sending <span class="keyword">data</span>         | <span class="number">0.000083</span> |</span><br><span class="line">| <span class="keyword">end</span>                  | <span class="number">0.000006</span> |</span><br><span class="line">| <span class="keyword">query</span> <span class="keyword">end</span>            | <span class="number">0.000007</span> |</span><br><span class="line">| closing <span class="keyword">tables</span>       | <span class="number">0.000010</span> |</span><br><span class="line">| freeing items        | <span class="number">0.000012</span> |</span><br><span class="line">| updating <span class="keyword">status</span>      | <span class="number">0.000010</span> |</span><br><span class="line">| cleaning up          | <span class="number">0.000005</span> |</span><br><span class="line">+<span class="comment">----------------------+----------+</span></span><br><span class="line"><span class="number">19</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>Sending data状态表示MySQL线程开始访问数据行并把结果返回给客户端,而不仅仅是返回结果给客户端.在Sending data状态下,MySQL线程往往需要做大量的磁盘读取操作,所以经常是整个查询中耗时最长的状态.<br>可以使用show profile查看更加详细的资源消耗情况,可选择all、cpu、block io、context switch、page faults等<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [test]&gt; show profile all for query 5;</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+</span></span><br><span class="line">| Status               | Duration | CPU_user | CPU_system | Context_voluntary | Context_involuntary | Block_ops_in | Block_ops_out | Messages_sent | Messages_received | Page_faults_major | Page_faults_minor | Swaps | Source_function       | Source_file   | Source_line |</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+</span></span><br><span class="line">| starting             | 0.000058 | 0.000034 |   0.000018 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | NULL                  | NULL          |        NULL |</span><br><span class="line">| checking permissions | 0.000011 | 0.000006 |   0.000003 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | check_access          | sql_parse.cc  |        4911 |</span><br><span class="line">| Opening tables       | 0.000026 | 0.000017 |   0.000009 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | open_tables           | sql_base.cc   |        5048 |</span><br><span class="line">| After opening tables | 0.000023 | 0.000015 |   0.000008 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | open_tables           | sql_base.cc   |        5240 |</span><br><span class="line">| System <span class="keyword">lock</span>          | <span class="number">0.000006</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_lock_tables     | lock.cc       |         <span class="number">307</span> |</span><br><span class="line">| <span class="keyword">Table</span> <span class="keyword">lock</span>           | <span class="number">0.000043</span> | <span class="number">0.000028</span> |   <span class="number">0.000015</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_lock_tables     | lock.cc       |         <span class="number">312</span> |</span><br><span class="line">| <span class="keyword">After</span> <span class="keyword">table</span> <span class="keyword">lock</span>     | <span class="number">0.000009</span> | <span class="number">0.000006</span> |   <span class="number">0.000003</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_lock_tables     | lock.cc       |         <span class="number">326</span> |</span><br><span class="line">| init                 | <span class="number">0.000021</span> | <span class="number">0.000014</span> |   <span class="number">0.000007</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_select          | sql_select.cc |        <span class="number">3075</span> |</span><br><span class="line">| optimizing           | <span class="number">0.000011</span> | <span class="number">0.000007</span> |   <span class="number">0.000004</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | <span class="keyword">optimize</span>              | sql_select.cc |         <span class="number">990</span> |</span><br><span class="line">| <span class="keyword">statistics</span>           | <span class="number">0.000025</span> | <span class="number">0.000016</span> |   <span class="number">0.000008</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | <span class="keyword">optimize</span>              | sql_select.cc |        <span class="number">1233</span> |</span><br><span class="line">| preparing            | <span class="number">0.000015</span> | <span class="number">0.000010</span> |   <span class="number">0.000005</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | <span class="keyword">optimize</span>              | sql_select.cc |        <span class="number">1258</span> |</span><br><span class="line">| executing            | <span class="number">0.000005</span> | <span class="number">0.000003</span> |   <span class="number">0.000002</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | exec                  | sql_select.cc |        <span class="number">2242</span> |</span><br><span class="line">| Sending <span class="keyword">data</span>         | <span class="number">0.000083</span> | <span class="number">0.000054</span> |   <span class="number">0.000029</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | exec                  | sql_select.cc |        <span class="number">2873</span> |</span><br><span class="line">| <span class="keyword">end</span>                  | <span class="number">0.000006</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_select          | sql_select.cc |        <span class="number">3110</span> |</span><br><span class="line">| <span class="keyword">query</span> <span class="keyword">end</span>            | <span class="number">0.000007</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_execute_command | sql_parse.cc  |        <span class="number">4520</span> |</span><br><span class="line">| closing <span class="keyword">tables</span>       | <span class="number">0.000010</span> | <span class="number">0.000007</span> |   <span class="number">0.000003</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | close_thread_tables   | sql_base.cc   |        <span class="number">1466</span> |</span><br><span class="line">| freeing items        | <span class="number">0.000012</span> | <span class="number">0.000008</span> |   <span class="number">0.000004</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | mysql_parse           | sql_parse.cc  |        <span class="number">5944</span> |</span><br><span class="line">| updating <span class="keyword">status</span>      | <span class="number">0.000010</span> | <span class="number">0.000006</span> |   <span class="number">0.000004</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | dispatch_command      | sql_parse.cc  |        <span class="number">1469</span> |</span><br><span class="line">| cleaning up          | <span class="number">0.000005</span> | <span class="number">0.000003</span> |   <span class="number">0.000001</span> |                 <span class="number">0</span> |                   <span class="number">0</span> |            <span class="number">0</span> |             <span class="number">0</span> |             <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |                 <span class="number">0</span> |     <span class="number">0</span> | dispatch_command      | sql_parse.cc  |        <span class="number">1486</span> |</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+</span></span><br><span class="line"><span class="number">19</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">MariaDB [<span class="keyword">test</span>]&gt; <span class="keyword">show</span> profile cpu <span class="keyword">for</span> <span class="keyword">query</span> <span class="number">5</span>;</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+</span></span><br><span class="line">| Status               | Duration | CPU_user | CPU_system |</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+</span></span><br><span class="line">| starting             | 0.000058 | 0.000034 |   0.000018 |</span><br><span class="line">| checking permissions | 0.000011 | 0.000006 |   0.000003 |</span><br><span class="line">| Opening tables       | 0.000026 | 0.000017 |   0.000009 |</span><br><span class="line">| After opening tables | 0.000023 | 0.000015 |   0.000008 |</span><br><span class="line">| System <span class="keyword">lock</span>          | <span class="number">0.000006</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |</span><br><span class="line">| <span class="keyword">Table</span> <span class="keyword">lock</span>           | <span class="number">0.000043</span> | <span class="number">0.000028</span> |   <span class="number">0.000015</span> |</span><br><span class="line">| <span class="keyword">After</span> <span class="keyword">table</span> <span class="keyword">lock</span>     | <span class="number">0.000009</span> | <span class="number">0.000006</span> |   <span class="number">0.000003</span> |</span><br><span class="line">| init                 | <span class="number">0.000021</span> | <span class="number">0.000014</span> |   <span class="number">0.000007</span> |</span><br><span class="line">| optimizing           | <span class="number">0.000011</span> | <span class="number">0.000007</span> |   <span class="number">0.000004</span> |</span><br><span class="line">| <span class="keyword">statistics</span>           | <span class="number">0.000025</span> | <span class="number">0.000016</span> |   <span class="number">0.000008</span> |</span><br><span class="line">| preparing            | <span class="number">0.000015</span> | <span class="number">0.000010</span> |   <span class="number">0.000005</span> |</span><br><span class="line">| executing            | <span class="number">0.000005</span> | <span class="number">0.000003</span> |   <span class="number">0.000002</span> |</span><br><span class="line">| Sending <span class="keyword">data</span>         | <span class="number">0.000083</span> | <span class="number">0.000054</span> |   <span class="number">0.000029</span> |</span><br><span class="line">| <span class="keyword">end</span>                  | <span class="number">0.000006</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |</span><br><span class="line">| <span class="keyword">query</span> <span class="keyword">end</span>            | <span class="number">0.000007</span> | <span class="number">0.000004</span> |   <span class="number">0.000002</span> |</span><br><span class="line">| closing <span class="keyword">tables</span>       | <span class="number">0.000010</span> | <span class="number">0.000007</span> |   <span class="number">0.000003</span> |</span><br><span class="line">| freeing items        | <span class="number">0.000012</span> | <span class="number">0.000008</span> |   <span class="number">0.000004</span> |</span><br><span class="line">| updating <span class="keyword">status</span>      | <span class="number">0.000010</span> | <span class="number">0.000006</span> |   <span class="number">0.000004</span> |</span><br><span class="line">| cleaning up          | <span class="number">0.000005</span> | <span class="number">0.000003</span> |   <span class="number">0.000001</span> |</span><br><span class="line">+<span class="comment">----------------------+----------+----------+------------+</span></span><br><span class="line"><span class="number">19</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<h2 id="通过trace分析优化器如何选择执行计划"><a href="#通过trace分析优化器如何选择执行计划" class="headerlink" title="通过trace分析优化器如何选择执行计划"></a>通过trace分析优化器如何选择执行计划</h2><ol>
+<li>打开trace,设置格式为JSON,设置trace最大能够使用的内存大小,避免解析过程中因为默认内存过小而不能完整显示.</li>
+<li>执行想要trace的SQL语句</li>
+<li>检查INFORMATION_SCHEMA.OPTIMIZER_TRACE<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SET OPTIMIZER_TRACE=&quot;enabled=on&quot;,END_MARKERS_IN_JSON=on;</span><br><span class="line">SET OPTIMIZER_TRACE_MAX_MEM_SIZE=1000000;</span><br><span class="line">SELECT * FROM INFORMATION_SCHEMA.OPTIMIZER_TRACE\G</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="确认问题并采取相应的优化措施"><a href="#确认问题并采取相应的优化措施" class="headerlink" title="确认问题并采取相应的优化措施"></a>确认问题并采取相应的优化措施</h2><h1 id="简单使用的优化方法"><a href="#简单使用的优化方法" class="headerlink" title="简单使用的优化方法"></a>简单使用的优化方法</h1><h2 id="定期分析表和检查表"><a href="#定期分析表和检查表" class="headerlink" title="定期分析表和检查表"></a>定期分析表和检查表</h2><p>分析表<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ANALYZE</span> [<span class="keyword">LOCAL</span>|<span class="keyword">NO_WRITE_TO_BINLOG</span>] <span class="keyword">TABLE</span> tbl_name[, tbl_name]...</span><br></pre></td></tr></table></figure></p>
+<p>本语句用于分析和存储表的关键字分布,分析的结果将可以使得系统得到准确的统计信息,使得SQL能够生成正确的执行计划</p>
+<p>检查表<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CHECK</span> <span class="keyword">TABLE</span> tbl_name[, tbl_name]...[<span class="keyword">option</span>]...option=&#123;<span class="keyword">QUICK</span>|<span class="keyword">FAST</span>|<span class="keyword">MEDIUM</span>|<span class="keyword">EXTENDED</span>|<span class="keyword">CHANGED</span>&#125;</span><br></pre></td></tr></table></figure></p>
+<p>检查表的作用是检查一个或多个表是否有错误.<br>CHECK TABLE也可以检查是否是否有错误.</p>
+<h2 id="定期优化表"><a href="#定期优化表" class="headerlink" title="定期优化表"></a>定期优化表</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OPTIONMIZE [LOCAL|NO_WRITE_TO_BINLOG] TABLE tbl_name [,tbl_name]...</span><br></pre></td></tr></table></figure>
+<p>优化表可以对表中的空间碎片进行合并.<br>InnoDB引擎的表可以设置innodb_file_per_table参数,设置InnoDB为独立表空间模式,每个数据库的每个表都会生成单独的ibd文件,用于存储表的数据和索引,减轻InnoDB表的控件回收问题.<br>删除大量数据后,InnoDB表可以通过alter table但不修改引擎的方式回收不用的空间<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tbl_name <span class="keyword">engine</span>=<span class="keyword">innodb</span>;</span><br></pre></td></tr></table></figure></p>
+<p><strong>ANLYZE、CHECK、OPTIMIZE、ALTER TABLE执行期间将对表进行锁定,因此一定注意在数据库不繁忙时执行相关操作</strong></p>
+<h1 id="常用SQL的优化"><a href="#常用SQL的优化" class="headerlink" title="常用SQL的优化"></a>常用SQL的优化</h1><h2 id="大批量插入数据"><a href="#大批量插入数据" class="headerlink" title="大批量插入数据"></a>大批量插入数据</h2><p>使用load命令导入数据,可以通过适当的设置提高导入速度.<br>对于MyISAM存储引擎的表,可以使用DISABLE KEYS关闭MyISAM表非唯一索引的更新,读入完成后,使用ENABLE KEYS打开MyISAM表非唯一索引的更新.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tbl_name <span class="keyword">disable</span> <span class="keyword">keys</span>;</span><br><span class="line"><span class="keyword">load</span> <span class="keyword">data</span> infole <span class="string">'/filepath'</span>;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tbl_name <span class="keyword">enable</span> <span class="keyword">keys</span>;</span><br></pre></td></tr></table></figure></p>
+<p>对于InnoDB存储引擎的表:</p>
+<ol>
+<li>将导入的数据按照主键的顺序排序</li>
+<li>导入数据前执行SET UNIQUE_CHECKS=0关闭唯一性校验,导入结束再执行SET UNIQUE_CHECKS=1,恢复唯一性校验</li>
+<li>关闭自动提交,等导入完成再打开(SET AUTOCOMMINT=0)</li>
+</ol>
+<h2 id="优化INSERT语句"><a href="#优化INSERT语句" class="headerlink" title="优化INSERT语句"></a>优化INSERT语句</h2><ol>
+<li>同一客户端同时插入很多行,应尽量使用一条语句,减少客户端与数据库之间的连接、关闭等消耗</li>
+<li>不同客户端插入很多行,使用INSERT DELAYED语句让INSERT语句马上执行,实际数据都被放在内存队列中,并没有真正写入磁盘</li>
+<li>将索引文件和数据文件分在不同的磁盘上存放</li>
+<li>批量插入可以通过增加bulk_insert_buffer_size变量值的方法提高速度,只对MyISAM表有用</li>
+<li>当从文本文件装载一个表时,使用LOAD DATA INFILE,比使用INSERT语句快</li>
+</ol>
+<h2 id="优化ORDER-BY语句"><a href="#优化ORDER-BY语句" class="headerlink" title="优化ORDER BY语句"></a>优化ORDER BY语句</h2><h3 id="MySQL两种排序方式"><a href="#MySQL两种排序方式" class="headerlink" title="MySQL两种排序方式"></a>MySQL两种排序方式</h3><ol>
+<li>通过使用有序索引顺序扫描直接返回有序数据,在使用explain分析查询语句时显示为Using Index,不需要额外排序操作效率较高</li>
+<li>通过对返回数据进行排序(Filesort排序),所有不是通过索引直接返回排序结果的排序都叫Filesort排序.</li>
+</ol>
+<p>ORDER BY语句优化目标:尽量减少额外的排序,通过索引直接返回有序数据.</p>
+<h3 id="Filesort优化"><a href="#Filesort优化" class="headerlink" title="Filesort优化"></a>Filesort优化</h3><p>通过建立合适的索引能减少Filesort的出现.如果条件限制导致Filesort不能消失,则需要加快Filesort的操作<br>对Filesort,MySQL的两种排序算法:</p>
+<ol>
+<li>两次扫描算法:根据条件取出排序字段和行指针信息,然后在排序区sort buffer中排序,如果sort buffer不足,则在临时表Temporary Table中存储排序结果.完成排序后再根据行指针回表读取记录.优点是排序的时候内存开销少,缺点是第二次读取记录会有大量随机I/O操作,MySQL4.1以前使用此方法</li>
+<li>一次扫描算法:一次性取出所有满足条件行的所有字段,然后排序,优点是速度快,缺点是内存开销大</li>
+</ol>
+<p>MySQL通过比较系统变量max_length_for_sort_data的大小和Query语句取出的字段总大小判断使用那种排序算法.如果max_length_for_sort_data更大,则使用一次扫描算法,否则使用二次扫描算法<br>适当加大max_length_for_sort_data可以让MySQL选择一次扫描算法,提高效率,设置max_length_for_sort_data过大,会造成CPU利用率过低和磁盘I/O过高,CPU和I/O利用平衡即可.<br>尽量使用必要的字段,SELECT具体的字段名称,减少排序区的使用,提高SQL性能.</p>
+<h2 id="优化GROUP-BY语句"><a href="#优化GROUP-BY语句" class="headerlink" title="优化GROUP BY语句"></a>优化GROUP BY语句</h2><p>如果查询包括GROUP BY但用户想避免排序结果的消耗,则可以指定ORDER BY NULL禁止排序.</p>
+<h2 id="优化嵌套查询"><a href="#优化嵌套查询" class="headerlink" title="优化嵌套查询"></a>优化嵌套查询</h2><p>使用连接JOIN替代子查询,因为JOIN不需要在内存中创建临时表</p>
+<h2 id="MySQL优化OR条件"><a href="#MySQL优化OR条件" class="headerlink" title="MySQL优化OR条件"></a>MySQL优化OR条件</h2><p>对于含有OR条件的查询子句,如果想利用索引,则OR之间的每个条件列都必须使用索引,如果没有索引则应该考虑增加索引.</p>
+<h2 id="分页查询优化"><a href="#分页查询优化" class="headerlink" title="分页查询优化"></a>分页查询优化</h2><ol>
+<li>在索引上完成排序分页操作,最后根据主键关联回原表查询所需额其他列内容</li>
+<li>将LIMIT查询转化为某个位置的查询(将LIMIT m,n转化为LIMIT n的查询)</li>
+</ol>
+<h2 id="使用SQL提示"><a href="#使用SQL提示" class="headerlink" title="使用SQL提示"></a>使用SQL提示</h2><h3 id="USE-INDEX"><a href="#USE-INDEX" class="headerlink" title="USE INDEX"></a>USE INDEX</h3><p>在查询语句中表名的后面,添加USE INDEX来提供希望MySQL去参考的索引列表,让MySQL不再考虑其它可以索引</p>
+<h3 id="IGNORE-INDEX"><a href="#IGNORE-INDEX" class="headerlink" title="IGNORE INDEX"></a>IGNORE INDEX</h3><p>让MySQL忽略一个或多个索引</p>
+<h3 id="FORCE-INDEX"><a href="#FORCE-INDEX" class="headerlink" title="FORCE INDEX"></a>FORCE INDEX</h3><p>强制MySQL使用一个特定的索引</p>
+<h1 id="常用SQL技巧"><a href="#常用SQL技巧" class="headerlink" title="常用SQL技巧"></a>常用SQL技巧</h1><h2 id="正则表达式的使用"><a href="#正则表达式的使用" class="headerlink" title="正则表达式的使用"></a>正则表达式的使用</h2><p>MySQL利用REGEXP命令提供给用户扩展的正则表达式功能.REGEXP在进行模式匹配时区分大小写.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">序列</th>
+<th style="text-align:center">序列说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">^</td>
+<td style="text-align:center">在字符串的开始处进行匹配</td>
+</tr>
+<tr>
+<td style="text-align:center">$</td>
+<td style="text-align:center">在字符串的末尾处进行匹配</td>
+</tr>
+<tr>
+<td style="text-align:center">.</td>
+<td style="text-align:center">匹配任意单个字符，包括换行符</td>
+</tr>
+<tr>
+<td style="text-align:center">[…]</td>
+<td style="text-align:center">匹配出括号内的任意字符</td>
+</tr>
+<tr>
+<td style="text-align:center"><sup><a href="#fn_..." id="reffn_...">...</a></sup></td>
+<td style="text-align:center">匹配不出括号内的任意字符</td>
+</tr>
+<tr>
+<td style="text-align:center">a*</td>
+<td style="text-align:center">匹配零个或多个a（包括空串）</td>
+</tr>
+<tr>
+<td style="text-align:center">a+</td>
+<td style="text-align:center">匹配1个或多个a（不包括空串）</td>
+</tr>
+<tr>
+<td style="text-align:center">a？</td>
+<td style="text-align:center">匹配1个或零个a</td>
+</tr>
+<tr>
+<td style="text-align:center">a1 &#124; a2</td>
+<td style="text-align:center">匹配a1或a2</td>
+</tr>
+<tr>
+<td style="text-align:center">a(m)</td>
+<td style="text-align:center">匹配m个a</td>
+</tr>
+<tr>
+<td style="text-align:center">a(m,)</td>
+<td style="text-align:center">匹配m个或更多个a</td>
+</tr>
+<tr>
+<td style="text-align:center">a(m,n)</td>
+<td style="text-align:center">匹配m到n个a</td>
+</tr>
+<tr>
+<td style="text-align:center">a(,n)</td>
+<td style="text-align:center">匹配0到n个a</td>
+</tr>
+<tr>
+<td style="text-align:center">(…)</td>
+<td style="text-align:center">将模式元素组成单一元素</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/03/30/mysql-8/" rel="prev" title="MySQL 存储过程和函数 触发器">
+      <i class="fa fa-chevron-left"></i> MySQL 存储过程和函数 触发器
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/04/09/mysql-10/" rel="next" title="MySQL数据导出、导入">
+      MySQL数据导出、导入 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#优化SQL步骤"><span class="nav-number">1.</span> <span class="nav-text">优化SQL步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#了解SQL的执行频率"><span class="nav-number">1.1.</span> <span class="nav-text">了解SQL的执行频率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定位执行效率较低的SQL语句"><span class="nav-number">1.2.</span> <span class="nav-text">定位执行效率较低的SQL语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通过EXPLAIN分析低效SQL的执行计划"><span class="nav-number">1.3.</span> <span class="nav-text">通过EXPLAIN分析低效SQL的执行计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通过show-profile分析SQL"><span class="nav-number">1.4.</span> <span class="nav-text">通过show profile分析SQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通过trace分析优化器如何选择执行计划"><span class="nav-number">1.5.</span> <span class="nav-text">通过trace分析优化器如何选择执行计划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#确认问题并采取相应的优化措施"><span class="nav-number">1.6.</span> <span class="nav-text">确认问题并采取相应的优化措施</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简单使用的优化方法"><span class="nav-number">2.</span> <span class="nav-text">简单使用的优化方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#定期分析表和检查表"><span class="nav-number">2.1.</span> <span class="nav-text">定期分析表和检查表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定期优化表"><span class="nav-number">2.2.</span> <span class="nav-text">定期优化表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用SQL的优化"><span class="nav-number">3.</span> <span class="nav-text">常用SQL的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#大批量插入数据"><span class="nav-number">3.1.</span> <span class="nav-text">大批量插入数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化INSERT语句"><span class="nav-number">3.2.</span> <span class="nav-text">优化INSERT语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化ORDER-BY语句"><span class="nav-number">3.3.</span> <span class="nav-text">优化ORDER BY语句</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL两种排序方式"><span class="nav-number">3.3.1.</span> <span class="nav-text">MySQL两种排序方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Filesort优化"><span class="nav-number">3.3.2.</span> <span class="nav-text">Filesort优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化GROUP-BY语句"><span class="nav-number">3.4.</span> <span class="nav-text">优化GROUP BY语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化嵌套查询"><span class="nav-number">3.5.</span> <span class="nav-text">优化嵌套查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL优化OR条件"><span class="nav-number">3.6.</span> <span class="nav-text">MySQL优化OR条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分页查询优化"><span class="nav-number">3.7.</span> <span class="nav-text">分页查询优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用SQL提示"><span class="nav-number">3.8.</span> <span class="nav-text">使用SQL提示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#USE-INDEX"><span class="nav-number">3.8.1.</span> <span class="nav-text">USE INDEX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IGNORE-INDEX"><span class="nav-number">3.8.2.</span> <span class="nav-text">IGNORE INDEX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FORCE-INDEX"><span class="nav-number">3.8.3.</span> <span class="nav-text">FORCE INDEX</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用SQL技巧"><span class="nav-number">4.</span> <span class="nav-text">常用SQL技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#正则表达式的使用"><span class="nav-number">4.1.</span> <span class="nav-text">正则表达式的使用</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

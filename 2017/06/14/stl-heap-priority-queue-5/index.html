@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="github源码分析仓库 heap 堆 heap允许用户以任意次序将任何元素推入容器内，但取出时一定是从优先权最高的元素开始取。heap并不是STL容器组件，而是priority-queue的底层所使用的算法。而priority-queue底层缺省使用vector并搭配max-heap算法。根据元素排列方式heap分为max-heap和min-heap两种，max-heap每个节点的键值都大于或等">
+<meta name="keywords" content="cpp,stl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SGI STL 标准库 heap priority-queue 5">
+<meta property="og:url" content="http://www.casezheng.date/2017/06/14/stl-heap-priority-queue-5/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="github源码分析仓库 heap 堆 heap允许用户以任意次序将任何元素推入容器内，但取出时一定是从优先权最高的元素开始取。heap并不是STL容器组件，而是priority-queue的底层所使用的算法。而priority-queue底层缺省使用vector并搭配max-heap算法。根据元素排列方式heap分为max-heap和min-heap两种，max-heap每个节点的键值都大于或等">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/STL-heap-push_heap.jpg">
+<meta property="og:image" content="http://www.casezheng.date/Picture/STL-heap-pop_heap.jpg">
+<meta property="og:image" content="http://www.casezheng.date/Picture/STL-heap-sort_heap.jpg">
+<meta property="og:updated_time" content="2020-04-12T04:56:35.929Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SGI STL 标准库 heap priority-queue 5">
+<meta name="twitter:description" content="github源码分析仓库 heap 堆 heap允许用户以任意次序将任何元素推入容器内，但取出时一定是从优先权最高的元素开始取。heap并不是STL容器组件，而是priority-queue的底层所使用的算法。而priority-queue底层缺省使用vector并搭配max-heap算法。根据元素排列方式heap分为max-heap和min-heap两种，max-heap每个节点的键值都大于或等">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/STL-heap-push_heap.jpg">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/06/14/stl-heap-priority-queue-5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SGI STL 标准库 heap priority-queue 5 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/14/stl-heap-priority-queue-5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SGI STL 标准库 heap priority-queue 5
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-14 15:05:00" itemprop="dateCreated datePublished" datetime="2017-06-14T15:05:00+08:00">2017-06-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cpp/" itemprop="url" rel="index"><span itemprop="name">cpp</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a href="https://github.com/CaseZheng/SourceCodeAnalysis" target="_blank" rel="noopener">github源码分析仓库</a></p>
+<h1 id="heap-堆"><a href="#heap-堆" class="headerlink" title="heap 堆"></a>heap 堆</h1><hr>
+<p>heap允许用户以任意次序将任何元素推入容器内，但取出时一定是从优先权最高的元素开始取。<br>heap并不是STL容器组件，而是priority-queue的底层所使用的算法。而priority-queue底层缺省使用vector并搭配max-heap算法。根据元素排列方式heap分为max-heap和min-heap两种，max-heap每个节点的键值都大于或等于其子节点键值，min-heap每个节点的键值都小于或等于其子节点键值，因此max-heap最大值在根节点，min-heap最小值在根节点。STL提供max-heap。<br>可以使用数组表示一颗完全二叉树，然后将数组第0位保留，当对完全二叉树位于数组的i处时，其左节点位于数组的<code>2*i</code>处，其右子节点必位于数组的<code>2*i+1</code>处，其父节点位于<code>i/2</code>处。</p>
+<h2 id="1-push-heap"><a href="#1-push-heap" class="headerlink" title="1. push_heap"></a>1. push_heap</h2><p>新加入的元素先放在最下层作为叶节点，因为是完全二叉树，所以一定放在最下层的最右边，即底层容器的end()处。<br>然后为了满足max-heap的条件，将这个新节点，和父节点做比较，如果其键值大于父节点，父子节点对换位置，一直向上，直到不需要对换或到根节点为止。<br><img src="/Picture/STL-heap-push_heap.jpg" alt="push_heap算法"></p>
+<h2 id="2-pop-heap"><a href="#2-pop-heap" class="headerlink" title="2. pop_heap"></a>2. pop_heap</h2><p>取走最大值(根节点)的操作，先将根节点和最底层最右边的叶节点对调，然后从上到下，用根节点和其左右两个子节点比较，当根节点小于其中任意一个的时候，取最大的那个和根节点对调，根节点作为其子节点，然后该子节点，作为子树的根节点再次判断，重复该过程，直到叶子或其比左右叶子节点都大的时候停止。然后底层容器的end()即为max-heap的最大值。<br><img src="/Picture/STL-heap-pop_heap.jpg" alt="pop_heap算法"></p>
+<h2 id="3-sort-heap"><a href="#3-sort-heap" class="headerlink" title="3. sort_heap"></a>3. sort_heap</h2><p>堆排序，每次都取堆顶，放在底层容器的最后端，对整个堆做pop_heap操作，当堆为空时，便可得到递增排序好的序列。<br><img src="/Picture/STL-heap-sort_heap.jpg" alt="sort_heap算法"></p>
+<h2 id="4-make-heap"><a href="#4-make-heap" class="headerlink" title="4. make_heap"></a>4. make_heap</h2><p>排列一段现有数据为max-heap, 先找到第一个需要重排的子树头部，排列其成为一个最大堆，指针前移，再排列该树为最大堆，直到走完整个需要重新排列的元素为止。</p>
+<h1 id="priority-queue-优先级队列"><a href="#priority-queue-优先级队列" class="headerlink" title="priority-queue 优先级队列"></a>priority-queue 优先级队列</h1><hr>
+<p>priority-queue是一个拥有权值概念的queue，允许加入新元素、移除旧元素、查看元素值等功能，由于是queue，所以只允许从底端加入，从顶端取出。<br>priority-queue其内部元素按照权值自动排序，权值高者在在前面。缺省情况下priority-queue利用max-heap完成。priority-queue没有迭代器。priority-queue的实现依靠底层容器的方法和heap的泛型算法。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/stl/" rel="tag"># stl</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/06/13/stl-deque-stack-queue-4/" rel="prev" title="SGI STL 标准库 deque stack queue 4">
+      <i class="fa fa-chevron-left"></i> SGI STL 标准库 deque stack queue 4
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/06/15/stl-slist-6/" rel="next" title="SGI STL 标准库 slist 6">
+      SGI STL 标准库 slist 6 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#heap-堆"><span class="nav-number">1.</span> <span class="nav-text">heap 堆</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-push-heap"><span class="nav-number">1.1.</span> <span class="nav-text">1. push_heap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-pop-heap"><span class="nav-number">1.2.</span> <span class="nav-text">2. pop_heap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-sort-heap"><span class="nav-number">1.3.</span> <span class="nav-text">3. sort_heap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-make-heap"><span class="nav-number">1.4.</span> <span class="nav-text">4. make_heap</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#priority-queue-优先级队列"><span class="nav-number">2.</span> <span class="nav-text">priority-queue 优先级队列</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

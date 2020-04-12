@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux I/O poll 源码分析   poll poll系统调用的函数调用过程 poll系统调用图解     pollpoll函数系统调用1234567891011121314151617181920212223242526272829303132333435363738394041int poll(struct polled* fds, nfds_t nfds, int timeout);">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux I&#x2F;O 复用 poll源码解析">
+<meta property="og:url" content="http://www.casezheng.date/2017/09/21/io-4-poll/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="Linux I/O poll 源码分析   poll poll系统调用的函数调用过程 poll系统调用图解     pollpoll函数系统调用1234567891011121314151617181920212223242526272829303132333435363738394041int poll(struct polled* fds, nfds_t nfds, int timeout);">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.casezheng.date/Picture/poll系统调用的函数调用过程.png">
+<meta property="og:image" content="http://www.casezheng.date/Picture/poll系统调用图解.jpg">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.120Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux I&#x2F;O 复用 poll源码解析">
+<meta name="twitter:description" content="Linux I/O poll 源码分析   poll poll系统调用的函数调用过程 poll系统调用图解     pollpoll函数系统调用1234567891011121314151617181920212223242526272829303132333435363738394041int poll(struct polled* fds, nfds_t nfds, int timeout);">
+<meta name="twitter:image" content="http://www.casezheng.date/Picture/poll系统调用的函数调用过程.png">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/09/21/io-4-poll/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux I/O 复用 poll源码解析 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/09/21/io-4-poll/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux I/O 复用 poll源码解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-21 09:15:00" itemprop="dateCreated datePublished" datetime="2017-09-21T09:15:00+08:00">2017-09-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Linux I/O poll 源码分析</p>
+<!-- vim-markdown-toc GFM -->
+<ul>
+<li><a href="#poll">poll</a><ul>
+<li><a href="#poll系统调用的函数调用过程">poll系统调用的函数调用过程</a></li>
+<li><a href="#poll系统调用图解">poll系统调用图解</a></li>
+</ul>
+</li>
+</ul>
+<!-- vim-markdown-toc -->
+<h1 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h1><p>poll函数系统调用<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll</span><span class="params">(struct polled* fds, <span class="keyword">nfds_t</span> nfds, <span class="keyword">int</span> timeout)</span></span>;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> fd;</span><br><span class="line">    short events;</span><br><span class="line">    short revents;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">SYSCALL_DEFINE3(poll, struct pollfd __user *, ufds, <span class="keyword">unsigned</span> <span class="keyword">int</span>, nfds,</span><br><span class="line">        <span class="keyword">long</span>, timeout_msecs)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">end_time</span>, *<span class="title">to</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//计算timespec类型的超时时间</span></span><br><span class="line">    <span class="keyword">if</span> (timeout_msecs &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        to = &amp;end_time;</span><br><span class="line">        poll_select_set_timeout(to, timeout_msecs / MSEC_PER_SEC,</span><br><span class="line">            NSEC_PER_MSEC * (timeout_msecs % MSEC_PER_SEC));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = do_sys_poll(ufds, nfds, to);        <span class="comment">//重要函数，返回就绪的文件描述符的总数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// do_sys_poll 被信号中断, 重新调用, 对使用者来说 poll 是不会被信号中断的.</span></span><br><span class="line">    <span class="keyword">if</span> (ret == -EINTR) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">restart_block</span> *<span class="title">restart_block</span>;</span></span><br><span class="line">        restart_block = &amp;current_thread_info()-&gt;restart_block;</span><br><span class="line">        restart_block-&gt;fn = do_restart_poll;        <span class="comment">//设置重启的函数</span></span><br><span class="line">        restart_block-&gt;poll.ufds = ufds;</span><br><span class="line">        restart_block-&gt;poll.nfds = nfds;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (timeout_msecs &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            restart_block-&gt;poll.tv_sec = end_time.tv_sec;</span><br><span class="line">            restart_block-&gt;poll.tv_nsec = end_time.tv_nsec;</span><br><span class="line">            restart_block-&gt;poll.has_timeout = <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span></span><br><span class="line">            restart_block-&gt;poll.has_timeout = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">// ERESTART_RESTARTBLOCK 不会返回给用户进程,  而是会被系统捕获, 然后调用 do_restart_poll</span></span><br><span class="line">        ret = -ERESTART_RESTARTBLOCK;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">long</span> <span class="title">do_restart_poll</span><span class="params">(struct restart_block *restart_block)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> __<span class="title">user</span> *<span class="title">ufds</span> = <span class="title">restart_block</span>-&gt;<span class="title">poll</span>.<span class="title">ufds</span>;</span></span><br><span class="line">    <span class="keyword">int</span> nfds = restart_block-&gt;poll.nfds;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> *<span class="title">to</span> = <span class="title">NULL</span>, <span class="title">end_time</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (restart_block-&gt;poll.has_timeout) &#123;</span><br><span class="line">        end_time.tv_sec = restart_block-&gt;poll.tv_sec;</span><br><span class="line">        end_time.tv_nsec = restart_block-&gt;poll.tv_nsec;</span><br><span class="line">        to = &amp;end_time;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = do_sys_poll(ufds, nfds, to);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret == -EINTR) &#123;</span><br><span class="line">        restart_block-&gt;fn = do_restart_poll;</span><br><span class="line">        ret = -ERESTART_RESTARTBLOCK;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">do_sys_poll</span><span class="params">(struct pollfd __user *ufds, <span class="keyword">unsigned</span> <span class="keyword">int</span> nfds,</span></span></span><br><span class="line"><span class="function"><span class="params">        struct timespec *end_time)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_wqueues</span> <span class="title">table</span>;</span></span><br><span class="line">     <span class="keyword">int</span> err = -EFAULT, fdcount, len, <span class="built_in">size</span>;</span><br><span class="line">    <span class="comment">//首先使用栈上的空间，加速访问</span></span><br><span class="line">    <span class="keyword">long</span> stack_pps[POLL_STACK_ALLOC/<span class="keyword">sizeof</span>(<span class="keyword">long</span>)];    <span class="comment">//long stack_pps[64];</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    struct poll_list &#123;</span></span><br><span class="line"><span class="comment">        struct poll_list *next;</span></span><br><span class="line"><span class="comment">        int len;                //本poll_list的entries长度</span></span><br><span class="line"><span class="comment">        struct pollfd entries[0];</span></span><br><span class="line"><span class="comment">    &#125;;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_list</span> *<span class="title">const</span> <span class="title">head</span> = (<span class="title">struct</span> <span class="title">poll_list</span> *)<span class="title">stack_pps</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">poll_list</span> *<span class="title">walk</span> = <span class="title">head</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> todo = nfds;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (nfds &gt; current-&gt;signal-&gt;rlim[RLIMIT_NOFILE].rlim_cur)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;    <span class="comment">// 文件描述符数量超过当前进程限制</span></span><br><span class="line"></span><br><span class="line">    len = <span class="keyword">min_t</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>, nfds, N_STACK_PPS);        <span class="comment">//计算链表头结点的entries数组长度</span></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;        <span class="comment">//将用户空间的pollfd全部拷贝到内核空间</span></span><br><span class="line">        walk-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">        walk-&gt;len = len;</span><br><span class="line">        <span class="keyword">if</span> (!len)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="comment">//当用户传入的fd很多时，由于poll系统调用每次都要把所有struct pollfd拷进内核，所以参数传递和页分配此时就成了poll系统调用的性能瓶颈。</span></span><br><span class="line">        <span class="keyword">if</span> (copy_from_user(walk-&gt;entries, ufds + nfds-todo,</span><br><span class="line">                    <span class="keyword">sizeof</span>(struct pollfd) * walk-&gt;len))        <span class="comment">//拷贝前walk-&gt;len个</span></span><br><span class="line">            <span class="keyword">goto</span> out_fds;</span><br><span class="line"></span><br><span class="line">        todo -= walk-&gt;len;    <span class="comment">//计算未拷贝的pollfd个数</span></span><br><span class="line">        <span class="keyword">if</span> (!todo)</span><br><span class="line">            <span class="keyword">break</span>;        <span class="comment">//全部已拷贝，退出</span></span><br><span class="line"></span><br><span class="line">        len = <span class="built_in">min</span>(todo, POLLFD_PER_PAGE);    <span class="comment">//计算个数</span></span><br><span class="line">        <span class="built_in">size</span> = <span class="keyword">sizeof</span>(struct poll_list) + <span class="keyword">sizeof</span>(struct pollfd) * len;    <span class="comment">//计算申请空间的大小</span></span><br><span class="line">        walk = walk-&gt;next = kmalloc(<span class="built_in">size</span>, GFP_KERNEL);        <span class="comment">//在堆上申请空间</span></span><br><span class="line">        <span class="keyword">if</span> (!walk) &#123;</span><br><span class="line">            err = -ENOMEM;</span><br><span class="line">            <span class="keyword">goto</span> out_fds;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//初始化table，设置函数指针table.pt.qproc为__pollwait</span></span><br><span class="line">    poll_initwait(&amp;table);</span><br><span class="line">    fdcount = do_poll(nfds, head, &amp;table, end_time);</span><br><span class="line">    poll_freewait(&amp;table);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (walk = head; walk; walk = walk-&gt;next) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> *<span class="title">fds</span> = <span class="title">walk</span>-&gt;<span class="title">entries</span>;</span></span><br><span class="line">        <span class="keyword">int</span> j;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; walk-&gt;len; j++, ufds++)</span><br><span class="line">            <span class="keyword">if</span> (__put_user(fds[j].revents, &amp;ufds-&gt;revents))</span><br><span class="line">                <span class="keyword">goto</span> out_fds;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    err = fdcount;</span><br><span class="line">out_fds:</span><br><span class="line">    walk = head-&gt;next;</span><br><span class="line">    <span class="keyword">while</span> (walk) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">poll_list</span> *<span class="title">pos</span> = <span class="title">walk</span>;</span></span><br><span class="line">        walk = walk-&gt;next;</span><br><span class="line">        kfree(pos);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">poll_initwait</span><span class="params">(struct poll_wqueues *pwq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    init_poll_funcptr(&amp;pwq-&gt;pt, __pollwait);</span><br><span class="line">    pwq-&gt;polling_task = current;</span><br><span class="line">    pwq-&gt;triggered = <span class="number">0</span>;</span><br><span class="line">    pwq-&gt;error = <span class="number">0</span>;</span><br><span class="line">    pwq-&gt;table = <span class="literal">NULL</span>;</span><br><span class="line">    pwq-&gt;inline_index = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">init_poll_funcptr</span><span class="params">(poll_table *pt, poll_queue_proc qproc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    pt-&gt;qproc = qproc;        <span class="comment">//__pollwait</span></span><br><span class="line">    pt-&gt;key   = ~<span class="number">0U</span>L; <span class="comment">/* all events enabled */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">do_poll</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> nfds,  struct poll_list *<span class="built_in">list</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">           struct poll_wqueues *wait, struct timespec *end_time)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    poll_table* pt = &amp;wait-&gt;pt;</span><br><span class="line">    <span class="keyword">ktime_t</span> expire, *to = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">int</span> timed_out = <span class="number">0</span>, count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> slack = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (end_time &amp;&amp; !end_time-&gt;tv_sec &amp;&amp; !end_time-&gt;tv_nsec) &#123;    <span class="comment">//已超时</span></span><br><span class="line">        pt = <span class="literal">NULL</span>;        <span class="comment">//不执行__pollwait</span></span><br><span class="line">        timed_out = <span class="number">1</span>;    <span class="comment">//不睡眠</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (end_time &amp;&amp; !timed_out)        <span class="comment">//计算睡眠时间，纳秒</span></span><br><span class="line">        slack = estimate_accuracy(end_time);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">poll_list</span> *<span class="title">walk</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (walk = <span class="built_in">list</span>; walk != <span class="literal">NULL</span>; walk = walk-&gt;next) &#123;    <span class="comment">//遍历整个链表</span></span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> * <span class="title">pfd</span>, * <span class="title">pfd_end</span>;</span></span><br><span class="line"></span><br><span class="line">            pfd = walk-&gt;entries;</span><br><span class="line">            pfd_end = pfd + walk-&gt;len;</span><br><span class="line">            <span class="keyword">for</span> (; pfd != pfd_end; pfd++) &#123;    <span class="comment">//遍历一个节点中的entries数组</span></span><br><span class="line">                <span class="comment">//当用户传入的fd很多时，对do_pollfd就会调用很多次，poll效率瓶颈的另一原因就在这里。</span></span><br><span class="line">                <span class="keyword">if</span> (do_pollfd(pfd, pt)) &#123;</span><br><span class="line">                    count++;            <span class="comment">//就绪文件描述符个数加1</span></span><br><span class="line">                    pt = <span class="literal">NULL</span>;          <span class="comment">//有文件描述符就绪，进程不需要再睡眠了，所以不需要再给后面文件的wait queue中添加唤醒函数了</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        pt = <span class="literal">NULL</span>;          <span class="comment">//所有的文件描述符都已执行__pollwait，以后不再执行</span></span><br><span class="line">        <span class="keyword">if</span> (!count) &#123;       <span class="comment">//若count为0（表示无文件描述符就绪）</span></span><br><span class="line">            count = wait-&gt;error;    <span class="comment">//count = 0；</span></span><br><span class="line">            <span class="comment">//当用户程序在调用poll后挂起时，发信号可以让程序迅速退出poll调用，而通常的系统调用是不会被信号打断的。</span></span><br><span class="line">            <span class="keyword">if</span> (signal_pending(current))    <span class="comment">//判断是否为信号唤醒</span></span><br><span class="line">                count = -EINTR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (count || timed_out)    <span class="comment">//有文件描述符就绪 或者 进程不再睡眠</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (end_time &amp;&amp; !to) &#123;    <span class="comment">//仅首次循环时执行，超时时间转换，转换为内核时间</span></span><br><span class="line">            expire = timespec_to_ktime(*end_time);</span><br><span class="line">            to = &amp;expire;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//当前进程从这里进入睡眠，等待直到超时，或由回调函数唤醒，喊醒后文件等待队列中的等待    //队列项并不清除，到后边统一清除</span></span><br><span class="line">        <span class="comment">//超时，返回0；被唤醒，返回-EINTR</span></span><br><span class="line">        <span class="keyword">if</span> (!poll_schedule_timeout(wait, TASK_INTERRUPTIBLE, to, slack))</span><br><span class="line">            timed_out = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">do_pollfd</span><span class="params">(struct pollfd *pollfd, poll_table *pwait)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> mask;</span><br><span class="line">    <span class="keyword">int</span> fd;</span><br><span class="line"></span><br><span class="line">    mask = <span class="number">0</span>;</span><br><span class="line">    fd = pollfd-&gt;fd;    <span class="comment">//得到要检测文件的文件描述符</span></span><br><span class="line">    <span class="keyword">if</span> (fd &gt;= <span class="number">0</span>) &#123;        <span class="comment">//检测fd的正确性</span></span><br><span class="line">        <span class="keyword">int</span> fput_needed;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">file</span> * <span class="title">file</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">//从当前进程描述符中取得文件结构，并增加引用计数</span></span><br><span class="line">        file = fget_light(fd, &amp;fput_needed);</span><br><span class="line">        mask = POLLNVAL;        <span class="comment">//初始化，文件描述符没有打开</span></span><br><span class="line">        <span class="keyword">if</span> (file != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="comment">//#define DEFAULT_POLLMASK (POLLIN | POLLOUT | POLLRDNORM | POLLWRNORM)</span></span><br><span class="line">            mask = DEFAULT_POLLMASK;</span><br><span class="line">            <span class="keyword">if</span> (file-&gt;f_op &amp;&amp; file-&gt;f_op-&gt;poll) &#123;</span><br><span class="line">                <span class="keyword">if</span> (pwait)        <span class="comment">//设置当前fd待检测的事件掩码</span></span><br><span class="line">                    pwait-&gt;key = pollfd-&gt;events | POLLERR | POLLHUP;</span><br><span class="line">                <span class="comment">//获取当前的就绪状态，并添加进程到文件的对应等待队列中</span></span><br><span class="line">                mask = file-&gt;f_op-&gt;poll(file, pwait);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//去除不关心的状态掩码</span></span><br><span class="line">            mask &amp;= pollfd-&gt;events | POLLERR | POLLHUP;</span><br><span class="line">            <span class="comment">//释放通过fget_light得到的file指针，实际就是减少引用计数</span></span><br><span class="line">            fput_light(file, fput_needed);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//记录当前fd的就绪状态</span></span><br><span class="line">    pollfd-&gt;revents = mask;</span><br><span class="line">    <span class="keyword">return</span> mask;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>select用位图组织文件描述符和事件掩码，而poll用链表+数组的形式</li>
+<li>要检测的文件描述符多的情况下，select全部用堆上的空间，poll用栈空间和堆空间</li>
+<li>select可以被信号终止，poll不能被信号终止，会重新启动</li>
+</ol>
+<h2 id="poll系统调用的函数调用过程"><a href="#poll系统调用的函数调用过程" class="headerlink" title="poll系统调用的函数调用过程"></a>poll系统调用的函数调用过程</h2><p><img src="/Picture/poll系统调用的函数调用过程.png" alt></p>
+<h2 id="poll系统调用图解"><a href="#poll系统调用图解" class="headerlink" title="poll系统调用图解"></a>poll系统调用图解</h2><p><img src="/Picture/poll系统调用图解.jpg" alt></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/09/20/io-3-select/" rel="prev" title="Linux I/O 复用 select源码解析">
+      <i class="fa fa-chevron-left"></i> Linux I/O 复用 select源码解析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/09/21/io-5-epoll/" rel="next" title="Linux I/O 复用 epoll源码解析">
+      Linux I/O 复用 epoll源码解析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#poll"><span class="nav-number">1.</span> <span class="nav-text">poll</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#poll系统调用的函数调用过程"><span class="nav-number">1.1.</span> <span class="nav-text">poll系统调用的函数调用过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#poll系统调用图解"><span class="nav-number">1.2.</span> <span class="nav-text">poll系统调用图解</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

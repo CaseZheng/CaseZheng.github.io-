@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="命令行参数的处理 gflags getopt getopt_long的简单使用与对比 getopt getopt_longgetopt是简单的命令行处理函数。而getopt_long则复杂一些，功能也更加强大。 1234567891011121314151617#include &amp;lt;unistd.h&amp;gt;int getopt(int argc, char * const argv[],">
+<meta name="keywords" content="cpp,linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="命令行参数的处理 gflags getopt getopt_long">
+<meta property="og:url" content="http://www.casezheng.date/2017/09/23/command-line-arguments/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="命令行参数的处理 gflags getopt getopt_long的简单使用与对比 getopt getopt_longgetopt是简单的命令行处理函数。而getopt_long则复杂一些，功能也更加强大。 1234567891011121314151617#include &amp;lt;unistd.h&amp;gt;int getopt(int argc, char * const argv[],">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:36.125Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="命令行参数的处理 gflags getopt getopt_long">
+<meta name="twitter:description" content="命令行参数的处理 gflags getopt getopt_long的简单使用与对比 getopt getopt_longgetopt是简单的命令行处理函数。而getopt_long则复杂一些，功能也更加强大。 1234567891011121314151617#include &amp;lt;unistd.h&amp;gt;int getopt(int argc, char * const argv[],">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/09/23/command-line-arguments/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>命令行参数的处理 gflags getopt getopt_long | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/09/23/command-line-arguments/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          命令行参数的处理 gflags getopt getopt_long
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-23 00:38:00" itemprop="dateCreated datePublished" datetime="2017-09-23T00:38:00+08:00">2017-09-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:36" itemprop="dateModified" datetime="2020-04-12T12:56:36+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cpp/" itemprop="url" rel="index"><span itemprop="name">cpp</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>命令行参数的处理 gflags getopt getopt_long的简单使用与对比</p>
+<h1 id="getopt-getopt-long"><a href="#getopt-getopt-long" class="headerlink" title="getopt getopt_long"></a>getopt getopt_long</h1><p>getopt是简单的命令行处理函数。而getopt_long则复杂一些，功能也更加强大。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getopt</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * <span class="keyword">const</span> argv[],</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> <span class="keyword">char</span> *optstring)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">char</span> *optarg;</span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">int</span> optind, opterr, optopt;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;getopt.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getopt_long</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * <span class="keyword">const</span> argv[],</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> <span class="keyword">char</span> *optstring,</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> struct option *longopts, <span class="keyword">int</span> *longindex)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getopt_long_only</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * <span class="keyword">const</span> argv[],</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> <span class="keyword">char</span> *optstring,</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> struct option *longopts, <span class="keyword">int</span> *longindex)</span></span>;</span><br></pre></td></tr></table></figure>
+<h2 id="getopt"><a href="#getopt" class="headerlink" title="getopt"></a>getopt</h2><p>函数说明 getopt()用来分析命令行参数。参数argc和argv分别代表参数个数和内容，跟main（）函数的命令行参数是一样的。参数 optstring为选项字符串， 告知 getopt()可以处理哪个选项以及哪个选项需要参数，如果选项字符串里的字母后接着冒号“:”，则表示还有相关的参数，全域变量optarg 即会指向此额外参数。如果在处理期间遇到了不符合optstring指定的其他选项getopt()将显示一个错误消息，并将全域变量optarg设为”?“字符，如果不希望getopt()打印出错信息，则只要将全域变量opterr设为0即可。<br>optarg 指向当前选项参数（如果有）的指针。<br>optind 再次调用getopt()时的下一个argv指针的索引。<br>opterr 是否将错误信息输出到stderr的标志，置为0表示不输出。默认输出。<br>optopt 最后一个未知选项。<br>getopt optstring参数详解：</p>
+<ol>
+<li>单个字符，表示选项。</li>
+<li>单个字符后接一个冒号:表示该选项后必须跟一个参数。参数紧跟在选项后或者以空格隔开。该参数的指针赋给optarg。</li>
+<li>单个字符后跟两个冒号::表示该选项后可以跟一个参数。也可以不跟。如果跟一个参数，参数必须紧跟在选项后不能以空格隔开。该参数的指针赋给optarg。</li>
+</ol>
+<p>getopt调用返回的是解析出的字符的选项。返回-1表示解析完毕。<br>简单示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span> i=<span class="number">0</span>; i&lt;argc; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"argv "</span>&lt;&lt;i&lt;&lt;<span class="string">" "</span>&lt;&lt;argv[i]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ch;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"optind:"</span>&lt;&lt;optind&lt;&lt;<span class="string">" opterr:"</span>&lt;&lt;opterr&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">while</span>((ch = getopt(argc, argv, <span class="string">"a:bcde::g"</span>)) != <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"optind:"</span>&lt;&lt;optind&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">switch</span>(ch)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'a'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option a "</span>&lt;&lt;optarg&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'b'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option b "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"optarg is NULL :"</span>&lt;&lt;(<span class="literal">NULL</span>==optarg)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'c'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option c "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'d'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option d "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'e'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option e "</span>&lt;&lt;optarg&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'?'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"unkown option "</span>&lt;&lt;optarg&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"error option"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span> i=<span class="number">0</span>; i&lt;argc; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"after argv "</span>&lt;&lt;i&lt;&lt;<span class="string">" "</span>&lt;&lt;argv[i]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译后使用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Other]$ ./run -aef gege -ehaha -b gaga -cd</span><br><span class="line">argv 0 ./run</span><br><span class="line">argv 1 -aef</span><br><span class="line">argv 2 gege</span><br><span class="line">argv 3 -ehaha</span><br><span class="line">argv 4 -b</span><br><span class="line">argv 5 gaga</span><br><span class="line">argv 6 -cd</span><br><span class="line">optind:1 opterr:1</span><br><span class="line">optind:2</span><br><span class="line">option a ef</span><br><span class="line">optind:4</span><br><span class="line">option e haha</span><br><span class="line">optind:5</span><br><span class="line">option b</span><br><span class="line">optarg is NULL :1</span><br><span class="line">optind:6</span><br><span class="line">option c</span><br><span class="line">optind:7</span><br><span class="line">option d</span><br><span class="line">after argv 0 ./run</span><br><span class="line">after argv 1 -aef</span><br><span class="line">after argv 2 -ehaha</span><br><span class="line">after argv 3 -b</span><br><span class="line">after argv 4 -cd</span><br><span class="line">after argv 5 gege</span><br><span class="line">after argv 6 gaga</span><br></pre></td></tr></table></figure>
+<p>optind初始值为1, 因为argv[0]存储的时程序名。所以从argv[1]开始解析。而optind表示的是下一次开始解析的位置，所以optind初始值为1。<br>解析a选项，解析出紧跟着的选项参数ef。-a和ef可以紧跟着也可以用空格分割。如果选项参数中有空格需要用” “或’’括起来。例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./run -a &quot;ef ef&quot;</span><br><span class="line">./run -a&quot;ef ef&quot;</span><br></pre></td></tr></table></figure>
+<p>解析e选项，解析e选项的参数haha。e选项使用了::，所以选项和选项参数必须紧跟在一起，不能用空格分割。例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./run -e&apos;fefe&apos;</span><br><span class="line">./run -efefe</span><br></pre></td></tr></table></figure>
+<p>而<code>./run -e fefe</code> 的写法是错误的，fefe无法解析出来。<br>再解析b c d选项，如果选项后不跟参数可以写在一起，例如<code>-cd</code>。<br>解析途中碰到的gege gaga 则不解析，并将其移动到argv参数尾部。即<code>argv[]</code>中的选项和选项的参数会被放置在数组前面，而optind 会指向第一个非选项和参数的位置。</p>
+<h2 id="getopt-long"><a href="#getopt-long" class="headerlink" title="getopt_long"></a>getopt_long</h2><p>getopt_long和getopt都是解析命令行参数，但getopt_long支持长选项。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getopt_long</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> * <span class="keyword">const</span> argv[],</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> <span class="keyword">char</span> *optstring,</span></span></span><br><span class="line"><span class="function"><span class="params">          <span class="keyword">const</span> struct option *longopts, <span class="keyword">int</span> *longindex)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">option</span> &#123;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *name;       <span class="comment">//长选项名字</span></span><br><span class="line">    <span class="keyword">int</span>         has_arg;    <span class="comment">//no_argument（或0）：选项不携带参数；required_argument（或1）：选项需要参数；optional_argument（或2）：选项携带可选参数</span></span><br><span class="line">    <span class="keyword">int</span>        *flag;       <span class="comment">//指定该长选项的返回值。如果flag是NULL，getopt_long会返回val。否则，getopt_long会返回0，且flag指向的值设置为val的值，前提是该选项成功找到了</span></span><br><span class="line">    <span class="keyword">int</span>         val;        <span class="comment">//当做返回值，或把值加载进flag所指的内存中。</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>longopts用来支持长选项。longopts指向数组的最后一个元素值都设置为0。</p>
+<ol>
+<li>注意相比getopt，使用getopt_long需要加头文件<code>&lt;getopt.h&gt;</code></li>
+<li>getopt_long除了会接受长选项，其他概念和getopt是一样的</li>
+<li>如果使用getopt_long想只接受短选项，设置longopts为NULL即可；如果只想接受长选项，相应地设置optstring为NULL即可</li>
+<li>长选项名是可以使用缩写方式，比如：选项有<code>--file--create</code>,那么输入<code>--c</code>/<code>--cr</code>/<code>--cre</code>等均会被正确识别为create选项</li>
+<li>对于带参数的长选项格式是：<code>--arg=param</code>或<code>--arg param</code></li>
+<li>longopts是指向struct option数组的第一个元素的指针，struct option定义在<code>&lt;getopt.h&gt;</code>中</li>
+<li>longindex如果非NULL，则是返回识别到struct option数组中元素的位置指针</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;getopt.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="comment">//getopt_long示例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span> i=<span class="number">0</span>; i&lt;argc; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"argv "</span>&lt;&lt;i&lt;&lt;<span class="string">" "</span>&lt;&lt;argv[i]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ch;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"optind:"</span>&lt;&lt;optind&lt;&lt;<span class="string">" opterr:"</span>&lt;&lt;opterr&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">int</span> flag;</span><br><span class="line">    <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">option</span> <span class="title">long_options</span>[] = &#123;</span></span><br><span class="line">            &#123;  <span class="string">"append"</span>,    <span class="number">1</span>,   <span class="literal">NULL</span>,   <span class="string">'a'</span> &#125;,</span><br><span class="line">            &#123;  <span class="string">"help"</span>,      <span class="number">0</span>,   <span class="literal">NULL</span>,   <span class="string">'h'</span> &#125;,</span><br><span class="line">            &#123;  <span class="string">"verbose"</span>,   <span class="number">0</span>,   <span class="literal">NULL</span>,   <span class="string">'v'</span>  &#125;,</span><br><span class="line">            &#123;  <span class="string">"output"</span>,    <span class="number">1</span>,   &amp;flag,  <span class="string">'o'</span>   &#125;,</span><br><span class="line">            &#123;  <span class="literal">NULL</span>,        <span class="number">0</span>,   <span class="literal">NULL</span>,   <span class="number">0</span>  &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    <span class="keyword">int</span> longindex = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>((ch = getopt_long(argc, argv, <span class="string">"a:hvb:cde::g"</span>, long_options, &amp;longindex)) != <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"optind:"</span>&lt;&lt;optind&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"ch:"</span>&lt;&lt;ch&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">switch</span>(ch)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"long option "</span>&lt;&lt;longindex&lt;&lt;<span class="string">" "</span>&lt;&lt;long_options[longindex].name;</span><br><span class="line">                <span class="keyword">if</span>(<span class="literal">NULL</span> != optarg)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">cout</span>&lt;&lt;<span class="string">" arg "</span>&lt;&lt;optarg;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'a'</span>:</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'h'</span>:</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'v'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"ch "</span>&lt;&lt;(<span class="keyword">char</span>)ch&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">if</span>(<span class="literal">NULL</span> != optarg)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">cout</span>&lt;&lt;<span class="string">"arg "</span>&lt;&lt;optarg;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'b'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option b "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"optarg is NULL :"</span>&lt;&lt;(<span class="literal">NULL</span>==optarg)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'c'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option c "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'d'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option d "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'e'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option e "</span>&lt;&lt;optarg&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'?'</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"option ? "</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">if</span>(<span class="literal">NULL</span> != optarg)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">cout</span>&lt;&lt;<span class="string">"unkown option "</span>&lt;&lt;optarg&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"unkown longindex "</span>&lt;&lt;longindex&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="built_in">cout</span>&lt;&lt;<span class="string">"error option"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span> i=<span class="number">0</span>; i&lt;argc; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"after argv "</span>&lt;&lt;i&lt;&lt;<span class="string">" "</span>&lt;&lt;argv[i]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Other]$ ./run -a fe -hv -cd -b ff -append --output fe</span><br><span class="line">argv 0 ./run</span><br><span class="line">argv 1 -a</span><br><span class="line">argv 2 fe</span><br><span class="line">argv 3 -hv</span><br><span class="line">argv 4 -cd</span><br><span class="line">argv 5 -b</span><br><span class="line">argv 6 ff</span><br><span class="line">argv 7 -append</span><br><span class="line">argv 8 --output</span><br><span class="line">argv 9 fe</span><br><span class="line">optind:1 opterr:1</span><br><span class="line">optind:3</span><br><span class="line">ch:97</span><br><span class="line">ch a</span><br><span class="line">arg fe</span><br><span class="line">optind:3</span><br><span class="line">ch:104</span><br><span class="line">ch h</span><br><span class="line"></span><br><span class="line">optind:4</span><br><span class="line">ch:118</span><br><span class="line">ch v</span><br><span class="line"></span><br><span class="line">optind:4</span><br><span class="line">ch:99</span><br><span class="line">option c</span><br><span class="line">optind:5</span><br><span class="line">ch:100</span><br><span class="line">option d</span><br><span class="line">optind:7</span><br><span class="line">ch:98</span><br><span class="line">option b</span><br><span class="line">optarg is NULL :0</span><br><span class="line">optind:8</span><br><span class="line">ch:97</span><br><span class="line">ch a</span><br><span class="line">arg ppend</span><br><span class="line">optind:10</span><br><span class="line">ch:0</span><br><span class="line">long option 3 output arg fe</span><br><span class="line">after argv 0 ./run</span><br><span class="line">after argv 1 -a</span><br><span class="line">after argv 2 fe</span><br><span class="line">after argv 3 -hv</span><br><span class="line">after argv 4 -cd</span><br><span class="line">after argv 5 -b</span><br><span class="line">after argv 6 ff</span><br><span class="line">after argv 7 -append</span><br><span class="line">after argv 8 --output</span><br><span class="line">after argv 9 fe</span><br></pre></td></tr></table></figure>
+<h1 id="gflags"><a href="#gflags" class="headerlink" title="gflags"></a>gflags</h1><p>gflags 是 google 开源的用于处理命令行参数的项目。</p>
+<h2 id="简单使用"><a href="#简单使用" class="headerlink" title="简单使用"></a>简单使用</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gflags/gflags.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line">DEFINE_bool(daemon, <span class="literal">true</span>, <span class="string">"run daemon mode"</span>);</span><br><span class="line">DEFINE_int32(port, <span class="number">9000</span>, <span class="string">"program listen port"</span>);</span><br><span class="line">DEFINE_string(confpath, <span class="string">"./config.ini"</span>, <span class="string">"program config path"</span>);</span><br><span class="line">DEFINE_double(dou, <span class="number">0</span>, <span class="string">"double"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义对 FLAGS_port 的检查函数</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">ValidatePort</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* name, <span class="keyword">int32_t</span> value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (value &gt; <span class="number">0</span> &amp;&amp; value &lt; <span class="number">32768</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Invalid value for --%s: %d\n"</span>, name, (<span class="keyword">int</span>)value);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用全局 static 变量来注册函数，static 变量会在 main 函数开始时就调用,确保参数检查在main函数进入时已经注册。</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">bool</span> port_dummy = gflags::RegisterFlagValidator(&amp;FLAGS_port, &amp;ValidatePort);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//gflags::RegisterFlagValidator(&amp;FLAGS_port, &amp;ValidatePort);</span></span><br><span class="line">    gflags::ParseCommandLineFlags(&amp;argc, &amp;argv, <span class="literal">true</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"daemon: "</span>&lt;&lt;FLAGS_daemon&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"port: "</span>&lt;&lt;FLAGS_port&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"configpath: "</span>&lt;&lt;FLAGS_confpath&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"dou: "</span>&lt;&lt;FLAGS_dou&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    FLAGS_dou = <span class="number">9999.8</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"after dou: "</span>&lt;&lt;FLAGS_dou&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用 SetCommandLineOption 函数对参数进行设置才会调用检查函数</span></span><br><span class="line">    gflags::SetCommandLineOption(<span class="string">"port"</span>, <span class="string">"-2"</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"after port: "</span>&lt;&lt;FLAGS_port&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    FLAGS_port = <span class="number">-2</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"after2 port: "</span>&lt;&lt;FLAGS_port&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译运行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Other]$ g++ -o run CommandLine.cpp -g -lgflags</span><br><span class="line">[CaseZheng@localhost Other]$ ./run -confpath   &quot;./config.txt&quot; -daemon=&quot;true&quot; --port=111 -dou 1.001</span><br><span class="line">1</span><br><span class="line">111</span><br><span class="line">./config.txt</span><br><span class="line">1.001</span><br></pre></td></tr></table></figure></p>
+<p>gflags支持的类型：</p>
+<ul>
+<li>DEFINE_bool: boolean</li>
+<li>DEFINE_int32: 32-bit integer</li>
+<li>DEFINE_int64: 64-bit integer</li>
+<li>DEFINE_uint64: unsigned 64-bit integer</li>
+<li>DEFINE_double: double</li>
+<li>DEFINE_string: C++ string</li>
+</ul>
+<p>如定义: <code>DEFINE_bool(daemon, true, &quot;run daemon mode&quot;);</code><br>在命令行可以这样访问：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">./run -daemon</span><br><span class="line">./run -daemon=true</span><br><span class="line">./run -daemon=1</span><br><span class="line">./run -daemon=false</span><br><span class="line">./run --daemon true</span><br><span class="line">./run --daemon &quot;true&quot;</span><br></pre></td></tr></table></figure></p>
+<p>在程序中可加前缀<code>FLAGS_</code>来访问，例如: <code>cout&lt;&lt;FLAGS_daemon&lt;&lt;endl;</code><br>gflags变量可以被修改 <code>FLAGS_daemon = true;</code></p>
+<p>gflags支持从文件中读取命令行参数。<br>config.flags文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-confpath   &quot;./config.txt&quot; -daemon=&quot;true&quot; --port=111 -dou 1.001</span><br></pre></td></tr></table></figure></p>
+<p>命令行使用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Other]$ ./run --flagfile config.flags</span><br><span class="line">1</span><br><span class="line">9000</span><br><span class="line">./config.ini</span><br><span class="line">dou: 0</span><br><span class="line">after dou: 9999.8</span><br></pre></td></tr></table></figure></p>
+<h2 id="外部引用"><a href="#外部引用" class="headerlink" title="外部引用"></a>外部引用</h2><p>如果希望在别的文件中使用gflags变量，可以使用<code>DECLARE_type</code>（type为变量类型 int string double等）来声明变量。相当与extern声明变量 例如： <code>DECLARE_bool(daemon);</code></p>
+<h2 id="参数检查"><a href="#参数检查" class="headerlink" title="参数检查"></a>参数检查</h2><p>可以注册检查函数值的检查函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@localhost Other]$ ./run -port=99</span><br><span class="line">[CaseZheng@localhost Other]$ ./run -port=-1</span><br><span class="line">Invalid value for --port: -1</span><br><span class="line">ERROR: failed validation of new value &apos;-1&apos; for flag &apos;port&apos;</span><br><span class="line">daemon: 1</span><br><span class="line">port: 99</span><br><span class="line">configpath: ./config.ini</span><br><span class="line">dou: 0</span><br><span class="line">after dou: 9999.8</span><br><span class="line">Invalid value for --port: -2</span><br><span class="line">after port: 99</span><br><span class="line">after2 port: -2</span><br></pre></td></tr></table></figure>
+<p>可以看到命令行输入错误，程序会直接退出。<br>使用SetCommandLineOption修改参数也会触发参数检测，但如果不合法，程序不退出。如果直接修改参数的值则不会触发参数检测函数。</p>
+<h2 id="特殊参数"><a href="#特殊参数" class="headerlink" title="特殊参数"></a>特殊参数</h2><ul>
+<li><code>--help</code> 打印定义过的所有参数的帮助信息</li>
+<li><code>--version</code> 打印版本信息 通过google::SetVersionString()指定</li>
+<li><code>--nodefok</code> 但命令行中出现没有定义的参数时，并不退出（error-exit）</li>
+<li><code>--fromenv</code> 从环境变量读取参数值 <code>--fromenv=foo,bar</code>表明要从环境变量读取foo，bar两个参数的值。通过<code>export FLAGS_foo=xxx; export FLAGS_bar=yyy</code> 程序就可读到foo，bar的值分别为xxx，yyy。</li>
+<li><code>--tryfromenv</code>与<code>--fromenv</code>类似，当参数的没有在环境变量定义时，不退出（fatal-exit）</li>
+<li><code>--flagfile</code> 从文件读取参数值，<code>--flagfile=my.conf</code>表明要从<code>my.conf</code>文件读取参数的值。在配置文件中指定参数值与在命令行方式类似，另外在flagfile里可进一步通过<code>--flagfile</code>来包含其他的文件。</li>
+</ul>
+<h1 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h1><ol>
+<li>getopt <code>getopt_long</code>是Linux标准库中的，可以直接使用，而gflags需要安装。</li>
+<li>getopt只支持短选项，<code>getopt_long</code>支持短选项和长选项，<code>getopt_long</code>支持长选项缩写，gflags不支持长选项缩写。</li>
+<li>getopt、<code>getopt_long</code>是C函数，通用性强，而gflags使用C++编写，C无法直接使用。</li>
+<li>getopt、<code>getopt_long</code>使用不便，gflags使用方便，清晰。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/09/21/io-5-epoll/" rel="prev" title="Linux I/O 复用 epoll源码解析">
+      <i class="fa fa-chevron-left"></i> Linux I/O 复用 epoll源码解析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/10/02/libevent-1/" rel="next" title="Libevent源码阅读——概述、实践">
+      Libevent源码阅读——概述、实践 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#getopt-getopt-long"><span class="nav-number">1.</span> <span class="nav-text">getopt getopt_long</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#getopt"><span class="nav-number">1.1.</span> <span class="nav-text">getopt</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getopt-long"><span class="nav-number">1.2.</span> <span class="nav-text">getopt_long</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gflags"><span class="nav-number">2.</span> <span class="nav-text">gflags</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单使用"><span class="nav-number">2.1.</span> <span class="nav-text">简单使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#外部引用"><span class="nav-number">2.2.</span> <span class="nav-text">外部引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数检查"><span class="nav-number">2.3.</span> <span class="nav-text">参数检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特殊参数"><span class="nav-number">2.4.</span> <span class="nav-text">特殊参数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#对比"><span class="nav-number">3.</span> <span class="nav-text">对比</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

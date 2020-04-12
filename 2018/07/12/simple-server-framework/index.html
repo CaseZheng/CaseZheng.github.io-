@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
+<meta name="keywords" content="boost,cpp,libevent">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务器框架设计与编码">
+<meta property="og:url" content="http://www.casezheng.date/2018/07/12/simple-server-framework/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/ZPDVIiD04CRVznG31QbemUT4Ip5KB8X8zJrijgjTI3PXTn84zG2Un4Fuu6tq6axM_Aj9IVCIldpV_2OpcomiSeDv4ZCHSsjXTMLu8k650LqdXIAFnn2bQGmhhN0gKcqHB1gbd-28xlVI5DBSKj4fzCmWrOzt7BV75sV-076Tw-aUQ_bCpPpdp4a5JSATbdxVh5lwx8rLCmNrJEsJ6nN9GchiJZkXnXOzpswvaPimGtDEl5mWk6WOSIldr2HRblAIb3z0l4RCHgX1cVaRml5QEGHSPsACHv4Ehb53j0Sn-dOKwT0QDKXJYJIZl3BK9RRQCQlZcUNPx7LUVu0U_7n-VBz_iNz7LQM2VQbs_NLojxvVqUptq89cXGSNj5iQALb8lQ5_yHS0">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/XLLTRzem57rkVeMbIGXeG7kc3BLDgShKQOW2UuoSv1Oo4YUp7RIfst_VTUo4VBWgBzZtt8_ZUu-TMo4fbqMQE652XI3USnp06PXyaZ9_v3G5ykOG_7qAiap8sKmSAOV8poMVUyhd1VWP-8AaVdxPtZZ_d2hXnOgPhgunJK9MB9R3qKsrlOkY7O-7OSQ494Boc1t80F_Hw9Bb_ccxNVlUFGa3bvopE2BZCA3yeE8dVLOOLuIIb8Vm0ogWvBPKstlSVH1qHBOcG16tUtjh6fv0bdvwgVpE4CgCpv7qYhrc2aIBsJKReYDCMw-n_p8EzRbKHIyOQXO-Xry5O4F6-jHZF6yPSOvnO3GXPUiUW2OwuN3qvRFnA16Tx4MDTpZg0qiMLUO9i28rP_V3DFBbdnoGFYZFBQwDcvbCwkDYnIp67KSkylWUWceI5cm38lUoo5RbUo6j0LHaLVrki-hHRRIbt_blM2lfjB-IuOf9uAyqX9OO1wGIOq-YTO1BF3KBdNoSr-iFfuRurSJGI6a-rydTrjeYmRh0Oa6KrWebDCEbnbJjKi09yOuGdkvOj6Cv5gv7NzDfMzPDd_RSJGqBjerJR3XDSs4DF6SdM4KMQ0zSn9bDK1vD4k3wzR26Ri0k4FcEe13Hrx54lgACPhCzJGebzvyjXNQm1off2q4HHlYa8QHNBV2H2lc3nr8xN7PDCLxKKagnBH3CcPHJCOfhiXaOecvJXtYmxbwre6jJXtSxsTJHohVZmctv6wUOm7DsG56-zO7w2KF4yiMOJdbyEChfeldwEwthDodooTz5TIMTvbUY4LsXpSZfL25rzvmssIfl7pUSEuMTMs0HVlx-0m00">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/ZLHDJyCm33sllo8I4ke-nNcCQQmhg19SjebhbRPcYqZRAV4Y9E2_aoKjJLc7wCtni_tyR7SXaGeyvjppKawb9C4JIq11WLkMWtWGD0VouH7zNILbAN4wbNig88iFA6Q10Mr0A11paiS7nxxrldvoEiywMM-eCt4I5Gpz_gt9FTGqaAMaSaWGjhuVkQ43Dx-Dx8tFMKaKnnI9wI9Eg0H3BJoPIstPYkEgee8KIp4xp-9Mdl_HNDHkpkr6bImZnXqaFgWZCXxBCdq3Z96yPYCYzwMeYCgHXGy85RjQ5VEo1WcL6bR80R5KQfGHRNEQeqF5xrjv5DFZfTmgMt4ns5hwJaHOPDt-Hqj5KUvNCgCroJMgFhaZDnUpha07kP1B-zI8VRP3Lk1gWUwppCgIbeL4qi775MW5tABhliANRVGShkDWgUkbIStR326FzHGkqdGNhDcjVy4xzx5fCdod-O53tQjsTDtZP2BORe-JUUkolDQPDHXtGRse6sD3lNRzyVZpL_G2Yap_Axu1">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/hLPRRvim57xdLrYQLD6Ce3sdNLGrRRT8dLgjc_Q833YfLR2HRPYcRlzznnYC3QHff_MXujo-Sp_nXLHOgBeiWgp0KgBDBKr9GvZwbbKt0fS4FGS8_jwbd4krMib7B4YUL4gSRq3bWOY6Y3KgayfIPy6Ve4Upp0xcFS0KQCke2a_F3AVXD4VN0alomBCdeZvZbXVayfUXGieKal3PgsUSIOMcqMpl1LSyuyKQdNmYofBXKSChWeilF2UzfQLxqoNKID4CcKYR3MVibaf5616RD9HAr9b2f047hEZuQ87CHmI2Mj4YaMqwYKacGfsL9d2UYmNI_oEaioq8Yuol1O80vu8mjVbAS0u1Q9jT3f2FNEWue7co1y1YVzZ-Xw2Al0MWInJaIGhzMY0erxKcBu6orPgP5BUpQstbj_ecxsBe8LhVMoQ9y3JjC4Jeg9EJogKFnpRRldQW_KuV1-ZBqXbtPR75orUh4bVdaCBnw3L4wN8EUdV67hpsn65rPzX1trBEpbh4VcKR2WS25wXTtU-imjaJPVlmXKgazMwdYtYYFo90n3gJrX5QL2rnYZwY3sSp3eok_3_mGr8sqzcijDIWX6ySh6Zs50q1QVqjSnZZo3nq6roxf6R3sqaANvuxxQNLyuxgGxVY_uvmBGGNTs9JS4bWIJsPZkqAA-npMuTJjbRk2ZnLFrZvSI7lQkLMifjoVHJAX9ewtkJ3jO8f1G5yR0eAcMshL-rmknYsyAyt6KfztAQVu39fjAVBbdoJMUjDp1d-9FZfjR_FtkeyEqDvdpfNm6LxipoI-UrnXVSfd4AQQIdUav6Pkvh0dxv0ubZG_QEAryvx8d2U5d5SLo2qXsjEPftuGWliRc7WxsGS5sGtzZxIw08OiW-6Cnh74zcGybGOkCLVBdzxYOqRiAmhe-40J3jnG6i4fLNyHir1pMiD2Pc8Xt875uJbyBxy2m00">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/XLHDRzim3BtxLmWeK2HP4-oST4KTrscxsLdchjlHK6pMyIPBggIa0xRzzz7oHvGbG7mI-SX7Ye_MhJPKcMt5l8nHhKaGbMlO0JU9p1QALa1-UmI_YxKGsaodUaCLvAaqwZh0a2TGEr0tf4fbRysylrxBziWDg1UQmID_4ItJknDCaIZApBBOqwm9r4QLl40l7fROoemq_i2FedJk1v_gX80oDgVPpmvCmY_fClnkEuBN9Rnrm4wKEHdj_Rugt9n54eOjk500iptol8pzvEd1ZrhucLTKOVUiYrb5VKN9wef71QtRBOWfVK79t8A819_ZLHH-xT10L9A1SIFSXYIBktRwkU-bSOREK8xI38ODp_XO1XppDZF4of-kgGQhI5YRSxJEvssCaMtE0nxF9oYPkOMmQwVG3Z8ZrFN13jM1w3_mkVUswzFT6LVRe6Lrk0FAOf436nmKL_2Q5i11OToe5lU-CQwQh954qOQTdYN-A9GHEye4-MhEGIQuDkIZ5dmw_KRP5iZbZnN5F-VgF-STDNJuuNrxkIQjtV1BSWyc0HDWWxq-nn6XKkSZObrq0HVk3zJIdq1QsjC8qjdv7hyBauagYusPt3ZRvZcBjySFrF8EtmI7nMhd1U4lMkzxe-Gu5szy_AT7lLlWERvM_m00">
+<meta property="og:updated_time" content="2018-07-12T10:16:50.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="服务器框架设计与编码">
+<meta name="twitter:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
+<meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/ZPDVIiD04CRVznG31QbemUT4Ip5KB8X8zJrijgjTI3PXTn84zG2Un4Fuu6tq6axM_Aj9IVCIldpV_2OpcomiSeDv4ZCHSsjXTMLu8k650LqdXIAFnn2bQGmhhN0gKcqHB1gbd-28xlVI5DBSKj4fzCmWrOzt7BV75sV-076Tw-aUQ_bCpPpdp4a5JSATbdxVh5lwx8rLCmNrJEsJ6nN9GchiJZkXnXOzpswvaPimGtDEl5mWk6WOSIldr2HRblAIb3z0l4RCHgX1cVaRml5QEGHSPsACHv4Ehb53j0Sn-dOKwT0QDKXJYJIZl3BK9RRQCQlZcUNPx7LUVu0U_7n-VBz_iNz7LQM2VQbs_NLojxvVqUptq89cXGSNj5iQALb8lQ5_yHS0">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/07/12/simple-server-framework/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>服务器框架设计与编码 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/07/12/simple-server-framework/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务器框架设计与编码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-12 18:16:50" itemprop="dateCreated datePublished" datetime="2018-07-12T18:16:50+08:00">2018-07-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cpp/" itemprop="url" rel="index"><span itemprop="name">cpp</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>一个libevent和boost库写的轻量级服务器框架</p>
+<h1 id="总体服务器框架"><a href="#总体服务器框架" class="headerlink" title="总体服务器框架"></a>总体服务器框架</h1><p>先看下总体的服务器框架设计图<br><img src="https://www.plantuml.com/plantuml/svg/ZPDVIiD04CRVznG31QbemUT4Ip5KB8X8zJrijgjTI3PXTn84zG2Un4Fuu6tq6axM_Aj9IVCIldpV_2OpcomiSeDv4ZCHSsjXTMLu8k650LqdXIAFnn2bQGmhhN0gKcqHB1gbd-28xlVI5DBSKj4fzCmWrOzt7BV75sV-076Tw-aUQ_bCpPpdp4a5JSATbdxVh5lwx8rLCmNrJEsJ6nN9GchiJZkXnXOzpswvaPimGtDEl5mWk6WOSIldr2HRblAIb3z0l4RCHgX1cVaRml5QEGHSPsACHv4Ehb53j0Sn-dOKwT0QDKXJYJIZl3BK9RRQCQlZcUNPx7LUVu0U_7n-VBz_iNz7LQM2VQbs_NLojxvVqUptq89cXGSNj5iQALb8lQ5_yHS0"><br>服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame.然后运行初始化函数Init(初始化日志,拉取配置文件等操作),然后运行Run函数启动反应堆.</p>
+<h1 id="Http服务器"><a href="#Http服务器" class="headerlink" title="Http服务器"></a>Http服务器</h1><p><a href="https://github.com/CaseZheng/SimpleServerFramework/tree/master/libevent_http_frame" target="_blank" rel="noopener">Http服务器代码</a></p>
+<p>Http服务器类图如下:<br><img src="https://www.plantuml.com/plantuml/svg/XLLTRzem57rkVeMbIGXeG7kc3BLDgShKQOW2UuoSv1Oo4YUp7RIfst_VTUo4VBWgBzZtt8_ZUu-TMo4fbqMQE652XI3USnp06PXyaZ9_v3G5ykOG_7qAiap8sKmSAOV8poMVUyhd1VWP-8AaVdxPtZZ_d2hXnOgPhgunJK9MB9R3qKsrlOkY7O-7OSQ494Boc1t80F_Hw9Bb_ccxNVlUFGa3bvopE2BZCA3yeE8dVLOOLuIIb8Vm0ogWvBPKstlSVH1qHBOcG16tUtjh6fv0bdvwgVpE4CgCpv7qYhrc2aIBsJKReYDCMw-n_p8EzRbKHIyOQXO-Xry5O4F6-jHZF6yPSOvnO3GXPUiUW2OwuN3qvRFnA16Tx4MDTpZg0qiMLUO9i28rP_V3DFBbdnoGFYZFBQwDcvbCwkDYnIp67KSkylWUWceI5cm38lUoo5RbUo6j0LHaLVrki-hHRRIbt_blM2lfjB-IuOf9uAyqX9OO1wGIOq-YTO1BF3KBdNoSr-iFfuRurSJGI6a-rydTrjeYmRh0Oa6KrWebDCEbnbJjKi09yOuGdkvOj6Cv5gv7NzDfMzPDd_RSJGqBjerJR3XDSs4DF6SdM4KMQ0zSn9bDK1vD4k3wzR26Ri0k4FcEe13Hrx54lgACPhCzJGebzvyjXNQm1off2q4HHlYa8QHNBV2H2lc3nr8xN7PDCLxKKagnBH3CcPHJCOfhiXaOecvJXtYmxbwre6jJXtSxsTJHohVZmctv6wUOm7DsG56-zO7w2KF4yiMOJdbyEChfeldwEwthDodooTz5TIMTvbUY4LsXpSZfL25rzvmssIfl7pUSEuMTMs0HVlx-0m00"><br>在调用CLibeventHttpFrame的Init函数时,除了初始化框架的日志,配置等模块外,还会生成CHttpServer实例,并运行HttpServer的初始化Init函数,给evhttp设置相应uri对应的回调函数,最后返回.等框架启动反应堆后,当有请求到来,会调用CPacket的DealPacket函数,解析请求,并通过uri分发请求,如果为默认的请求则分发到CPacketModel,并根据Interface分发到不同的CDealModel,自定义URI则分发到别的具体的CPacket实例,例如示例CExamplePacket.</p>
+<h1 id="Timer服务器"><a href="#Timer服务器" class="headerlink" title="Timer服务器"></a>Timer服务器</h1><p><a href="https://github.com/CaseZheng/SimpleServerFramework/tree/master/libevent_timer_frame" target="_blank" rel="noopener">Timer服务器代码</a></p>
+<p>Timer服务器类图如下:<br><img src="https://www.plantuml.com/plantuml/svg/ZLHDJyCm33sllo8I4ke-nNcCQQmhg19SjebhbRPcYqZRAV4Y9E2_aoKjJLc7wCtni_tyR7SXaGeyvjppKawb9C4JIq11WLkMWtWGD0VouH7zNILbAN4wbNig88iFA6Q10Mr0A11paiS7nxxrldvoEiywMM-eCt4I5Gpz_gt9FTGqaAMaSaWGjhuVkQ43Dx-Dx8tFMKaKnnI9wI9Eg0H3BJoPIstPYkEgee8KIp4xp-9Mdl_HNDHkpkr6bImZnXqaFgWZCXxBCdq3Z96yPYCYzwMeYCgHXGy85RjQ5VEo1WcL6bR80R5KQfGHRNEQeqF5xrjv5DFZfTmgMt4ns5hwJaHOPDt-Hqj5KUvNCgCroJMgFhaZDnUpha07kP1B-zI8VRP3Lk1gWUwppCgIbeL4qi775MW5tABhliANRVGShkDWgUkbIStR326FzHGkqdGNhDcjVy4xzx5fCdod-O53tQjsTDtZP2BORe-JUUkolDQPDHXtGRse6sD3lNRzyVZpL_G2Yap_Axu1"><br>在调用CLibeventTimerFrame的Init函数时,除了初始化框架的日志,配置等模块外,还会生成CTimerServer实例,并运行CTimerServer的初始化Init函数,生成定时器,最后启动定时器,当定时器激活后根据注册的ItimerServer执行相应的应用代码</p>
+<h1 id="Tcp服务器"><a href="#Tcp服务器" class="headerlink" title="Tcp服务器"></a>Tcp服务器</h1><p><a href="https://github.com/CaseZheng/SimpleServerFramework/tree/master/libevent_tcp_frame" target="_blank" rel="noopener">Tcp服务器代码</a></p>
+<p>Tcp服务器类图如下:<br><img src="https://www.plantuml.com/plantuml/svg/hLPRRvim57xdLrYQLD6Ce3sdNLGrRRT8dLgjc_Q833YfLR2HRPYcRlzznnYC3QHff_MXujo-Sp_nXLHOgBeiWgp0KgBDBKr9GvZwbbKt0fS4FGS8_jwbd4krMib7B4YUL4gSRq3bWOY6Y3KgayfIPy6Ve4Upp0xcFS0KQCke2a_F3AVXD4VN0alomBCdeZvZbXVayfUXGieKal3PgsUSIOMcqMpl1LSyuyKQdNmYofBXKSChWeilF2UzfQLxqoNKID4CcKYR3MVibaf5616RD9HAr9b2f047hEZuQ87CHmI2Mj4YaMqwYKacGfsL9d2UYmNI_oEaioq8Yuol1O80vu8mjVbAS0u1Q9jT3f2FNEWue7co1y1YVzZ-Xw2Al0MWInJaIGhzMY0erxKcBu6orPgP5BUpQstbj_ecxsBe8LhVMoQ9y3JjC4Jeg9EJogKFnpRRldQW_KuV1-ZBqXbtPR75orUh4bVdaCBnw3L4wN8EUdV67hpsn65rPzX1trBEpbh4VcKR2WS25wXTtU-imjaJPVlmXKgazMwdYtYYFo90n3gJrX5QL2rnYZwY3sSp3eok_3_mGr8sqzcijDIWX6ySh6Zs50q1QVqjSnZZo3nq6roxf6R3sqaANvuxxQNLyuxgGxVY_uvmBGGNTs9JS4bWIJsPZkqAA-npMuTJjbRk2ZnLFrZvSI7lQkLMifjoVHJAX9ewtkJ3jO8f1G5yR0eAcMshL-rmknYsyAyt6KfztAQVu39fjAVBbdoJMUjDp1d-9FZfjR_FtkeyEqDvdpfNm6LxipoI-UrnXVSfd4AQQIdUav6Pkvh0dxv0ubZG_QEAryvx8d2U5d5SLo2qXsjEPftuGWliRc7WxsGS5sGtzZxIw08OiW-6Cnh74zcGybGOkCLVBdzxYOqRiAmhe-40J3jnG6i4fLNyHir1pMiD2Pc8Xt875uJbyBxy2m00"><br>在调用CLibeventTcpFrame的Init函数时,除了初始化框架的日志,配置等模块外,还会生成CTcpServer实例,并运行CTcpServer的初始化Init函数,生成具体的IDealModel实例化对象和IProtocol实例化对象,返回后框架启动反应堆,当有请求到来时生成一个CSocketHandle对象,并记录到CTcpServer中,对发过来的信息,通过IProtocol实例解析报文,并将解析后的信息存放在生成的IPacketModel实例中,将IPacketModel实例传递给IDealModel实例进行业务逻辑的处理.</p>
+<h1 id="Rpc服务器"><a href="#Rpc服务器" class="headerlink" title="Rpc服务器"></a>Rpc服务器</h1><p><a href="https://github.com/CaseZheng/SimpleServerFramework/tree/master/libevent_rpc_frame" target="_blank" rel="noopener">Rpc服务器代码</a></p>
+<p>Rpc服务器类图如下:</p>
+<p><img src="https://www.plantuml.com/plantuml/svg/XLHDRzim3BtxLmWeK2HP4-oST4KTrscxsLdchjlHK6pMyIPBggIa0xRzzz7oHvGbG7mI-SX7Ye_MhJPKcMt5l8nHhKaGbMlO0JU9p1QALa1-UmI_YxKGsaodUaCLvAaqwZh0a2TGEr0tf4fbRysylrxBziWDg1UQmID_4ItJknDCaIZApBBOqwm9r4QLl40l7fROoemq_i2FedJk1v_gX80oDgVPpmvCmY_fClnkEuBN9Rnrm4wKEHdj_Rugt9n54eOjk500iptol8pzvEd1ZrhucLTKOVUiYrb5VKN9wef71QtRBOWfVK79t8A819_ZLHH-xT10L9A1SIFSXYIBktRwkU-bSOREK8xI38ODp_XO1XppDZF4of-kgGQhI5YRSxJEvssCaMtE0nxF9oYPkOMmQwVG3Z8ZrFN13jM1w3_mkVUswzFT6LVRe6Lrk0FAOf436nmKL_2Q5i11OToe5lU-CQwQh954qOQTdYN-A9GHEye4-MhEGIQuDkIZ5dmw_KRP5iZbZnN5F-VgF-STDNJuuNrxkIQjtV1BSWyc0HDWWxq-nn6XKkSZObrq0HVk3zJIdq1QsjC8qjdv7hyBauagYusPt3ZRvZcBjySFrF8EtmI7nMhd1U4lMkzxe-Gu5szy_AT7lLlWERvM_m00"><br>在调用CLibevenRpcFrame的Init函数时,除了初始化框架的日志,配置等模块外,还会生成CRpcServer实例,并运行CTcpServer的初始化Init函数,将InterfaceInfo信息通过evrpc_register_generic注册到libevent中,然后返回,框架启动反应堆,如果收到rpc请求则会调用注册的各个回调函数,包括生成请求参数结构体,将请求信息解码到请求信息结构体中,生成返回信息结构体,业务处理回调函数,将返回信息结构体重新编码为字节流的回调函数等.<br>libevent的rpc框架中存在一个问题,如果请求参数为空会core掉,经查是libevent的一个bug.已经提了<a href="https://github.com/libevent/libevent/issues/660" target="_blank" rel="noopener">Issues</a>.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/boost/" rel="tag"># boost</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/libevent/" rel="tag"># libevent</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/06/08/elasticsearch/" rel="prev" title="elasticsearch入门学习">
+      <i class="fa fa-chevron-left"></i> elasticsearch入门学习
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/07/13/rabbitmq/" rel="next" title="RabbitMQ">
+      RabbitMQ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#总体服务器框架"><span class="nav-number">1.</span> <span class="nav-text">总体服务器框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Http服务器"><span class="nav-number">2.</span> <span class="nav-text">Http服务器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Timer服务器"><span class="nav-number">3.</span> <span class="nav-text">Timer服务器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Tcp服务器"><span class="nav-number">4.</span> <span class="nav-text">Tcp服务器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Rpc服务器"><span class="nav-number">5.</span> <span class="nav-text">Rpc服务器</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

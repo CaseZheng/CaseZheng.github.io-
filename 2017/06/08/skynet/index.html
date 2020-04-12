@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="skynet配置文件说明简单配置文件示例root = &amp;quot;./&amp;quot; thread = 8 logger = nil harbor = 1 address = &amp;quot;127.0.0.1:2526&amp;quot; master = &amp;quot;127.0.0.1:2013&amp;quot; start = &amp;quot;main&amp;quot;  -- main script bootstrap">
+<meta name="keywords" content="other">
+<meta property="og:type" content="article">
+<meta property="og:title" content="skynet">
+<meta property="og:url" content="http://www.casezheng.date/2017/06/08/skynet/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="skynet配置文件说明简单配置文件示例root = &amp;quot;./&amp;quot; thread = 8 logger = nil harbor = 1 address = &amp;quot;127.0.0.1:2526&amp;quot; master = &amp;quot;127.0.0.1:2013&amp;quot; start = &amp;quot;main&amp;quot;  -- main script bootstrap">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:35.919Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="skynet">
+<meta name="twitter:description" content="skynet配置文件说明简单配置文件示例root = &amp;quot;./&amp;quot; thread = 8 logger = nil harbor = 1 address = &amp;quot;127.0.0.1:2526&amp;quot; master = &amp;quot;127.0.0.1:2013&amp;quot; start = &amp;quot;main&amp;quot;  -- main script bootstrap">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/06/08/skynet/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>skynet | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/08/skynet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          skynet
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-08 18:33:00" itemprop="dateCreated datePublished" datetime="2017-06-08T18:33:00+08:00">2017-06-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="skynet配置文件说明"><a href="#skynet配置文件说明" class="headerlink" title="skynet配置文件说明"></a>skynet配置文件说明</h1><h2 id="简单配置文件示例"><a href="#简单配置文件示例" class="headerlink" title="简单配置文件示例"></a>简单配置文件示例</h2><pre><code>root = &quot;./&quot;
+thread = 8
+logger = nil
+harbor = 1
+address = &quot;127.0.0.1:2526&quot;
+master = &quot;127.0.0.1:2013&quot;
+start = &quot;main&quot;  -- main script
+bootstrap = &quot;snlua bootstrap&quot;   -- The service for bootstrap
+standalone = &quot;0.0.0.0:2013&quot;
+luaservice = root..&quot;service/?.lua;&quot;..root..&quot;test/?.lua;&quot;..root..&quot;examples/?.lua&quot;
+lualoader = &quot;lualib/loader.lua&quot;
+snax = root..&quot;examples/?.lua;&quot;..root..&quot;test/?.lua&quot;
+cpath = root..&quot;cservice/?.so&quot;
+</code></pre><h2 id="必要配置项"><a href="#必要配置项" class="headerlink" title="必要配置项"></a>必要配置项</h2><ul>
+<li>thread 启动多少个工作线程。通常不要将它配置超过你实际拥有的 CPU 核心数。</li>
+<li>bootstrap skynet 启动的第一个服务以及其启动参数。默认配置为 snlua bootstrap ，即启动一个名为 bootstrap 的 lua 服务。通常指的是 service/bootstrap.lua 这段代码。</li>
+<li>cpath 用 C 编写的服务模块的位置，通常指 cservice 下那些 .so 文件。如果你的系统的动态库不是以 .so 为后缀，需要做相应的修改。这个路径可以配置多项，以 ; 分割。</li>
+</ul>
+<h2 id="bootstrap代码中用到的一些配置项"><a href="#bootstrap代码中用到的一些配置项" class="headerlink" title="bootstrap代码中用到的一些配置项"></a>bootstrap代码中用到的一些配置项</h2><ul>
+<li>logger 它决定了 skynet 内建的 skynet_error 这个 C API 将信息输出到什么文件中。如果 logger 配置为 nil ，将输出到标准输出。你可以配置一个文件名来将信息记录在特定文件中。</li>
+<li>logservice 默认为 “logger” ，你可以配置为你定制的 log 服务（比如加上时间戳等更多信息）。可以参考 service_logger.c 来实现它。注：如果你希望用 lua 来编写这个服务，可以在这里填写 snlua ，然后在 logger 配置具体的 lua 服务的名字。在 examples 目录下，有 config.userlog 这个范例可供参考。</li>
+<li>logpath 配置一个路径，当你运行时为一个服务打开 log 时，这个服务所有的输入消息都会被记录在这个目录下，文件名为服务地址。</li>
+<li>standalone 如果把这个 skynet 进程作为主进程启动（skynet 可以由分布在多台机器上的多个进程构成网络），那么需要配置standalone 这一项，表示这个进程是主节点，它需要开启一个控制中心，监听一个端口，让其它节点接入。</li>
+<li>master 指定 skynet 控制中心的地址和端口，如果你配置了 standalone 项，那么这一项通常和 standalone 相同。</li>
+<li>address 当前 skynet 节点的地址和端口，方便其它节点和它组网。注：即使你只使用一个节点，也需要开启控制中心，并额外配置这个节点的地址和端口。</li>
+<li>harbor 可以是 1-255 间的任意整数。一个 skynet 网络最多支持 255 个节点。每个节点有必须有一个唯一的编号。如果 harbor 为 0 ，skynet 工作在单节点模式下。此时 master 和 address 以及 standalone 都不必设置。</li>
+<li>start 这是 bootstrap 最后一个环节将启动的 lua 服务，也就是你定制的 skynet 节点的主程序。默认为 main ，即启动 main.lua 这个脚本。这个 lua 服务的路径由下面的 luaservice 指定。</li>
+</ul>
+<h2 id="集群服务用到的配置项"><a href="#集群服务用到的配置项" class="headerlink" title="集群服务用到的配置项"></a>集群服务用到的配置项</h2><ul>
+<li>cluster 它决定了集群配置文件的路径。</li>
+</ul>
+<h2 id="lua-服务由-snlua-提供，它会查找一些配置项以加载-lua-代码"><a href="#lua-服务由-snlua-提供，它会查找一些配置项以加载-lua-代码" class="headerlink" title="lua 服务由 snlua 提供，它会查找一些配置项以加载 lua 代码"></a>lua 服务由 snlua 提供，它会查找一些配置项以加载 lua 代码</h2><ul>
+<li>lualoader 用哪一段 lua 代码加载 lua 服务。通常配置为 lualib/loader.lua ，再由这段代码解析服务名称，进一步加载 lua 代码。snlua 会将下面几个配置项取出，放在初始化好的 lua 虚拟机的全局变量中。具体可参考实现。<ul>
+<li>SERVICE_NAME 第一个参数，通常是服务名。</li>
+<li>LUA_PATH config 文件中配置的 lua_path 。</li>
+<li>LUA_CPATH config 文件中配置的 lua_cpath 。</li>
+<li>LUA_PRELOAD config 文件中配置的 preload 。</li>
+<li>LUA_SERVICE config 文件中配置的 luaservice 。</li>
+</ul>
+</li>
+<li>luaservice lua 服务代码所在的位置。可以配置多项，以 ; 分割。 如果在创建 lua 服务时，以一个目录而不是单个文件提供，最终找到的路径还会被添加到 package.path 中。比如，在编写 lua 服务时，有时候会希望把该服务用到的库也放到同一个目录下。</li>
+<li>lua_path 将添加到 package.path 中的路径，供 require 调用。</li>
+<li>lua_cpath 将添加到 package.cpath 中的路径，供 require 调用。</li>
+<li>preload 在设置完 package 中的路径后，加载 lua 服务代码前，loader 会尝试先运行一个 preload 制定的脚本，默认为空。</li>
+<li>snax 用 snax 框架编写的服务的查找路径。</li>
+<li>profile 默认为 true, 可以用来统计每个服务使用了多少 cpu 时间。在 DebugConsole 中可以查看。会对性能造成微弱的影响，设置为 false 可以关闭这个统计。</li>
+</ul>
+<p>可以把一些配置选项配置在环境变量中。比如，你可以把 thread 配置在 SKYNET_THREAD 这个环境变量里。你可以在 config 文件中写：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">thread=$SKYNET_THREAD</span><br></pre></td></tr></table></figure></p>
+<p>在 skynet 启动时，就会用 SKYNET_THREAD 这个环境变量的值替换掉 config 中的 $SKYNET_THREAD 了。</p>
+<h2 id="后台模式"><a href="#后台模式" class="headerlink" title="后台模式"></a>后台模式</h2><ul>
+<li>daemon 配置 daemon = “./skynet.pid” 可以以后台模式启动 skynet 。注意，同时请配置 logger 项输出 log 。</li>
+</ul>
+<h1 id="skynet目录结构"><a href="#skynet目录结构" class="headerlink" title="skynet目录结构"></a>skynet目录结构</h1><ol>
+<li>3rd：第三方代码，主要生成一些给lua用的so动态库</li>
+<li>lualib：lua库</li>
+<li>lualib-src =&gt; luaclib：给lua用的c库</li>
+<li>service：lua服务</li>
+<li>service-src =&gt; cservice：c服务</li>
+<li>skynet-src =&gt; skynet：主程序</li>
+<li>Makefile</li>
+<li>client-src =&gt; client：测试客户端</li>
+<li>examples：示例工程</li>
+</ol>
+<h1 id="skynet重要文件"><a href="#skynet重要文件" class="headerlink" title="skynet重要文件"></a>skynet重要文件</h1><ol>
+<li>skynet_server.c：管理服务</li>
+<li>skynet_handle.c：管理服务唯一的handle</li>
+<li>skynet_module.c：启动c编写的so模块</li>
+<li>skynet_monitor.c：监视服务死循环</li>
+<li>skynet_mq.c：消息队列</li>
+<li>skynet_timer.c：定时器</li>
+<li>skynet_socket.c：Socket</li>
+<li>skynet_master.c：不同skynet节点服务名字中心服务</li>
+<li>skynet_harbor.c：不同skynet节点通讯</li>
+</ol>
+<h1 id="skynet重要模块和服务"><a href="#skynet重要模块和服务" class="headerlink" title="skynet重要模块和服务"></a>skynet重要模块和服务</h1><ol>
+<li>gate.so：为整个skynet提供socket功能</li>
+<li>snlua.so：启动多个lua服务</li>
+<li>launcher.lua：在lua中启动服务</li>
+</ol>
+<h1 id="skynet重要库"><a href="#skynet重要库" class="headerlink" title="skynet重要库"></a>skynet重要库</h1><ol>
+<li>skynet.lua：lua常用功能封装</li>
+<li>skynet.so：lua调用skynet功能</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/other/" rel="tag"># other</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/06/07/stl-alloc-1/" rel="prev" title="SGI STL 标准库 空间配置器 1">
+      <i class="fa fa-chevron-left"></i> SGI STL 标准库 空间配置器 1
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/06/09/stl-iterators-traits-2/" rel="next" title="SGI STL 标准库 迭代器与类型萃取 2">
+      SGI STL 标准库 迭代器与类型萃取 2 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#skynet配置文件说明"><span class="nav-number">1.</span> <span class="nav-text">skynet配置文件说明</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单配置文件示例"><span class="nav-number">1.1.</span> <span class="nav-text">简单配置文件示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#必要配置项"><span class="nav-number">1.2.</span> <span class="nav-text">必要配置项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bootstrap代码中用到的一些配置项"><span class="nav-number">1.3.</span> <span class="nav-text">bootstrap代码中用到的一些配置项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#集群服务用到的配置项"><span class="nav-number">1.4.</span> <span class="nav-text">集群服务用到的配置项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lua-服务由-snlua-提供，它会查找一些配置项以加载-lua-代码"><span class="nav-number">1.5.</span> <span class="nav-text">lua 服务由 snlua 提供，它会查找一些配置项以加载 lua 代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后台模式"><span class="nav-number">1.6.</span> <span class="nav-text">后台模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#skynet目录结构"><span class="nav-number">2.</span> <span class="nav-text">skynet目录结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#skynet重要文件"><span class="nav-number">3.</span> <span class="nav-text">skynet重要文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#skynet重要模块和服务"><span class="nav-number">4.</span> <span class="nav-text">skynet重要模块和服务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#skynet重要库"><span class="nav-number">5.</span> <span class="nav-text">skynet重要库</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="mongodb各个程序功能介绍bsondump 导出bson结构mongo 客户端mongod 服务器mongodump 整体数据库导出 二进制mongoexport 导出易识别的json文档或csv文档mongorestore 数据库整体导入mongos 路由器(分片时用) mongodb启动 连接1mongod --dbpath=/ptah/to/database --logpath=/pat">
+<meta name="keywords" content="mongodb">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mongodb 基础学习">
+<meta property="og:url" content="http://www.casezheng.date/2017/07/12/mongodb/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="mongodb各个程序功能介绍bsondump 导出bson结构mongo 客户端mongod 服务器mongodump 整体数据库导出 二进制mongoexport 导出易识别的json文档或csv文档mongorestore 数据库整体导入mongos 路由器(分片时用) mongodb启动 连接1mongod --dbpath=/ptah/to/database --logpath=/pat">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-04-12T04:56:35.959Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mongodb 基础学习">
+<meta name="twitter:description" content="mongodb各个程序功能介绍bsondump 导出bson结构mongo 客户端mongod 服务器mongodump 整体数据库导出 二进制mongoexport 导出易识别的json文档或csv文档mongorestore 数据库整体导入mongos 路由器(分片时用) mongodb启动 连接1mongod --dbpath=/ptah/to/database --logpath=/pat">
+
+<link rel="canonical" href="http://www.casezheng.date/2017/07/12/mongodb/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>mongodb 基础学习 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/07/12/mongodb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mongodb 基础学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-07-12 22:47:00" itemprop="dateCreated datePublished" datetime="2017-07-12T22:47:00+08:00">2017-07-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="mongodb各个程序功能介绍"><a href="#mongodb各个程序功能介绍" class="headerlink" title="mongodb各个程序功能介绍"></a>mongodb各个程序功能介绍</h1><p>bsondump 导出bson结构<br>mongo 客户端<br>mongod 服务器<br>mongodump 整体数据库导出 二进制<br>mongoexport 导出易识别的json文档或csv文档<br>mongorestore 数据库整体导入<br>mongos 路由器(分片时用)</p>
+<h1 id="mongodb启动-连接"><a href="#mongodb启动-连接" class="headerlink" title="mongodb启动 连接"></a>mongodb启动 连接</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mongod --dbpath=/ptah/to/database --logpath=/path/to/logfile --fork --port 27017</span><br></pre></td></tr></table></figure>
+<p>参数解释：</p>
+<ol>
+<li><code>--dbpath</code>数据存储目录</li>
+<li><code>--logpath</code>日志存储文件</li>
+<li><code>--port</code> 允许端口</li>
+<li><code>--fork</code> 后台允许</li>
+<li><code>--smallfiles</code></li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo mongod --dbpath=/data/mongodb --logpath=/data/mongodb/mongodb.log --port 27017 --fork</span><br><span class="line"></span><br><span class="line">about to fork child process, waiting until server is ready for connections.</span><br><span class="line">forked process: 4237</span><br><span class="line">child process started successfully, parent exiting</span><br></pre></td></tr></table></figure>
+<p>mongdb连接，默认连接27017端口<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@home mongodb]$ mongo</span><br><span class="line">MongoDB shell version: 3.2.12</span><br><span class="line">connecting to: test</span><br><span class="line">Welcome to the MongoDB shell.</span><br><span class="line">For interactive help, type &quot;help&quot;.</span><br><span class="line">For more comprehensive documentation, see</span><br><span class="line">        http://docs.mongodb.org/</span><br><span class="line">Questions? Try the support group</span><br><span class="line">        http://groups.google.com/group/mongodb-user</span><br><span class="line">Server has startup warnings:</span><br><span class="line">2017-07-12T23:32:29.327+0800 I CONTROL  [initandlisten] ** WARNING: You are running this process as the root user, which is not recommended.</span><br><span class="line">2017-07-12T23:32:29.327+0800 I CONTROL  [initandlisten]</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<h1 id="mongodb入门命令"><a href="#mongodb入门命令" class="headerlink" title="mongodb入门命令"></a>mongodb入门命令</h1><ol>
+<li>show dbs;  show databases; 查看数据库</li>
+<li>use databasesname;  选中数据库</li>
+<li>show tables; show collection; 查看数据库中的所有表</li>
+<li>创建数据库 隐式创建 use databasesname 如果数据库不存在，则创建</li>
+<li>db.createCollection(‘tablename’) 创建表</li>
+<li>db.tablename.drop() 删除表</li>
+<li>db.dropDatabase() 删除数据库</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&gt;show databases</span><br><span class="line">local  0.000GB</span><br><span class="line">&gt; use local</span><br><span class="line">switched to db local</span><br><span class="line">&gt; show tables</span><br><span class="line">startup_log</span><br><span class="line">&gt; use test</span><br><span class="line">switched to db test</span><br><span class="line">&gt; db.createCollection(&apos;stu&apos;)</span><br><span class="line">&#123; &quot;ok&quot; : 1 &#125;</span><br><span class="line">&gt; show tables</span><br><span class="line">stu</span><br><span class="line">&gt; db.stu.drop()</span><br><span class="line">true</span><br><span class="line">&gt; db.dropDatabase()</span><br><span class="line">&#123; &quot;dropped&quot; : &quot;test&quot;, &quot;ok&quot; : 1 &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="mongodb增"><a href="#mongodb增" class="headerlink" title="mongodb增"></a>mongodb增</h1><p>db.tablename.insert(jsonvalue);<br>一次可插入多个数据，使用json数组即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:2,&quot;name&quot;:&quot;casezheng&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; show tables;</span><br><span class="line">test</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598090b7817bfe1400a371be&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<h1 id="mongodb删"><a href="#mongodb删" class="headerlink" title="mongodb删"></a>mongodb删</h1><p>db.tablename.remove(expression);<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598090b7817bfe1400a371be&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt;</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:3,&quot;name&quot;:&quot;casezheng&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:4,&quot;name&quot;:&quot;casezheng&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:5,&quot;name&quot;:&quot;casezheng&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:6,&quot;name&quot;:&quot;casezheng&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.remove(&#123;&quot;id&quot;:2&#125;)</span><br><span class="line">WriteResult(&#123; &quot;nRemoved&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091ee817bfe1400a371c1&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091f2817bfe1400a371c2&quot;), &quot;id&quot; : 6, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt; db.test.remove(&#123;&quot;id&quot;:6&#125;)</span><br><span class="line">WriteResult(&#123; &quot;nRemoved&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091ee817bfe1400a371c1&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<p>db.tablename.remove(expression, true);不论匹配多少行只删掉一行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091ee817bfe1400a371c1&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:5,&quot;name&quot;:&quot;casezheng2&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091ee817bfe1400a371c1&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598092ac817bfe1400a371c3&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng2&quot; &#125;</span><br><span class="line">&gt; db.test.remove(&#123;&quot;id&quot;:5&#125;, true);</span><br><span class="line">WriteResult(&#123; &quot;nRemoved&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598092ac817bfe1400a371c3&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng2&quot; &#125;</span><br><span class="line">&gt; db.test.insert(&#123;&quot;id&quot;:5,&quot;name&quot;:&quot;casezheng3&quot;&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nInserted&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.remove(&#123;&quot;id&quot;:5&#125;);</span><br><span class="line">WriteResult(&#123; &quot;nRemoved&quot; : 2 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<h1 id="mongodb改"><a href="#mongodb改" class="headerlink" title="mongodb改"></a>mongodb改</h1><p>db.tablename.update(expression, jsonvalue);将符合expression的行改为jsonvalue<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt; db.test.update(&#123;&quot;id&quot;:3&#125;, &#123;&quot;name&quot;:&quot;casezhenghaha&quot;&#125;)</span><br><span class="line">WriteResult(&#123; &quot;nMatched&quot; : 1, &quot;nUpserted&quot; : 0, &quot;nModified&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可使用谓词set设置其中某个列的值<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&gt; db.test.update(&#123;&quot;id&quot;:4&#125;, &#123;$set:&#123;&quot;name&quot;:&quot;casezhenghehehe&quot;&#125;&#125;)</span><br><span class="line">WriteResult(&#123; &quot;nMatched&quot; : 1, &quot;nUpserted&quot; : 0, &quot;nModified&quot; : 1 &#125;)</span><br><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>unset 删除某个列<br>rename 重命名某个列<br>inc 增长某个列</p>
+<h1 id="mongodb查"><a href="#mongodb查" class="headerlink" title="mongodb查"></a>mongodb查</h1><p>db.tablename.find(expression);<br>db.tablename.findOne(expression);<br>查询所有<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>查询单独的某列<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:4&#125;, &#123;&quot;name&quot;:1&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>findOne只查询一行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:5&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&gt; db.test.findOne(&#123;&quot;id&quot;:5&#125;)</span><br><span class="line">&#123;</span><br><span class="line">        &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;),</span><br><span class="line">        &quot;id&quot; : 5,</span><br><span class="line">        &quot;name&quot; : &quot;casezheng&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="mongodb查询表达式"><a href="#mongodb查询表达式" class="headerlink" title="mongodb查询表达式"></a>mongodb查询表达式</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<p>不等于ne<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:&#123;$ne:5&#125;&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>in nin<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:&#123;$in:[4, 5, 3]&#125;&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:&#123;$nin:[4, 5, 3]&#125;&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>all<br>取出field列是数组，且至少包含v1,v2值<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;fiels:&#123;$all:[v1, v2]&#125;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>exi存在某个属性<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:&#123;$exists:1&#125;&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br></pre></td></tr></table></figure></p>
+<p>与，写在一个json里面即可<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find()</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;), &quot;id&quot; : 5, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809b69817bfe1400a371cb&quot;), &quot;id&quot; : 10 &#125;</span><br><span class="line">&gt; db.test.find(&#123;&quot;id&quot;:&#123;$ne:5&#125;, &quot;name&quot;:&#123;$exists:1&#125;&#125;)</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<p>nor 所有条件都不满足的文档为真返回<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.test.find(&#123;$nor:[&#123;&quot;id&quot;:5&#125;,&#123;&quot;name&quot;:&quot;casezheng&quot;&#125;]&#125;);</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;), &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;), &quot;id&quot; : 4, &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;), &quot;id&quot; : 3, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;), &quot;id&quot; : 2, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;), &quot;id&quot; : 1, &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123; &quot;_id&quot; : ObjectId(&quot;59809b69817bfe1400a371cb&quot;), &quot;id&quot; : 10 &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure></p>
+<p>where速度慢</p>
+<h1 id="mongodb游标"><a href="#mongodb游标" class="headerlink" title="mongodb游标"></a>mongodb游标</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">&gt; var cursor = db.test.find()</span><br><span class="line">&gt; while(cursor.hasNext())&#123;</span><br><span class="line">... printjsononeline(cursor.next())</span><br><span class="line">... &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;),  &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;),  &quot;id&quot; : 4,  &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;),  &quot;id&quot; : 3,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;),  &quot;id&quot; : 2,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;),  &quot;id&quot; : 1,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;59809b69817bfe1400a371cb&quot;),  &quot;id&quot; : 10 &#125;</span><br><span class="line">&gt; var cursor = db.test.find()</span><br><span class="line">&gt; cursor.forEach(function(obj)&#123;printjsononeline(obj)&#125;);</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598091e7817bfe1400a371bf&quot;),  &quot;name&quot; : &quot;casezhenghaha&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598091eb817bfe1400a371c0&quot;),  &quot;id&quot; : 4,  &quot;name&quot; : &quot;casezhenghehehe&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;59809440817bfe1400a371c5&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c0817bfe1400a371c6&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng4&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c3817bfe1400a371c7&quot;),  &quot;id&quot; : 5,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095c7817bfe1400a371c8&quot;),  &quot;id&quot; : 3,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095ca817bfe1400a371c9&quot;),  &quot;id&quot; : 2,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;598095cd817bfe1400a371ca&quot;),  &quot;id&quot; : 1,  &quot;name&quot; : &quot;casezheng45&quot; &#125;</span><br><span class="line">&#123;  &quot;_id&quot; : ObjectId(&quot;59809b69817bfe1400a371cb&quot;),  &quot;id&quot; : 10 &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="mongodb分组"><a href="#mongodb分组" class="headerlink" title="mongodb分组"></a>mongodb分组</h1><h1 id="maoReduce"><a href="#maoReduce" class="headerlink" title="maoReduce"></a>maoReduce</h1>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mongodb/" rel="tag"># mongodb</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/07/04/python/" rel="prev" title="初学Python">
+      <i class="fa fa-chevron-left"></i> 初学Python
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/07/22/cplusplus-review/" rel="next" title="C++复习学习笔记">
+      C++复习学习笔记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb各个程序功能介绍"><span class="nav-number">1.</span> <span class="nav-text">mongodb各个程序功能介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb启动-连接"><span class="nav-number">2.</span> <span class="nav-text">mongodb启动 连接</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb入门命令"><span class="nav-number">3.</span> <span class="nav-text">mongodb入门命令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb增"><span class="nav-number">4.</span> <span class="nav-text">mongodb增</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb删"><span class="nav-number">5.</span> <span class="nav-text">mongodb删</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb改"><span class="nav-number">6.</span> <span class="nav-text">mongodb改</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb查"><span class="nav-number">7.</span> <span class="nav-text">mongodb查</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb查询表达式"><span class="nav-number">8.</span> <span class="nav-text">mongodb查询表达式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb游标"><span class="nav-number">9.</span> <span class="nav-text">mongodb游标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mongodb分组"><span class="nav-number">10.</span> <span class="nav-text">mongodb分组</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#maoReduce"><span class="nav-number">11.</span> <span class="nav-text">maoReduce</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

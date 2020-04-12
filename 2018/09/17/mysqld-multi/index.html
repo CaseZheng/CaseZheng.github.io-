@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="msvalidate.01" content="F14AAB2D4C842CB9F200D0A80DA8CB2F">
+  <meta name="baidu-site-verification" content="GNlbaIvRtqlfiBfg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这里演示在单台机器上利用mysqld_multi运行两个MySQL实例,MySQL版本5.1.73 配置文件创建mysql_multi所需的配置文件touch /etc/mysql_multi.cnf 编辑配置文件如下vim /etc/mysql_multi.cnf1234567891011121314151617181920212223242526[mysqld_multi]mysqld = /">
+<meta name="keywords" content="linux,mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL单机多实例">
+<meta property="og:url" content="http://www.casezheng.date/2018/09/17/mysqld-multi/index.html">
+<meta property="og:site_name" content="CaseZheng">
+<meta property="og:description" content="这里演示在单台机器上利用mysqld_multi运行两个MySQL实例,MySQL版本5.1.73 配置文件创建mysql_multi所需的配置文件touch /etc/mysql_multi.cnf 编辑配置文件如下vim /etc/mysql_multi.cnf1234567891011121314151617181920212223242526[mysqld_multi]mysqld = /">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-05-06T17:12:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL单机多实例">
+<meta name="twitter:description" content="这里演示在单台机器上利用mysqld_multi运行两个MySQL实例,MySQL版本5.1.73 配置文件创建mysql_multi所需的配置文件touch /etc/mysql_multi.cnf 编辑配置文件如下vim /etc/mysql_multi.cnf1234567891011121314151617181920212223242526[mysqld_multi]mysqld = /">
+
+<link rel="canonical" href="http://www.casezheng.date/2018/09/17/mysqld-multi/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL单机多实例 | CaseZheng</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?4f1686055a927fa7bf1a09bc1143b57c";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">CaseZheng</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">CaseZheng Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2018/09/17/mysqld-multi/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL单机多实例
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-17 18:48:08" itemprop="dateCreated datePublished" datetime="2018-09-17T18:48:08+08:00">2018-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-05-07 01:12:08" itemprop="dateModified" datetime="2019-05-07T01:12:08+08:00">2019-05-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里演示在单台机器上利用mysqld_multi运行两个MySQL实例,MySQL版本5.1.73</p>
+<h1 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h1><h2 id="创建mysql-multi所需的配置文件"><a href="#创建mysql-multi所需的配置文件" class="headerlink" title="创建mysql_multi所需的配置文件"></a>创建mysql_multi所需的配置文件</h2><p>touch /etc/mysql_multi.cnf</p>
+<h2 id="编辑配置文件如下"><a href="#编辑配置文件如下" class="headerlink" title="编辑配置文件如下"></a>编辑配置文件如下</h2><p>vim /etc/mysql_multi.cnf<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">[mysqld_multi]</span><br><span class="line">mysqld = /usr/bin/mysqld_safe</span><br><span class="line">mysqladmin = /usr/bin/mysqladmin</span><br><span class="line">log = /data/mysql/log/mysqld_multi.log</span><br><span class="line"></span><br><span class="line">[mysqld3306]</span><br><span class="line">user = mysql</span><br><span class="line">port = 3306</span><br><span class="line">socket = /data/mysql/3306/mysql.sock</span><br><span class="line">pid-file = /data/mysql/3306/mysqld.pid</span><br><span class="line">log-error = /data/mysql/3306/mysqld.log</span><br><span class="line">datadir = /data/mysql/3306/data</span><br><span class="line">max_connections = 200</span><br><span class="line">default-storage-engine = innodb</span><br><span class="line">character_set_server = utf8</span><br><span class="line"></span><br><span class="line">[mysqld3307]</span><br><span class="line">user = mysql</span><br><span class="line">port = 3307</span><br><span class="line">socket = /data/mysql/3307/mysql.sock</span><br><span class="line">pid-file = /data/mysql/3307/mysqld.pid</span><br><span class="line">log-error = /data/mysql/3307/mysqld.log</span><br><span class="line">datadir = /data/mysql/3307/data</span><br><span class="line">max_connections = 200</span><br><span class="line">default-storage-engine = innodb</span><br><span class="line">character_set_server = utf8</span><br></pre></td></tr></table></figure></p>
+<h1 id="初始化DB"><a href="#初始化DB" class="headerlink" title="初始化DB"></a>初始化DB</h1><p>mysql_install_db —datadir=/data/mysql/3306/data —user=mysql<br>mysql_install_db —datadir=/data/mysql/3307/data —user=mysql</p>
+<h1 id="查看mysql用户组-不存在则创建一个"><a href="#查看mysql用户组-不存在则创建一个" class="headerlink" title="查看mysql用户组 不存在则创建一个"></a>查看mysql用户组 不存在则创建一个</h1><h2 id="查看"><a href="#查看" class="headerlink" title="查看"></a>查看</h2><p><code>grep mysql /etc/group</code></p>
+<h2 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h2><p><code>groupadd mysql</code></p>
+<h1 id="查看mysql用户-不存在则创建一个"><a href="#查看mysql用户-不存在则创建一个" class="headerlink" title="查看mysql用户 不存在则创建一个"></a>查看mysql用户 不存在则创建一个</h1><h2 id="查看-1"><a href="#查看-1" class="headerlink" title="查看"></a>查看</h2><p><code>grep mysql /etc/passwd</code></p>
+<h2 id="创建-1"><a href="#创建-1" class="headerlink" title="创建"></a>创建</h2><p><code>useradd mysql -g mysql -M -s /sbin/nologin</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">增加一个名为CentOS Mysql的用户。</span><br><span class="line">-g：指定新用户所属的用户组(group)</span><br><span class="line">-M：不建立根目录</span><br><span class="line">-s：定义其使用的shell，/sbin/nologin代表用户不能登录系统。</span><br></pre></td></tr></table></figure>
+<h1 id="给mysql用户添加权限"><a href="#给mysql用户添加权限" class="headerlink" title="给mysql用户添加权限"></a>给mysql用户添加权限</h1><p><code>chown -R mysql.mysql /data/mysql</code></p>
+<h1 id="启用MySQL实例"><a href="#启用MySQL实例" class="headerlink" title="启用MySQL实例"></a>启用MySQL实例</h1><p><code>mysqld_multi --defaults-extra-file=/etc/mysql_multi.cnf start</code></p>
+<h1 id="查看启用的MySQL实例状态"><a href="#查看启用的MySQL实例状态" class="headerlink" title="查看启用的MySQL实例状态"></a>查看启用的MySQL实例状态</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@HSB-DEV-001 log]mysqld_multi --defaults-extra-file=/etc/mysql_multi.cnf report</span><br><span class="line">Reporting MySQL servers</span><br><span class="line">MySQL server from group: mysqld3306 is running</span><br><span class="line">MySQL server from group: mysqld3307 is running</span><br><span class="line"></span><br><span class="line">[root@HSB-DEV-001 mysql]ps -aef | grep mysql</span><br><span class="line">root     28064     1  0 19:08 pts/7    00:00:00 /bin/sh /usr/bin/mysqld_safe --user=mysql --port=3306 --socket=/data/mysql/3306/mysql.sock --pid-file=/data/mysql/3306/mysqld.pid --log-error=/data/mysql/3306/mysqld.log --datadir=/data/mysql/3306/data --max_connections=200 --default-storage-engine=innodb --character_set_server=utf8</span><br><span class="line">root     28072     1  0 19:08 pts/7    00:00:00 /bin/sh /usr/bin/mysqld_safe --user=mysql --port=3307 --socket=/data/mysql/3307/mysql.sock --pid-file=/data/mysql/3307/mysqld.pid --log-error=/data/mysql/3307/mysqld.log --datadir=/data/mysql/3307/data --max_connections=200 --default-storage-engine=innodb --character_set_server=utf8</span><br><span class="line">mysql    28304 28064  0 19:08 pts/7    00:00:00 /usr/libexec/mysqld --basedir=/usr --datadir=/data/mysql/3306/data --user=mysql --max_connections=200 --default-storage-engine=innodb --character_set_server=utf8 --log-error=/data/mysql/3306/mysqld.log --pid-file=/data/mysql/3306/mysqld.pid --socket=/data/mysql/3306/mysql.sock --port=3306</span><br><span class="line">mysql    28308 28072  0 19:08 pts/7    00:00:00 /usr/libexec/mysqld --basedir=/usr --datadir=/data/mysql/3307/data --user=mysql --max_connections=200 --default-storage-engine=innodb --character_set_server=utf8 --log-error=/data/mysql/3307/mysqld.log --pid-file=/data/mysql/3307/mysqld.pid --socket=/data/mysql/3307/mysql.sock --port=3307</span><br></pre></td></tr></table></figure>
+<h1 id="设置密码和权限"><a href="#设置密码和权限" class="headerlink" title="设置密码和权限"></a>设置密码和权限</h1><h2 id="登录MySQL"><a href="#登录MySQL" class="headerlink" title="登录MySQL"></a>登录MySQL</h2><p><code>mysql -h 127.0.0.1 -P3306 -uroot -p</code></p>
+<h2 id="修改密码"><a href="#修改密码" class="headerlink" title="修改密码"></a>修改密码</h2><p><code>SET PASSWORD=password(&#39;123456&#39;);</code></p>
+<h1 id="设置权限"><a href="#设置权限" class="headerlink" title="设置权限"></a>设置权限</h1><p><code>GRANT ALL PRIVILEGES ON *.* TO &#39;root&#39;@&#39;%&#39; IDENTIFIED BY &#39;123456&#39; WITH GRANT OPTION;</code></p>
+<h1 id="查看权限"><a href="#查看权限" class="headerlink" title="查看权限"></a>查看权限</h1><p><code>SHOW GRANTS FOR &#39;root&#39;@&#39;%&#39;;</code></p>
+<h1 id="设置mysqld-multi为开机自启动"><a href="#设置mysqld-multi为开机自启动" class="headerlink" title="设置mysqld_multi为开机自启动"></a>设置mysqld_multi为开机自启动</h1><ol>
+<li><p><code>sudo vim /etc/rc.d/rc.local</code></p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">mysqld_multi --defaults-extra-file=/etc/mysql_multi.cnf start</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>赋予<code>rc.local</code>可执行权限<code>chmod +x  /etc/rc.d/rc.local</code></p>
+</li>
+<li><p><code>sudo vim /usr/lib/systemd/system/rc-local.service</code></p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置<code>rc-local.service</code>服务开机运行<code>systemctl enable rc-local.service</code></p>
+</li>
+</ol>
+<h1 id="问题解决"><a href="#问题解决" class="headerlink" title="问题解决"></a>问题解决</h1><h2 id="Warning-World-writable-config-file-‘-etc-mysql-multi-cnf’-is-ignored"><a href="#Warning-World-writable-config-file-‘-etc-mysql-multi-cnf’-is-ignored" class="headerlink" title="Warning: World-writable config file ‘/etc/mysql_multi.cnf’ is ignored"></a>Warning: World-writable config file ‘/etc/mysql_multi.cnf’ is ignored</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@HSB-DEV-001 ~]# /usr/local/mysql/bin/mysqld_multi --defaults-extra-file=/etc/mysql_multi.cnf report</span><br><span class="line">Warning: World-writable config file &apos;/etc/mysql_multi.cnf&apos; is ignored</span><br><span class="line">Warning: World-writable config file &apos;/etc/mysql_multi.cnf&apos; is ignored</span><br><span class="line">Reporting MySQL servers</span><br><span class="line">Warning: World-writable config file &apos;/etc/mysql_multi.cnf&apos; is ignored</span><br><span class="line">MySQL server from group: mysqld3307 is running</span><br></pre></td></tr></table></figure>
+<p>当配置文件的权限为任何人都可访问时,MySQL任务不安全会忽略配置文件,改为644即可<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@HSB-DEV-001 ~]# chmod 644 /etc/mysql_multi.cnf</span><br></pre></td></tr></table></figure></p>
+<h2 id="doesn’t-have-a-default-value"><a href="#doesn’t-have-a-default-value" class="headerlink" title="doesn’t have a default value"></a>doesn’t have a default value</h2><p>重启MySQL实例后执行SQL命令报如下错误,经查是开启了MySQL严格模式导致的,使用select @@sql_mode;语句查看MySQL实例的模式,发现确实是开启了严格模式,查看MySQL配置配置,发现已经设置不使用严格模式,最后发现是MySQL读取了多个配置文件导致的,MySQL在读取了首选配置文件后又读取了别的配置文件导致设置的默认被覆盖.</p>
+<h3 id="查看MySQL模式"><a href="#查看MySQL模式" class="headerlink" title="查看MySQL模式"></a>查看MySQL模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(none)]&gt; select @@sql_mode;</span><br><span class="line">+--------------------------------------------+</span><br><span class="line">| @@sql_mode                                 |</span><br><span class="line">+--------------------------------------------+</span><br><span class="line">| STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION |</span><br><span class="line">+--------------------------------------------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>在sql_mode中有STRICT_TRANS_TABLES则表示开启严格模式, 使用mysql严格模式可以使数据更加安全严格，缺点是减少了对空数据入库的兼容性, 严格模式功能说明:</p>
+<ol>
+<li>不支持对not null字段插入null值</li>
+<li>不支持对自增长字段插入值</li>
+<li>不支持text字段有默认值</li>
+</ol>
+<h3 id="查看MySQL默认配置文件和优先顺序"><a href="#查看MySQL默认配置文件和优先顺序" class="headerlink" title="查看MySQL默认配置文件和优先顺序"></a>查看MySQL默认配置文件和优先顺序</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[CaseZheng@VM_187_252_centos ~]$ mysql --help|grep &apos;my.cnf&apos;</span><br><span class="line">/etc/mysql/my.cnf /etc/my.cnf ~/.my.cnf</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/07/13/rabbitmq/" rel="prev" title="RabbitMQ">
+      <i class="fa fa-chevron-left"></i> RabbitMQ
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/09/18/mysql-slave/" rel="next" title="MySQL主从复制与异地容灾">
+      MySQL主从复制与异地容灾 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#配置文件"><span class="nav-number">1.</span> <span class="nav-text">配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#创建mysql-multi所需的配置文件"><span class="nav-number">1.1.</span> <span class="nav-text">创建mysql_multi所需的配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编辑配置文件如下"><span class="nav-number">1.2.</span> <span class="nav-text">编辑配置文件如下</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#初始化DB"><span class="nav-number">2.</span> <span class="nav-text">初始化DB</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看mysql用户组-不存在则创建一个"><span class="nav-number">3.</span> <span class="nav-text">查看mysql用户组 不存在则创建一个</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查看"><span class="nav-number">3.1.</span> <span class="nav-text">查看</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建"><span class="nav-number">3.2.</span> <span class="nav-text">创建</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看mysql用户-不存在则创建一个"><span class="nav-number">4.</span> <span class="nav-text">查看mysql用户 不存在则创建一个</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查看-1"><span class="nav-number">4.1.</span> <span class="nav-text">查看</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建-1"><span class="nav-number">4.2.</span> <span class="nav-text">创建</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#给mysql用户添加权限"><span class="nav-number">5.</span> <span class="nav-text">给mysql用户添加权限</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#启用MySQL实例"><span class="nav-number">6.</span> <span class="nav-text">启用MySQL实例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看启用的MySQL实例状态"><span class="nav-number">7.</span> <span class="nav-text">查看启用的MySQL实例状态</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#设置密码和权限"><span class="nav-number">8.</span> <span class="nav-text">设置密码和权限</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#登录MySQL"><span class="nav-number">8.1.</span> <span class="nav-text">登录MySQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修改密码"><span class="nav-number">8.2.</span> <span class="nav-text">修改密码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#设置权限"><span class="nav-number">9.</span> <span class="nav-text">设置权限</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看权限"><span class="nav-number">10.</span> <span class="nav-text">查看权限</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#设置mysqld-multi为开机自启动"><span class="nav-number">11.</span> <span class="nav-text">设置mysqld_multi为开机自启动</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题解决"><span class="nav-number">12.</span> <span class="nav-text">问题解决</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Warning-World-writable-config-file-‘-etc-mysql-multi-cnf’-is-ignored"><span class="nav-number">12.1.</span> <span class="nav-text">Warning: World-writable config file ‘/etc/mysql_multi.cnf’ is ignored</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#doesn’t-have-a-default-value"><span class="nav-number">12.2.</span> <span class="nav-text">doesn’t have a default value</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看MySQL模式"><span class="nav-number">12.2.1.</span> <span class="nav-text">查看MySQL模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看MySQL默认配置文件和优先顺序"><span class="nav-number">12.2.2.</span> <span class="nav-text">查看MySQL默认配置文件和优先顺序</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="CaseZheng"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">CaseZheng</p>
+  <div class="site-description" itemprop="description">CaseZheng的博客网站</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">130</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CaseZheng" title="GitHub → https://github.com/CaseZheng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:764307915@qq.com" title="E-Mail → mailto:764307915@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaseZheng</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">717k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
