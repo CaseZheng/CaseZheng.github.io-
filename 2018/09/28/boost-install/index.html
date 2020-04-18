@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="boost库的安装获取boost源码boost官网获取最新版本123wget https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gztar zxvf boost_1_68_0.tar.gzcd boost_1_68_0 booststrap.shboost库有两种类型 1.需要编译才可使用 2.直接包含文件">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C++ boost库源码编译安装">
 <meta property="og:url" content="http://www.casezheng.date/2018/09/28/boost-install/index.html">
@@ -282,8 +282,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -311,6 +311,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -493,6 +494,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : 'e9569a8b9957cd9fd16c70c94b06b1ac',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

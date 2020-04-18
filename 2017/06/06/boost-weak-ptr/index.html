@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="weak_ptrweak_ptr是为了配合shared_ptr而引入的一种智能指针，因为weak_ptr不具有普通指针的行为，没有重载operator*和operator-&amp;gt;。weak_ptr的最大作用用来协助shared_ptr工作，观测资源的使用情况。 类摘要 用法weak_ptr被设计为与shared_ptr共同工作，可从一个shared_ptr或者weak_ptr对象构造，获得对象的">
-<meta name="keywords" content="boost,cpp,智能指针">
+<meta name="keywords" content="cpp,boost,智能指针">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库 内存管理 weak_ptr intrusive_ptr 4">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/06/boost-weak-ptr/index.html">
@@ -296,8 +296,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/智能指针/" rel="tag"># 智能指针</a>
           </div>
 
@@ -326,6 +326,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -508,6 +509,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '70075996275c3be9648f7e7697cfdcc6',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

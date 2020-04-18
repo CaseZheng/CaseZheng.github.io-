@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="智能指针库概述计算机系统中资源有很多种，内存、文件描述符、socket、数据库连接等，程序中申请资源后必须及时归还系统。 1. RAII机制C++程序员通常采用RAII机制(资源获取即初始化，Resource Acquisition Is Initialization)，在使用资源的构造函数中申请资源，使用后再析构函数中释放资源。栈上创建的局部对象，离开作用域后自动销毁，调用析构函数释放资源。用n">
-<meta name="keywords" content="boost,cpp,智能指针,stl">
+<meta name="keywords" content="cpp,boost,智能指针,stl">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库 内存管理 智能指针概述 1">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/05/boost-smart-ptr-summary/index.html">
@@ -294,8 +294,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/智能指针/" rel="tag"># 智能指针</a>
               <a href="/tags/stl/" rel="tag"># stl</a>
           </div>
@@ -325,6 +325,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -507,6 +508,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '15126869c9a469fa7a19b728fbbafc0e',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

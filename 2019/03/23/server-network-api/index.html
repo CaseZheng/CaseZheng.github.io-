@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
-<meta name="keywords" content="cpp,linux,网络">
+<meta name="keywords" content="linux,cpp,网络">
 <meta property="og:type" content="article">
 <meta property="og:title" content="服务器开发-网络通信API和注意事项">
 <meta property="og:url" content="http://www.casezheng.date/2019/03/23/server-network-api/index.html">
@@ -401,8 +401,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/网络/" rel="tag"># 网络</a>
           </div>
 
@@ -431,6 +431,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -613,6 +614,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '5d5847c678908795db7976ea1b659cf6',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

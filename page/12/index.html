@@ -857,6 +857,226 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-list-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/06/01/redis-list-note/" class="post-title-link" itemprop="url">Redis数据库链表大概介绍</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-01 18:52:00" itemprop="dateCreated datePublished" datetime="2017-06-01T18:52:00+08:00">2017-06-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Redis-list-笔记"><a href="#Redis-list-笔记" class="headerlink" title="Redis list 笔记"></a>Redis list 笔记</h1><h2 id="链表和链表节点的实现"><a href="#链表和链表节点的实现" class="headerlink" title="链表和链表节点的实现"></a>链表和链表节点的实现</h2><ul>
+<li><p>在adlist.h中listNode结构表示链表节点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">typedef struct listNode</span><br><span class="line">&#123;</span><br><span class="line">    struct listNode *prev;                  //前置节点</span><br><span class="line">    struct listNode *next;                  //后置节点</span><br><span class="line">    void *value;                            //节点的值</span><br><span class="line">&#125;listNode;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在adlist.h中list结构表示链表头</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct list</span><br><span class="line">&#123;</span><br><span class="line">    listNode *head;                         //表头节点</span><br><span class="line">    listNode *tail;                         //表尾节点</span><br><span class="line">    void *(*dup)(void *ptr);                //节点值复制函数</span><br><span class="line">    void (*free)(void *ptr);                //节点值释放函数</span><br><span class="line">    int (*match)(void *ptr, void *key);     //节点值对比函数</span><br><span class="line">    unsigned long len;                      //链表所含节点数量</span><br><span class="line">&#125;list;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="Redis链表的特点"><a href="#Redis链表的特点" class="headerlink" title="Redis链表的特点"></a>Redis链表的特点</h2><ul>
+<li>双端:链表节点有前后指针，找到一个节点前置节点和后置节点的复杂度都是O(1)</li>
+<li>无环:表头节点的prev指针和表尾节点的next指针都指向NULL，对链表的访问以NULL为终点。</li>
+<li>表头保存了表头指针和表尾指针，程序获取链表头节点和尾节点的复杂度为O(1)</li>
+<li>表头保存了链表长度，获取链表长度的操作复杂度为O(1)</li>
+<li>通过(void*) 保存节点值，可以保存不同类型的值，带有dup，free，match属性，为节点值设置类型特定函数。</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-dict-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/06/01/redis-dict-note/" class="post-title-link" itemprop="url">Redis数据库字典大概介绍</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-01 18:52:00" itemprop="dateCreated datePublished" datetime="2017-06-01T18:52:00+08:00">2017-06-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Redis-dict-笔记"><a href="#Redis-dict-笔记" class="headerlink" title="Redis dict 笔记"></a>Redis dict 笔记</h1><h2 id="字典的实现"><a href="#字典的实现" class="headerlink" title="字典的实现"></a>字典的实现</h2><ul>
+<li>Redis的字典使用哈希表作为底层实现。</li>
+</ul>
+<h3 id="hash表"><a href="#hash表" class="headerlink" title="hash表"></a>hash表</h3><ul>
+<li>Redis的hash表有dict.h中的dictht结构定义。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictht</span><br><span class="line">&#123;</span><br><span class="line">    dictEntry **table;  //哈希表数组</span><br><span class="line">    unsigned long size; //哈希表大小</span><br><span class="line">    unsigned long sizemask; //哈希表大小掩码 用于计算索引值 总是等于size-1</span><br><span class="line">    unsigned long used; //表示已有节点的数量</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="hash表节点"><a href="#hash表节点" class="headerlink" title="hash表节点"></a>hash表节点</h3><ul>
+<li>Redis的hash表节点在dict.h中定义<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">typedef stuct dictEntry</span><br><span class="line">&#123;</span><br><span class="line">    void *key;          //键</span><br><span class="line">    union &#123;</span><br><span class="line">        void *val;</span><br><span class="line">        uint64_t u64;</span><br><span class="line">        int64_t s64;</span><br><span class="line">        double d;</span><br><span class="line">    &#125; v;                //值</span><br><span class="line">    struct dictEntry *next;     //指向下一个hash表节点 形成链表 开链法解决hash冲突</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h3><ul>
+<li>Redis中的字典在dict.h中由dict结构表示<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dict &#123;</span><br><span class="line">    dictType *type;     //类型特点函数</span><br><span class="line">    void *privdata;     //私有数据 保存需要传给类型特定函数的可选参数</span><br><span class="line">    dictht ht[2];       //hash表  一般使用ht[0] ht[1]用于rehash</span><br><span class="line">    long rehashidx;     //rehash索引 记录rehash进度 当rehash不在进行时,值为-1</span><br><span class="line">    int iterators;      // number of iterators currently running</span><br><span class="line">&#125; dict;</span><br><span class="line">//保存用于操作特定类型键值对的函数</span><br><span class="line">typedef struct dictType &#123;</span><br><span class="line">    //hash值计算函数</span><br><span class="line">    unsigned int (*hashFunction)(const void *key);</span><br><span class="line">    //复制键函数</span><br><span class="line">    void *(*keyDup)(void *privdata, const void *key);</span><br><span class="line">    //复制值函数</span><br><span class="line">    void *(*valDup)(void *privdata, const void *obj);</span><br><span class="line">    //对比键函数</span><br><span class="line">    int (*keyCompare)(void *privdata, const void *key1, const void *key2);</span><br><span class="line">    //销毁键函数</span><br><span class="line">    void (*keyDestructor)(void *privdata, void *key);</span><br><span class="line">    //销毁值函数</span><br><span class="line">    void (*valDestructor)(void *privdata, void *obj);</span><br><span class="line">&#125; dictType;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="哈希算法-键位冲突-rehash"><a href="#哈希算法-键位冲突-rehash" class="headerlink" title="哈希算法 键位冲突 rehash"></a>哈希算法 键位冲突 rehash</h2><ul>
+<li>先使用hashFunction函数算出hash值，再由hash值算出索引值，索引冲突使用开链法解决。当字典被用作数据库的底层实现或hash键的底层实现时，Redis使用MurmurHash算法计算键的hash值 该算法优点在于即使输入的键有规律, 仍然可以给出很好的随机分布性, 并且算法的计算速度也很快。</li>
+<li>hash表保存的值会随操作不断变大或变小，为了让hash表的负载因子在合理范围，需要对hash表rehash。扩展操作后的大小为 第一次大于等于used*2的2^n（2的n次幂）。缩小操作后的大小为 第一次大于等于used的2^n（2的n次幂）</li>
+<li>rehash 在ht[0]和ht[1]中渐进进行，即每次操作时才rehash ht[0]中的键到ht[1]等ht[0]空了 就可以将ht[0]释放将ht[1]设置ht[0],然后为ht[1]重新生成空hash表,为下次rehash做准备.</li>
+<li>hash表负载因子计算 负载因子=ht[0].used/ht[0].size </li>
+<li>hash表扩展操作</li>
+<li><ol>
+<li>当服务器当前没有执行BGSAVE命令或者BGREWRITEAOF命令, 并且hash表的负载大于等于1</li>
+</ol>
+</li>
+<li><ol>
+<li>当服务器当前执行BGSAVE命令或者BGREWRITEAOF命令, 并且hash表的负载大于等于5</li>
+</ol>
+</li>
+<li>hash表收缩操作 hash表负载因子小于0.1</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-ziplist-note/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -993,7 +1213,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-list-note/">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-string-note/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1007,7 +1227,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2017/06/01/redis-list-note/" class="post-title-link" itemprop="url">Redis数据库链表大概介绍</a>
+            <a href="/2017/06/01/redis-string-note/" class="post-title-link" itemprop="url">Redis数据库string SDS大概介绍</a>
         </h2>
 
         <div class="post-meta">
@@ -1061,20 +1281,28 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Redis-list-笔记"><a href="#Redis-list-笔记" class="headerlink" title="Redis list 笔记"></a>Redis list 笔记</h1><h2 id="链表和链表节点的实现"><a href="#链表和链表节点的实现" class="headerlink" title="链表和链表节点的实现"></a>链表和链表节点的实现</h2><ul>
-<li><p>在adlist.h中listNode结构表示链表节点</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">typedef struct listNode</span><br><span class="line">&#123;</span><br><span class="line">    struct listNode *prev;                  //前置节点</span><br><span class="line">    struct listNode *next;                  //后置节点</span><br><span class="line">    void *value;                            //节点的值</span><br><span class="line">&#125;listNode;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在adlist.h中list结构表示链表头</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct list</span><br><span class="line">&#123;</span><br><span class="line">    listNode *head;                         //表头节点</span><br><span class="line">    listNode *tail;                         //表尾节点</span><br><span class="line">    void *(*dup)(void *ptr);                //节点值复制函数</span><br><span class="line">    void (*free)(void *ptr);                //节点值释放函数</span><br><span class="line">    int (*match)(void *ptr, void *key);     //节点值对比函数</span><br><span class="line">    unsigned long len;                      //链表所含节点数量</span><br><span class="line">&#125;list;</span><br></pre></td></tr></table></figure>
-</li>
+          <h1 id="Redis-string-笔记-简单动态字符串SDS"><a href="#Redis-string-笔记-简单动态字符串SDS" class="headerlink" title="Redis string 笔记 简单动态字符串SDS"></a>Redis string 笔记 简单动态字符串SDS</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><ul>
+<li>Redis没有使用C语言传统的字符串(以空格结尾的字符串数组)表示，而是自己构建了一种简单动态字符串(SDS)的抽象类型，并将SDS作为Redis的默认字符串表示。</li>
+<li>Redis中C字符串只会作为字符串字面量用在一些无须对字符串值进行修改的地方。当Redis需要的是一个可以修改的字符串值时，Redis会使用SDS来表示字符串值。</li>
 </ul>
-<h2 id="Redis链表的特点"><a href="#Redis链表的特点" class="headerlink" title="Redis链表的特点"></a>Redis链表的特点</h2><ul>
-<li>双端:链表节点有前后指针，找到一个节点前置节点和后置节点的复杂度都是O(1)</li>
-<li>无环:表头节点的prev指针和表尾节点的next指针都指向NULL，对链表的访问以NULL为终点。</li>
-<li>表头保存了表头指针和表尾指针，程序获取链表头节点和尾节点的复杂度为O(1)</li>
-<li>表头保存了链表长度，获取链表长度的操作复杂度为O(1)</li>
-<li>通过(void*) 保存节点值，可以保存不同类型的值，带有dup，free，match属性，为节点值设置类型特定函数。</li>
+<h2 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h2><ul>
+<li>在sds.h中每一个sdshdr结构体表示一个SDS值。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct sdshdr</span><br><span class="line">&#123;</span><br><span class="line">    uint32_t len;       //字符串长度</span><br><span class="line">    uint32_t alloc;     //分配的buf长度</span><br><span class="line">    unsigned char flag; //sds标记 低三位用于标记sds类型 高五位未使用</span><br><span class="line">    char buf[];         //保存C字符串 会在末尾处加&apos;\0&apos;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="SDS和字符串的区别"><a href="#SDS和字符串的区别" class="headerlink" title="SDS和字符串的区别"></a>SDS和字符串的区别</h2><h3 id="常数复杂度获取字符串长度"><a href="#常数复杂度获取字符串长度" class="headerlink" title="常数复杂度获取字符串长度"></a>常数复杂度获取字符串长度</h3><ul>
+<li>C字符串不记录字符串长度，获取字符串长度时需要遍历,时间复杂度O(N)。SDS记录了字符串长度，获取字符串长度时间复杂度为O(1)。</li>
+</ul>
+<h3 id="杜绝缓冲区溢出"><a href="#杜绝缓冲区溢出" class="headerlink" title="杜绝缓冲区溢出"></a>杜绝缓冲区溢出</h3><ul>
+<li>C字符串不记录字符串长度，那么字符串拼接等操作不会检查缓冲区的大小，而SDS会检查缓冲区大小，如果不足会自动扩充，防止缓冲区溢出。C字符串API不安全可能会造成缓冲区溢出，SDS API是安全的。</li>
+</ul>
+<h3 id="减少修改字符串时带来的内存重分配次数"><a href="#减少修改字符串时带来的内存重分配次数" class="headerlink" title="减少修改字符串时带来的内存重分配次数"></a>减少修改字符串时带来的内存重分配次数</h3><ul>
+<li>C字符串每次增长或缩短都会牵扯到内存的重新分配和释放。SDS通过生成字符串时预分配空间、惰性释放空间对其进行优化。C字符串修改N次字符串长度必然执行N次内存分配，SDS修改字符串长度N次最多执行N次内存分配。</li>
+</ul>
+<h3 id="二进制安全"><a href="#二进制安全" class="headerlink" title="二进制安全"></a>二进制安全</h3><ul>
+<li>C字符串只能保存文本数据，不能保存用空字符分割多个单词的特殊数据结构。SDS保存的是二进制数据。</li>
+</ul>
+<h3 id="兼容部分C字符串函数"><a href="#兼容部分C字符串函数" class="headerlink" title="兼容部分C字符串函数"></a>兼容部分C字符串函数</h3><ul>
+<li>SDS在保存数据时总是多分配一个字节存放’\0’，让保存文本数据的SDS重用一部分C字符串库函数，避免代码重复。</li>
 </ul>
 
       
@@ -1169,226 +1397,6 @@
 <li>redis使用skiplist做为有序集合键的底层实现之一。</li>
 </ul>
 <h2 id="跳跃表实现"><a href="#跳跃表实现" class="headerlink" title="跳跃表实现"></a>跳跃表实现</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span>  <span class="comment">//跳跃表节点</span></span><br><span class="line">    robj *obj;                  <span class="comment">//所保存的成员对象 在同一个跳跃表中，各个节点保存的成员对象</span></span><br><span class="line">                                <span class="comment">//必须是唯一的，但各个节点保存的分值却可以是相同的，分值相同</span></span><br><span class="line">                                <span class="comment">//的节点按成员对象在字典序中的大小来进行排序。</span></span><br><span class="line">    <span class="keyword">double</span> score;               <span class="comment">//分值 跳跃表中，节点按各自所保存的分值从小到大排列</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span>     <span class="comment">//后退指针，指向位于当前节点的前一个节点。</span></span><br><span class="line">                                        <span class="comment">//后退指针在程序从表尾向表头遍历时使用</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span>  <span class="comment">//前进指针, 用于从表头向表尾方向访问节点。</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">int</span> span;              <span class="comment">//跨度, 用于记录两个节点之间的距离。两个节点之间的跨</span></span><br><span class="line">                                        <span class="comment">//度越大，他们相聚得就越远。指向NULL的所有前进指针的</span></span><br><span class="line">                                        <span class="comment">//跨度都为0, 因为它们没有连向任何节点。跨度用于计算</span></span><br><span class="line">                                        <span class="comment">//排位，在查找某个节点的过程中，将沿途访问过的所有曾</span></span><br><span class="line">                                        <span class="comment">//的跨度累计起来，得到的结果就是目标节点在跳跃表中的排名。</span></span><br><span class="line">    &#125; level[];                  <span class="comment">//层 包含多个元素，每个元素包含一个指向其它节点的指针，</span></span><br><span class="line">                                <span class="comment">//程序可以通过这些层加快访问其它节点的速度, 一般来说，层</span></span><br><span class="line">                                <span class="comment">//的数量越多，访问其它节点的速度就越快。每次创建新跳跃表</span></span><br><span class="line">                                <span class="comment">//节点的时候，程序根据幂次定律随机生成一个介于1到32之间的值</span></span><br><span class="line">                                <span class="comment">//做为levle数组的大小，这个大小就是层的"高度"</span></span><br><span class="line">&#125; zskiplistNode;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span>      <span class="comment">//跳跃表节点相关信息</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span>    <span class="comment">//指向跳跃表表头节点和表尾节点</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> length;       <span class="comment">//跳跃表的长度，即跳跃表目前包含节点的数量</span></span><br><span class="line">    <span class="keyword">int</span> level;                  <span class="comment">//记录目前跳跃表内，层数最大的那个节点的层数(表头节点的层数不计算在内)</span></span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-intset-note/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="CaseZheng">
-      <meta itemprop="description" content="CaseZheng的博客网站">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaseZheng">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/06/01/redis-intset-note/" class="post-title-link" itemprop="url">Redis数据库整数集合大概介绍</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-06-01 18:52:00" itemprop="dateCreated datePublished" datetime="2017-06-01T18:52:00+08:00">2017-06-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Redis-intset-整数集合-笔记"><a href="#Redis-intset-整数集合-笔记" class="headerlink" title="Redis intset 整数集合 笔记"></a>Redis intset 整数集合 笔记</h1><ul>
-<li>整数集合是集合键的底层实现之一，当一个集合值包含整数值元素，并且这个集合的元素数量不多时，Redis就会使用整数集合做为集合键的底层实现。</li>
-</ul>
-<h2 id="整数集合的实现"><a href="#整数集合的实现" class="headerlink" title="整数集合的实现"></a>整数集合的实现</h2><ul>
-<li>整数集合(intset)是Redis用于保存整数值的集合抽象数据结构，可以保存类型为int16_t、int32_t、int64_t的整数值，并且保证集合中不会出现重复元素。</li>
-<li><p>每个intset.h/intset结构表示一个整数集合：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define INTSET_ENC_INT16 (sizeof(int16_t))</span><br><span class="line">#define INTSET_ENC_INT32 (sizeof(int32_t))</span><br><span class="line">#define INTSET_ENC_INT64 (sizeof(int64_t))</span><br><span class="line"></span><br><span class="line">typedef struct intset &#123;</span><br><span class="line">    uint32_t encoding;  //编码方式</span><br><span class="line">    uint32_t length;    //集合包含的元素数量 即contents数组的长度</span><br><span class="line">    int8_t contents[];  //保存元素的数组 整数集合的每个元素都是contents数组的一个数组项，各个项在数组中按值的大小从小到大排序，并且数组中不包含任何重复项。</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>contents结构类型声明为int8_t，但实际上contents不保存任何int8_t类型的值，contents数组的真正类型取决于encoding属性的值。encoding的值可以是INTSET_ENC_INT16,INTSET_ENC_INT32,INTSET_ENC_INT64。</p>
-</li>
-</ul>
-<h2 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h2><ul>
-<li>当添加一个新元素到整数集合里面，并且新的类型比集合现有所有元素的类型都长时，整数集合需要升级，然后将新元素添加到整数集合里面。</li>
-<li>升级整数集合三步进行<ol>
-<li>根据新元素类型，扩展整数集合底层数组空间大小，并为新元素分配空间</li>
-<li>将底层数组现有元素转换成与新元素相同的类型，并将类型转化后的元素放在争取的位上，在放置元素的过程中，需要继续维持底层数组的有序性质不变。</li>
-<li>将新元素添加到底层数组里面。 </li>
-</ol>
-</li>
-<li>想整数集合添加新元素的时间复杂度为O(N)</li>
-</ul>
-<h2 id="升级的好处"><a href="#升级的好处" class="headerlink" title="升级的好处"></a>升级的好处</h2><pre><code>1. 提高数组集合操作的灵活性, C语言为静态类型语言，为了避免类型错误，通常不会将两种不同类型的值放在同一个数据结构中。整数集合通过自动升级底层数组来适应新元素，所以我们可以随意将int16_t, int32_t, int64_t类型的整数添加到集合中，而不必担心类型错误。
-2. 尽可能节约内存
-</code></pre><h2 id="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"><a href="#整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。" class="headerlink" title="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"></a>整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。</h2>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-string-note/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="CaseZheng">
-      <meta itemprop="description" content="CaseZheng的博客网站">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaseZheng">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/06/01/redis-string-note/" class="post-title-link" itemprop="url">Redis数据库string SDS大概介绍</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-06-01 18:52:00" itemprop="dateCreated datePublished" datetime="2017-06-01T18:52:00+08:00">2017-06-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Redis-string-笔记-简单动态字符串SDS"><a href="#Redis-string-笔记-简单动态字符串SDS" class="headerlink" title="Redis string 笔记 简单动态字符串SDS"></a>Redis string 笔记 简单动态字符串SDS</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><ul>
-<li>Redis没有使用C语言传统的字符串(以空格结尾的字符串数组)表示，而是自己构建了一种简单动态字符串(SDS)的抽象类型，并将SDS作为Redis的默认字符串表示。</li>
-<li>Redis中C字符串只会作为字符串字面量用在一些无须对字符串值进行修改的地方。当Redis需要的是一个可以修改的字符串值时，Redis会使用SDS来表示字符串值。</li>
-</ul>
-<h2 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h2><ul>
-<li>在sds.h中每一个sdshdr结构体表示一个SDS值。</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct sdshdr</span><br><span class="line">&#123;</span><br><span class="line">    uint32_t len;       //字符串长度</span><br><span class="line">    uint32_t alloc;     //分配的buf长度</span><br><span class="line">    unsigned char flag; //sds标记 低三位用于标记sds类型 高五位未使用</span><br><span class="line">    char buf[];         //保存C字符串 会在末尾处加&apos;\0&apos;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h2 id="SDS和字符串的区别"><a href="#SDS和字符串的区别" class="headerlink" title="SDS和字符串的区别"></a>SDS和字符串的区别</h2><h3 id="常数复杂度获取字符串长度"><a href="#常数复杂度获取字符串长度" class="headerlink" title="常数复杂度获取字符串长度"></a>常数复杂度获取字符串长度</h3><ul>
-<li>C字符串不记录字符串长度，获取字符串长度时需要遍历,时间复杂度O(N)。SDS记录了字符串长度，获取字符串长度时间复杂度为O(1)。</li>
-</ul>
-<h3 id="杜绝缓冲区溢出"><a href="#杜绝缓冲区溢出" class="headerlink" title="杜绝缓冲区溢出"></a>杜绝缓冲区溢出</h3><ul>
-<li>C字符串不记录字符串长度，那么字符串拼接等操作不会检查缓冲区的大小，而SDS会检查缓冲区大小，如果不足会自动扩充，防止缓冲区溢出。C字符串API不安全可能会造成缓冲区溢出，SDS API是安全的。</li>
-</ul>
-<h3 id="减少修改字符串时带来的内存重分配次数"><a href="#减少修改字符串时带来的内存重分配次数" class="headerlink" title="减少修改字符串时带来的内存重分配次数"></a>减少修改字符串时带来的内存重分配次数</h3><ul>
-<li>C字符串每次增长或缩短都会牵扯到内存的重新分配和释放。SDS通过生成字符串时预分配空间、惰性释放空间对其进行优化。C字符串修改N次字符串长度必然执行N次内存分配，SDS修改字符串长度N次最多执行N次内存分配。</li>
-</ul>
-<h3 id="二进制安全"><a href="#二进制安全" class="headerlink" title="二进制安全"></a>二进制安全</h3><ul>
-<li>C字符串只能保存文本数据，不能保存用空字符分割多个单词的特殊数据结构。SDS保存的是二进制数据。</li>
-</ul>
-<h3 id="兼容部分C字符串函数"><a href="#兼容部分C字符串函数" class="headerlink" title="兼容部分C字符串函数"></a>兼容部分C字符串函数</h3><ul>
-<li>SDS在保存数据时总是多分配一个字节存放’\0’，让保存文本数据的SDS重用一部分C字符串库函数，避免代码重复。</li>
-</ul>
 
       
     </div>
@@ -1595,6 +1603,7 @@
   
 
   
+
 
 </body>
 </html>

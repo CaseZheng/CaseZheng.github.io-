@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。 Boost库没有专门的单件库，仅在其它库中有不完善的实现。 singlton_default的单件实现singlton_default泛型单件类。 12#include &amp;lt;boost/container/detail/singleton.hpp&amp;gt;using boost::conta">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库实用工具singleton">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/02/boost-singleton/index.html">
@@ -300,8 +300,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -329,6 +329,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -511,6 +512,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : 'b6cc5114b4a3743120496228b70512ea',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

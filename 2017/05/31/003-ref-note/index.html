@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:  1#include &amp;lt;boo">
-<meta name="keywords" content="boost,cpp,asio">
+<meta name="keywords" content="cpp,boost,asio">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库学习 ref">
 <meta property="og:url" content="http://www.casezheng.date/2017/05/31/003-ref-note/index.html">
@@ -316,8 +316,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/asio/" rel="tag"># asio</a>
           </div>
 
@@ -327,12 +327,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/05/27/liunx-cmd/" rel="prev" title="linux命令">
-      <i class="fa fa-chevron-left"></i> linux命令
+    <a href="/2017/05/31/001-asio-note/" rel="prev" title="boost 库学习 asio">
+      <i class="fa fa-chevron-left"></i> boost 库学习 asio
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/05/31/001-asio-note/" rel="next" title="boost 库学习 asio">
-      boost 库学习 asio <i class="fa fa-chevron-right"></i>
+    <a href="/2017/05/31/boost-noncopyable/" rel="next" title="boost 实用工具 noncopyable学习">
+      boost 实用工具 noncopyable学习 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -346,6 +346,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -528,6 +529,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '1cb195cc4d81500b8c77abce64bd174e',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

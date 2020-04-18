@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
-<meta name="keywords" content="boost,cpp,libevent">
+<meta name="keywords" content="cpp,boost,libevent">
 <meta property="og:type" content="article">
 <meta property="og:title" content="服务器框架设计与编码">
 <meta property="og:url" content="http://www.casezheng.date/2018/07/12/simple-server-framework/index.html">
@@ -292,8 +292,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/libevent/" rel="tag"># libevent</a>
           </div>
 
@@ -322,6 +322,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -504,6 +505,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '3f58ece1b4e17170a860581eba32f9aa',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

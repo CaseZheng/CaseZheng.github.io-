@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="swapboost::swap是对标准库提供的std::swap的增强和泛化，未交换两个变量的值提供便捷的方法。 1#include &amp;lt;boost/swap.hpp&amp;gt; 原理std::swap()的经典实现。 1234567template&amp;lt;typename T&amp;gt;void swap(T&amp;amp; a, T&amp;amp; b)&amp;#123;    T tmp(a);    a = b">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库实用工具 swap">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/02/boost-swap/index.html">
@@ -297,8 +297,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -326,6 +326,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -508,6 +509,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '3764848f77e8c79c1014a4cbe664d545',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

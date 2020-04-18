@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="optional12#include&amp;lt;boost/optional.hpp&amp;gt;using namespace boost; “无意义”的值函数正确执行，结果不一定是有效的返回值，也可能是“无意义”的值。例如，求一个值得倒数，传入参数为0。 类摘要optional像一个仅能存放一个元素的容器，实现“未初始化”的概念：如果元素未初始化，容器就是空的，否则，容器内就是有效的、已经初始化的值。">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 实用工具 optional学习">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/01/boost-optional/index.html">
@@ -306,8 +306,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -335,6 +335,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -517,6 +518,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '7550394fb86a3fba50a31a3ee3a98c71',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="assignassign库重载赋值操作符、逗号操作符、括号操作符，用难以想象的简洁语法非常方便的对STL容器赋值或者初始化。 12#include &amp;lt;boost/assign.hpp&amp;gt;using namespace boost::assign; 1. 使用操作符+=向容器增加元素在使用assign库时必须使用using指示符，让重载的+=,等操作符在作用域内生效。+=操作符后可以接若干">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库实用工具 assign">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/01/boost-assign/index.html">
@@ -292,8 +292,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -321,6 +321,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -503,6 +504,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '2e9adbd2f815585ea8d1eb997a31434b',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

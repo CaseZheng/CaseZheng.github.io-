@@ -203,7 +203,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-dict-note/">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/06/01/redis-intset-note/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -217,7 +217,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2017/06/01/redis-dict-note/" class="post-title-link" itemprop="url">Redis数据库字典大概介绍</a>
+            <a href="/2017/06/01/redis-intset-note/" class="post-title-link" itemprop="url">Redis数据库整数集合大概介绍</a>
         </h2>
 
         <div class="post-meta">
@@ -271,38 +271,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Redis-dict-笔记"><a href="#Redis-dict-笔记" class="headerlink" title="Redis dict 笔记"></a>Redis dict 笔记</h1><h2 id="字典的实现"><a href="#字典的实现" class="headerlink" title="字典的实现"></a>字典的实现</h2><ul>
-<li>Redis的字典使用哈希表作为底层实现。</li>
+          <h1 id="Redis-intset-整数集合-笔记"><a href="#Redis-intset-整数集合-笔记" class="headerlink" title="Redis intset 整数集合 笔记"></a>Redis intset 整数集合 笔记</h1><ul>
+<li>整数集合是集合键的底层实现之一，当一个集合值包含整数值元素，并且这个集合的元素数量不多时，Redis就会使用整数集合做为集合键的底层实现。</li>
 </ul>
-<h3 id="hash表"><a href="#hash表" class="headerlink" title="hash表"></a>hash表</h3><ul>
-<li>Redis的hash表有dict.h中的dictht结构定义。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictht</span><br><span class="line">&#123;</span><br><span class="line">    dictEntry **table;  //哈希表数组</span><br><span class="line">    unsigned long size; //哈希表大小</span><br><span class="line">    unsigned long sizemask; //哈希表大小掩码 用于计算索引值 总是等于size-1</span><br><span class="line">    unsigned long used; //表示已有节点的数量</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="整数集合的实现"><a href="#整数集合的实现" class="headerlink" title="整数集合的实现"></a>整数集合的实现</h2><ul>
+<li>整数集合(intset)是Redis用于保存整数值的集合抽象数据结构，可以保存类型为int16_t、int32_t、int64_t的整数值，并且保证集合中不会出现重复元素。</li>
+<li><p>每个intset.h/intset结构表示一个整数集合：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define INTSET_ENC_INT16 (sizeof(int16_t))</span><br><span class="line">#define INTSET_ENC_INT32 (sizeof(int32_t))</span><br><span class="line">#define INTSET_ENC_INT64 (sizeof(int64_t))</span><br><span class="line"></span><br><span class="line">typedef struct intset &#123;</span><br><span class="line">    uint32_t encoding;  //编码方式</span><br><span class="line">    uint32_t length;    //集合包含的元素数量 即contents数组的长度</span><br><span class="line">    int8_t contents[];  //保存元素的数组 整数集合的每个元素都是contents数组的一个数组项，各个项在数组中按值的大小从小到大排序，并且数组中不包含任何重复项。</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>contents结构类型声明为int8_t，但实际上contents不保存任何int8_t类型的值，contents数组的真正类型取决于encoding属性的值。encoding的值可以是INTSET_ENC_INT16,INTSET_ENC_INT32,INTSET_ENC_INT64。</p>
 </li>
 </ul>
-<h3 id="hash表节点"><a href="#hash表节点" class="headerlink" title="hash表节点"></a>hash表节点</h3><ul>
-<li>Redis的hash表节点在dict.h中定义<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">typedef stuct dictEntry</span><br><span class="line">&#123;</span><br><span class="line">    void *key;          //键</span><br><span class="line">    union &#123;</span><br><span class="line">        void *val;</span><br><span class="line">        uint64_t u64;</span><br><span class="line">        int64_t s64;</span><br><span class="line">        double d;</span><br><span class="line">    &#125; v;                //值</span><br><span class="line">    struct dictEntry *next;     //指向下一个hash表节点 形成链表 开链法解决hash冲突</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h3><ul>
-<li>Redis中的字典在dict.h中由dict结构表示<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dict &#123;</span><br><span class="line">    dictType *type;     //类型特点函数</span><br><span class="line">    void *privdata;     //私有数据 保存需要传给类型特定函数的可选参数</span><br><span class="line">    dictht ht[2];       //hash表  一般使用ht[0] ht[1]用于rehash</span><br><span class="line">    long rehashidx;     //rehash索引 记录rehash进度 当rehash不在进行时,值为-1</span><br><span class="line">    int iterators;      // number of iterators currently running</span><br><span class="line">&#125; dict;</span><br><span class="line">//保存用于操作特定类型键值对的函数</span><br><span class="line">typedef struct dictType &#123;</span><br><span class="line">    //hash值计算函数</span><br><span class="line">    unsigned int (*hashFunction)(const void *key);</span><br><span class="line">    //复制键函数</span><br><span class="line">    void *(*keyDup)(void *privdata, const void *key);</span><br><span class="line">    //复制值函数</span><br><span class="line">    void *(*valDup)(void *privdata, const void *obj);</span><br><span class="line">    //对比键函数</span><br><span class="line">    int (*keyCompare)(void *privdata, const void *key1, const void *key2);</span><br><span class="line">    //销毁键函数</span><br><span class="line">    void (*keyDestructor)(void *privdata, void *key);</span><br><span class="line">    //销毁值函数</span><br><span class="line">    void (*valDestructor)(void *privdata, void *obj);</span><br><span class="line">&#125; dictType;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="哈希算法-键位冲突-rehash"><a href="#哈希算法-键位冲突-rehash" class="headerlink" title="哈希算法 键位冲突 rehash"></a>哈希算法 键位冲突 rehash</h2><ul>
-<li>先使用hashFunction函数算出hash值，再由hash值算出索引值，索引冲突使用开链法解决。当字典被用作数据库的底层实现或hash键的底层实现时，Redis使用MurmurHash算法计算键的hash值 该算法优点在于即使输入的键有规律, 仍然可以给出很好的随机分布性, 并且算法的计算速度也很快。</li>
-<li>hash表保存的值会随操作不断变大或变小，为了让hash表的负载因子在合理范围，需要对hash表rehash。扩展操作后的大小为 第一次大于等于used*2的2^n（2的n次幂）。缩小操作后的大小为 第一次大于等于used的2^n（2的n次幂）</li>
-<li>rehash 在ht[0]和ht[1]中渐进进行，即每次操作时才rehash ht[0]中的键到ht[1]等ht[0]空了 就可以将ht[0]释放将ht[1]设置ht[0],然后为ht[1]重新生成空hash表,为下次rehash做准备.</li>
-<li>hash表负载因子计算 负载因子=ht[0].used/ht[0].size </li>
-<li>hash表扩展操作</li>
-<li><ol>
-<li>当服务器当前没有执行BGSAVE命令或者BGREWRITEAOF命令, 并且hash表的负载大于等于1</li>
+<h2 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h2><ul>
+<li>当添加一个新元素到整数集合里面，并且新的类型比集合现有所有元素的类型都长时，整数集合需要升级，然后将新元素添加到整数集合里面。</li>
+<li>升级整数集合三步进行<ol>
+<li>根据新元素类型，扩展整数集合底层数组空间大小，并为新元素分配空间</li>
+<li>将底层数组现有元素转换成与新元素相同的类型，并将类型转化后的元素放在争取的位上，在放置元素的过程中，需要继续维持底层数组的有序性质不变。</li>
+<li>将新元素添加到底层数组里面。 </li>
 </ol>
 </li>
-<li><ol>
-<li>当服务器当前执行BGSAVE命令或者BGREWRITEAOF命令, 并且hash表的负载大于等于5</li>
-</ol>
-</li>
-<li>hash表收缩操作 hash表负载因子小于0.1</li>
+<li>想整数集合添加新元素的时间复杂度为O(N)</li>
 </ul>
-
+<h2 id="升级的好处"><a href="#升级的好处" class="headerlink" title="升级的好处"></a>升级的好处</h2><pre><code>1. 提高数组集合操作的灵活性, C语言为静态类型语言，为了避免类型错误，通常不会将两种不同类型的值放在同一个数据结构中。整数集合通过自动升级底层数组来适应新元素，所以我们可以随意将int16_t, int32_t, int64_t类型的整数添加到集合中，而不必担心类型错误。
+2. 尽可能节约内存
+</code></pre><h2 id="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"><a href="#整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。" class="headerlink" title="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"></a>整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。</h2>
       
     </div>
 
@@ -847,7 +839,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/002-bind-note/">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/003-ref-note/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -861,7 +853,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2017/05/31/002-bind-note/" class="post-title-link" itemprop="url">boost 库学习 bind</a>
+            <a href="/2017/05/31/003-ref-note/" class="post-title-link" itemprop="url">boost 库学习 ref</a>
         </h2>
 
         <div class="post-meta">
@@ -915,51 +907,39 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="boost库-bind学习-boost-1-63"><a href="#boost库-bind学习-boost-1-63" class="headerlink" title="boost库 bind学习 boost_1_63"></a>boost库 bind学习 boost_1_63</h1><ul>
-<li>bind是C++98标准库中函数适配器bind1st/bind2nd的泛化和增强，可以适配任意的可调用对象，包含函数指针、函数引用、成员函数指针和函数对象。bind最多可以绑定9个函数参数，而且对绑定对象的要求很低，可以在没有<code>result_type</code>内部类型定义的情况下完成对函数对象的绑定。</li>
-<li>bind位于名词空间boost，使用bind组件需包含头文件<code>&lt;boost/bind.hpp&gt;</code>, 即:</li>
+          <h1 id="boost库-ref学习-boost-1-63"><a href="#boost库-ref学习-boost-1-63" class="headerlink" title="boost库 ref学习 boost_1_63"></a>boost库 ref学习 boost_1_63</h1><ul>
+<li>STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。</li>
+<li>特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。<code>boost.ref</code>应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/bind.hpp&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> boost;</span><br></pre></td></tr></table></figure>
-<h2 id="1-工作原理"><a href="#1-工作原理" class="headerlink" title="1. 工作原理"></a>1. 工作原理</h2><ul>
-<li>bind并不是单独的类或函数，是非常庞大的家族，依据绑定的参数个数和要绑定的调用对象类型，有数十种不同形式，名字都叫做bind，编译器会根据具体的绑定代码自动确定要使用的正确形式。</li>
-<li>bind接受的第一个参数必须是一个可调用对象，包括函数指针、函数引用、函数对象和成员函数指针，bind接受最多九个参数。参数数量必须与可调用对象的参数数量相等，这些参数将被传递给可调用对象作为输入参数。</li>
-<li>绑定完成后，bind返回一个函数对象，内部保存了可调用对象的拷贝，具有operator(),返回值类型自动推导为可调用对象的返回值类型，在发生调用时，函数对象把之前存储的参数转发给可调用对象完成调用。</li>
-<li>bind占位符被定义为_1、_2、_3一直到_9，位于一个匿名名词空间。占位符可以取代bind中参数的位置，在发生函数调用时才接受真正的参数。</li>
-<li>bind占位符的名字代表它在调用式中的顺序，而在绑定表达式中没有顺序的要求。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/ref.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
+<h2 id="1-类摘要"><a href="#1-类摘要" class="headerlink" title="1. 类摘要"></a>1. 类摘要</h2><ul>
+<li>ref库定义了一个很小很简单的引用类型的包装器，reference_wrapper,</li>
 </ul>
-<h2 id="2-绑定普通函数"><a href="#2-绑定普通函数" class="headerlink" title="2. 绑定普通函数"></a>2. 绑定普通函数</h2><ul>
-<li>bind可以绑定普通函数，包括函数、函数指针。</li>
-<li>必须在绑定表达式中提供函数要求的所有参数，无论是真实参数还是占位符均可以。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">class</span> <span class="title">reference_wrapper</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">reference_wrapper</span><span class="params">(T&amp; t)</span>: <span class="title">t_</span><span class="params">(&amp;t)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="keyword">operator</span> T&amp; () <span class="keyword">const</span> &#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T&amp; <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T* <span class="title">get_pointer</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> t_; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* t_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>reference_wrapper的构造函数接受类型T的引用类型，内部使用指针存储t的引用，构造出一个reference_wrapper对象，包装了引用。get()和get_pointer()这两个函数分别返回存储的引用和指针，相当于揭开对t的包装。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f3</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a+b+c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f4</span>:</span> <span class="keyword">public</span> <span class="built_in">std</span>::binary_function&lt;<span class="keyword">int</span>,<span class="keyword">int</span>,<span class="keyword">int</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> <span class="keyword">const</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (x + y); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定普通函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于f2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于f3(1, 2, 3)</span></span><br><span class="line">    </span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;          <span class="comment">//相当于f2(4, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind2nd(f4(), <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _2)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(4, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _2, _1)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _1)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _1, <span class="number">8</span>, _2)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(5, 8, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _3, _2, _2)(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(3, 2, 2)</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f2_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f3_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    f2_type pf2 = f2;</span><br><span class="line">    f3_type pf3 = f3;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于*pf2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于*pf3(1, 2, 3)</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-绑定成员函数"><a href="#3-绑定成员函数" class="headerlink" title="3. 绑定成员函数"></a>3. 绑定成员函数</h2><ul>
-<li>bind可以绑定类的成员函数。类的成员函数指针不能直接调用operator()，必须绑定一个对象或者函数，通过this指针调用成员函数。因此bind需要用一个占位符的位置让用户提供一个类的实例、引用或者指针，通过对象作为第一个参数来调用成员函数。所以使用成员函数最多只能绑定8个参数。</li>
-<li>bind可以代替标准库中的mem_fun和mem_fun_ref帮顶起，用来配合标准算法操作容器中对象。</li>
-<li>bind同样支持绑定虚拟成员函数，用法与非虚函数相同，虚函数的行为将由实际调用发生时的实例来决定。</li>
+<h2 id="2-基本用法"><a href="#2-基本用法" class="headerlink" title="2. 基本用法"></a>2. 基本用法</h2><ul>
+<li>reference_wrapper只在使用T的语境下才会执行隐式转换，其它情况下需要调用类型转换函数或者get()函数得到真正操作被包装对象。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Test():x(<span class="number">0</span>)&#123;&#125;</span><br><span class="line">    Test(<span class="keyword">int</span> _x):x(_x)&#123;&#125;</span><br><span class="line">    ~Test()&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="string">" b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="string">" "</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test</span><span class="params">(Test &amp;t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    t.print();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test_p</span><span class="params">(Test *t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != t) &#123; t-&gt;print(); &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//绑定成员函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Test t;</span><br><span class="line">    Test &amp;yt = t;</span><br><span class="line">    Test *pt = &amp;t;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, t, _1, <span class="number">10</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, yt, <span class="number">9</span>, <span class="number">10</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _1, _2)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _2, _1)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; vecTest;</span><br><span class="line">    vecTest.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">4</span>));</span><br><span class="line"></span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), print_test);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), mem_fun_ref(&amp;Test::print));    <span class="comment">//mem_fun_ref用于容器存储对象实体时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test*&gt; vecTest_p;</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">5</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">6</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">7</span>));</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), print_test_p);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), mem_fun(&amp;Test::print));    <span class="comment">//mem_fen用于容器存储对象指针时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="4-绑定成员变量"><a href="#4-绑定成员变量" class="headerlink" title="4. 绑定成员变量"></a>4. 绑定成员变量</h2><ul>
-<li>bind可以绑定public成员变量</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw</span><span class="params">(x)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(x==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    (<span class="keyword">int</span> &amp;)rw = <span class="number">100</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(<span class="number">100</span>==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw2</span><span class="params">(rw)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(rw2.get()==<span class="number">100</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="built_in">string</span>&gt; <span class="title">rws</span><span class="params">(str)</span></span>;</span><br><span class="line">    *rws.get_pointer() = <span class="string">"ref"</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;str&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;rws.get().size()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-工厂函数"><a href="#3-工厂函数" class="headerlink" title="3. 工厂函数"></a>3. 工厂函数</h2><ul>
+<li>ref库提供了两个便捷的工厂函数ref()和cref()，通过参数类型推导构造reference_wrapper对象。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; v;</span><br><span class="line">    v.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">4</span>));</span><br><span class="line">    for_each(v.begin(), v.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v2</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">    transform(v.begin(), v.end(), v2.begin(), bind(&amp;Test::x, _1));  <span class="comment">//bind取出Test对象的成员变量x，transform算法调用bind表达式操作容器v，逐个吧变量填入到v2中</span></span><br><span class="line">    for_each(v2.begin(), v2.end(), boost::bind(print_test_int, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">typedef</span> pair&lt;<span class="keyword">int</span>, <span class="built_in">string</span>&gt; <span class="keyword">pair_t</span>;</span><br><span class="line">    <span class="function"><span class="keyword">pair_t</span> <span class="title">p</span><span class="params">(<span class="number">123</span>, <span class="string">"bind"</span>)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::first, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::second, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="5-绑定函数对象"><a href="#5-绑定函数对象" class="headerlink" title="5. 绑定函数对象"></a>5. 绑定函数对象</h2><ul>
-<li>bind可以绑定函数对象，包括标准库中的所有预定义的函数对象</li>
-<li>如果函数对象有内部定义result_type,bind可以自动推导出返回值类型，如果函数对象未定义result_type,则需要用模版参数指明返回值类型。</li>
-<li>标准库和boost库大部分函数对象都具有result_type定义。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">reference_wrapper&lt;T&gt; <span class="title">ref</span><span class="params">(T&amp; t)</span></span>;</span><br><span class="line"><span class="function">reference_wrapper&lt;T <span class="keyword">const</span>&gt; <span class="title">cref</span><span class="params">(T <span class="keyword">const</span>&amp; t)</span></span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>ref可以根据参数类型自动推导正确的<code>reference_wrapper&lt;T&gt;</code>对象，<code>ref()</code>产生类型为T，<code>cref()</code>产生类型为T const。</li>
+<li>reference_wrapper支持拷贝，因此ref()和cref()可以直接总在需要拷贝语义的函数参数中。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">g</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">int</span> result_type;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//绑定函数对象</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, <span class="number">10</span>)(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;     <span class="comment">//标准库 具有result_type类型定义</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind&lt;<span class="keyword">int</span>&gt;(f(), _1, _2)(<span class="number">10</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//自定义函数对象，可以通过模版制定返回值类型</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(g(), _1, _2)(<span class="number">15</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;           <span class="comment">//自定义函数对象，定义result_type</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="6-使用ref库"><a href="#6-使用ref库" class="headerlink" title="6. 使用ref库"></a>6. 使用ref库</h2><ul>
-<li>bind采用拷贝的方式存储绑定对象和参数，如果函数对象或值参数很大、拷贝代价很高，或者无法拷贝，bind的使用会受到限制。因此bind可以搭配ref库，ref库包装对象的引用，让bind存储对象引用的拷贝，降低拷贝的代价。</li>
-<li>使用ref传对象引用时，必须保证bind被调用时引用时有效的。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> x = <span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rw, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rw).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str = <span class="string">"hahahahah"</span>;</span><br><span class="line">    BOOST_AUTO(rws, ref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rws).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">sqrt</span>(ref(x))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-操作包装"><a href="#4-操作包装" class="headerlink" title="4. 操作包装"></a>4. 操作包装</h2><ul>
+<li>ref库运用模版元编程技术提供两个特征类is_reference_wrapper和unwrap_reference，用于检测reference_wrapper对象。<code>is_reference_wrapper&lt;T&gt;</code>的bool成员变量value可以判断T是否为一个reference_wrapper。<code>unwrap_reference&lt;T&gt;</code>的内部定义type表明了T的真实类型，无论它是否经过reference_wrapper包装。</li>
+<li><code>unwrap_ref()</code>利用<code>unwrap_reference&lt;T&gt;</code>直接解开reference_wrapper的包装(如果有的话)，返回被包装对象的引用。直接对一个未包装的对象使用<code>unwrap_ref()</code>直接返回对象自身的引用。<code>unwrap_ref()</code>可以安全地用在泛型代码中，而不必关心对象的包装特性，总能够正确地操作对象。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//使用ref库</span></span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">20</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, cref(x))(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    g gf;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(ref(gf), _1, <span class="number">20</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    BOOST_AUTO(r, ref(x));</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> *y = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">5</span>);</span><br><span class="line">        r = ref(*y);</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;r&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">delete</span> y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> *w = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">8</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="7-高级议题"><a href="#7-高级议题" class="headerlink" title="7. 高级议题"></a>7. 高级议题</h2><h3 id="为占位符更名"><a href="#为占位符更名" class="headerlink" title="为占位符更名"></a>为占位符更名</h3><ul>
-<li>最简单的方法：为原占位符使用引用创建别名，可以使用<code>BOOST_AUTO</code>，无需关心占位符的真实类型，将推导的工作交给编译器。<h3 id="存储bind表达式"><a href="#存储bind表达式" class="headerlink" title="存储bind表达式"></a>存储bind表达式</h3></li>
-<li>bind表达式生成的函数对象类型声明非常复杂，可以使用typedef库BOOST_AUTO宏辅助，也可以用function库。<h3 id="嵌套绑定"><a href="#嵌套绑定" class="headerlink" title="嵌套绑定"></a>嵌套绑定</h3></li>
-<li>bind可以嵌套，一个bind表达式生成的函数对象可以被另一个bind再绑定，实现类似<code>f(g(x))</code>的形式。bind嵌套要特别小心，不容易写正确和理解。<h3 id="操作符重载"><a href="#操作符重载" class="headerlink" title="操作符重载"></a>操作符重载</h3></li>
-<li>bind重载了比较操作符和逻辑非操作符,可以将多个bind绑定组合起来，形成复杂的逻辑表达式，配合标准库实现语法简单但语义复杂的操作。<h3 id="绑定非标准函数"><a href="#绑定非标准函数" class="headerlink" title="绑定非标准函数"></a>绑定非标准函数</h3></li>
-<li>有的非标准函数bind无法推导出返回值，必须显式地指定bind的返回值类型。</li>
-<li>bind不支持使用了不同调用方式(如<code>__stdcall</code>、<code>__fastcall</code>、<code>extern &quot;C&quot;</code>)的函数，bind将它们看做函数对象，需要显式指定bind的返回值类型。或者在<code>&lt;boost/bind.hpp&gt;</code>之前加上<code>BOOST_BIND_ENABLE_STDCALL</code>、<code>BOOST_BIND_ENABLE_FASTCALL</code>、<code>BOOST_BIND_ENABLE_PASCAL</code>等宏，明确告诉bind支持这些调用。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v</span><span class="params">(<span class="number">10</span>, <span class="number">2</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rw, ref(v));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rw)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(v)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rw)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(v)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> x = (<span class="keyword">int</span>)<span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rwd, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rwd)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(x)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rwd)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(x)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    unwrap_ref(rw).push_back(<span class="number">4</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rw)[<span class="number">10</span>]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">str</span><span class="params">(<span class="string">"hahaha"</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rws, cref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rws)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="5-为ref增加函数调用功能"><a href="#5-为ref增加函数调用功能" class="headerlink" title="5. 为ref增加函数调用功能"></a>5. 为ref增加函数调用功能</h2><ul>
+<li>ref将对象包装为引用语义，降低了复制成本，使引用的行为更像对象，可以让容器安全地持有被包装的引用对象，可以称为”智能引用”</li>
+<li>ref库没有实现TR1的全部定义，不能提供函数调用操作operator(),无法包装一个函数对象的引用并传递给标准库算法。可以修改boost::ref库添加函数调用功能。</li>
 </ul>
 
       
@@ -1185,7 +1165,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/003-ref-note/">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/002-bind-note/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1199,7 +1179,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2017/05/31/003-ref-note/" class="post-title-link" itemprop="url">boost 库学习 ref</a>
+            <a href="/2017/05/31/002-bind-note/" class="post-title-link" itemprop="url">boost 库学习 bind</a>
         </h2>
 
         <div class="post-meta">
@@ -1253,183 +1233,52 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="boost库-ref学习-boost-1-63"><a href="#boost库-ref学习-boost-1-63" class="headerlink" title="boost库 ref学习 boost_1_63"></a>boost库 ref学习 boost_1_63</h1><ul>
-<li>STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。</li>
-<li>特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。<code>boost.ref</code>应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:</li>
+          <h1 id="boost库-bind学习-boost-1-63"><a href="#boost库-bind学习-boost-1-63" class="headerlink" title="boost库 bind学习 boost_1_63"></a>boost库 bind学习 boost_1_63</h1><ul>
+<li>bind是C++98标准库中函数适配器bind1st/bind2nd的泛化和增强，可以适配任意的可调用对象，包含函数指针、函数引用、成员函数指针和函数对象。bind最多可以绑定9个函数参数，而且对绑定对象的要求很低，可以在没有<code>result_type</code>内部类型定义的情况下完成对函数对象的绑定。</li>
+<li>bind位于名词空间boost，使用bind组件需包含头文件<code>&lt;boost/bind.hpp&gt;</code>, 即:</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/ref.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
-<h2 id="1-类摘要"><a href="#1-类摘要" class="headerlink" title="1. 类摘要"></a>1. 类摘要</h2><ul>
-<li>ref库定义了一个很小很简单的引用类型的包装器，reference_wrapper,</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/bind.hpp&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> boost;</span><br></pre></td></tr></table></figure>
+<h2 id="1-工作原理"><a href="#1-工作原理" class="headerlink" title="1. 工作原理"></a>1. 工作原理</h2><ul>
+<li>bind并不是单独的类或函数，是非常庞大的家族，依据绑定的参数个数和要绑定的调用对象类型，有数十种不同形式，名字都叫做bind，编译器会根据具体的绑定代码自动确定要使用的正确形式。</li>
+<li>bind接受的第一个参数必须是一个可调用对象，包括函数指针、函数引用、函数对象和成员函数指针，bind接受最多九个参数。参数数量必须与可调用对象的参数数量相等，这些参数将被传递给可调用对象作为输入参数。</li>
+<li>绑定完成后，bind返回一个函数对象，内部保存了可调用对象的拷贝，具有operator(),返回值类型自动推导为可调用对象的返回值类型，在发生调用时，函数对象把之前存储的参数转发给可调用对象完成调用。</li>
+<li>bind占位符被定义为_1、_2、_3一直到_9，位于一个匿名名词空间。占位符可以取代bind中参数的位置，在发生函数调用时才接受真正的参数。</li>
+<li>bind占位符的名字代表它在调用式中的顺序，而在绑定表达式中没有顺序的要求。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">class</span> <span class="title">reference_wrapper</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">reference_wrapper</span><span class="params">(T&amp; t)</span>: <span class="title">t_</span><span class="params">(&amp;t)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="keyword">operator</span> T&amp; () <span class="keyword">const</span> &#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T&amp; <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T* <span class="title">get_pointer</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> t_; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* t_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>reference_wrapper的构造函数接受类型T的引用类型，内部使用指针存储t的引用，构造出一个reference_wrapper对象，包装了引用。get()和get_pointer()这两个函数分别返回存储的引用和指针，相当于揭开对t的包装。</li>
+<h2 id="2-绑定普通函数"><a href="#2-绑定普通函数" class="headerlink" title="2. 绑定普通函数"></a>2. 绑定普通函数</h2><ul>
+<li>bind可以绑定普通函数，包括函数、函数指针。</li>
+<li>必须在绑定表达式中提供函数要求的所有参数，无论是真实参数还是占位符均可以。</li>
 </ul>
-<h2 id="2-基本用法"><a href="#2-基本用法" class="headerlink" title="2. 基本用法"></a>2. 基本用法</h2><ul>
-<li>reference_wrapper只在使用T的语境下才会执行隐式转换，其它情况下需要调用类型转换函数或者get()函数得到真正操作被包装对象。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f3</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a+b+c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f4</span>:</span> <span class="keyword">public</span> <span class="built_in">std</span>::binary_function&lt;<span class="keyword">int</span>,<span class="keyword">int</span>,<span class="keyword">int</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> <span class="keyword">const</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (x + y); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定普通函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于f2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于f3(1, 2, 3)</span></span><br><span class="line">    </span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;          <span class="comment">//相当于f2(4, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind2nd(f4(), <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _2)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(4, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _2, _1)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _1)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _1, <span class="number">8</span>, _2)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(5, 8, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _3, _2, _2)(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(3, 2, 2)</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f2_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f3_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    f2_type pf2 = f2;</span><br><span class="line">    f3_type pf3 = f3;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于*pf2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于*pf3(1, 2, 3)</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-绑定成员函数"><a href="#3-绑定成员函数" class="headerlink" title="3. 绑定成员函数"></a>3. 绑定成员函数</h2><ul>
+<li>bind可以绑定类的成员函数。类的成员函数指针不能直接调用operator()，必须绑定一个对象或者函数，通过this指针调用成员函数。因此bind需要用一个占位符的位置让用户提供一个类的实例、引用或者指针，通过对象作为第一个参数来调用成员函数。所以使用成员函数最多只能绑定8个参数。</li>
+<li>bind可以代替标准库中的mem_fun和mem_fun_ref帮顶起，用来配合标准算法操作容器中对象。</li>
+<li>bind同样支持绑定虚拟成员函数，用法与非虚函数相同，虚函数的行为将由实际调用发生时的实例来决定。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw</span><span class="params">(x)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(x==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    (<span class="keyword">int</span> &amp;)rw = <span class="number">100</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(<span class="number">100</span>==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw2</span><span class="params">(rw)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(rw2.get()==<span class="number">100</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="built_in">string</span>&gt; <span class="title">rws</span><span class="params">(str)</span></span>;</span><br><span class="line">    *rws.get_pointer() = <span class="string">"ref"</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;str&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;rws.get().size()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-工厂函数"><a href="#3-工厂函数" class="headerlink" title="3. 工厂函数"></a>3. 工厂函数</h2><ul>
-<li>ref库提供了两个便捷的工厂函数ref()和cref()，通过参数类型推导构造reference_wrapper对象。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Test():x(<span class="number">0</span>)&#123;&#125;</span><br><span class="line">    Test(<span class="keyword">int</span> _x):x(_x)&#123;&#125;</span><br><span class="line">    ~Test()&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="string">" b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="string">" "</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test</span><span class="params">(Test &amp;t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    t.print();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test_p</span><span class="params">(Test *t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != t) &#123; t-&gt;print(); &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//绑定成员函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Test t;</span><br><span class="line">    Test &amp;yt = t;</span><br><span class="line">    Test *pt = &amp;t;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, t, _1, <span class="number">10</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, yt, <span class="number">9</span>, <span class="number">10</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _1, _2)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _2, _1)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; vecTest;</span><br><span class="line">    vecTest.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">4</span>));</span><br><span class="line"></span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), print_test);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), mem_fun_ref(&amp;Test::print));    <span class="comment">//mem_fun_ref用于容器存储对象实体时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test*&gt; vecTest_p;</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">5</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">6</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">7</span>));</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), print_test_p);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), mem_fun(&amp;Test::print));    <span class="comment">//mem_fen用于容器存储对象指针时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-绑定成员变量"><a href="#4-绑定成员变量" class="headerlink" title="4. 绑定成员变量"></a>4. 绑定成员变量</h2><ul>
+<li>bind可以绑定public成员变量</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">reference_wrapper&lt;T&gt; <span class="title">ref</span><span class="params">(T&amp; t)</span></span>;</span><br><span class="line"><span class="function">reference_wrapper&lt;T <span class="keyword">const</span>&gt; <span class="title">cref</span><span class="params">(T <span class="keyword">const</span>&amp; t)</span></span>;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>ref可以根据参数类型自动推导正确的<code>reference_wrapper&lt;T&gt;</code>对象，<code>ref()</code>产生类型为T，<code>cref()</code>产生类型为T const。</li>
-<li>reference_wrapper支持拷贝，因此ref()和cref()可以直接总在需要拷贝语义的函数参数中。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; v;</span><br><span class="line">    v.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">4</span>));</span><br><span class="line">    for_each(v.begin(), v.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v2</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">    transform(v.begin(), v.end(), v2.begin(), bind(&amp;Test::x, _1));  <span class="comment">//bind取出Test对象的成员变量x，transform算法调用bind表达式操作容器v，逐个吧变量填入到v2中</span></span><br><span class="line">    for_each(v2.begin(), v2.end(), boost::bind(print_test_int, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">typedef</span> pair&lt;<span class="keyword">int</span>, <span class="built_in">string</span>&gt; <span class="keyword">pair_t</span>;</span><br><span class="line">    <span class="function"><span class="keyword">pair_t</span> <span class="title">p</span><span class="params">(<span class="number">123</span>, <span class="string">"bind"</span>)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::first, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::second, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="5-绑定函数对象"><a href="#5-绑定函数对象" class="headerlink" title="5. 绑定函数对象"></a>5. 绑定函数对象</h2><ul>
+<li>bind可以绑定函数对象，包括标准库中的所有预定义的函数对象</li>
+<li>如果函数对象有内部定义result_type,bind可以自动推导出返回值类型，如果函数对象未定义result_type,则需要用模版参数指明返回值类型。</li>
+<li>标准库和boost库大部分函数对象都具有result_type定义。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> x = <span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rw, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rw).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str = <span class="string">"hahahahah"</span>;</span><br><span class="line">    BOOST_AUTO(rws, ref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rws).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">sqrt</span>(ref(x))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="4-操作包装"><a href="#4-操作包装" class="headerlink" title="4. 操作包装"></a>4. 操作包装</h2><ul>
-<li>ref库运用模版元编程技术提供两个特征类is_reference_wrapper和unwrap_reference，用于检测reference_wrapper对象。<code>is_reference_wrapper&lt;T&gt;</code>的bool成员变量value可以判断T是否为一个reference_wrapper。<code>unwrap_reference&lt;T&gt;</code>的内部定义type表明了T的真实类型，无论它是否经过reference_wrapper包装。</li>
-<li><code>unwrap_ref()</code>利用<code>unwrap_reference&lt;T&gt;</code>直接解开reference_wrapper的包装(如果有的话)，返回被包装对象的引用。直接对一个未包装的对象使用<code>unwrap_ref()</code>直接返回对象自身的引用。<code>unwrap_ref()</code>可以安全地用在泛型代码中，而不必关心对象的包装特性，总能够正确地操作对象。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">g</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">int</span> result_type;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//绑定函数对象</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, <span class="number">10</span>)(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;     <span class="comment">//标准库 具有result_type类型定义</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind&lt;<span class="keyword">int</span>&gt;(f(), _1, _2)(<span class="number">10</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//自定义函数对象，可以通过模版制定返回值类型</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(g(), _1, _2)(<span class="number">15</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;           <span class="comment">//自定义函数对象，定义result_type</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="6-使用ref库"><a href="#6-使用ref库" class="headerlink" title="6. 使用ref库"></a>6. 使用ref库</h2><ul>
+<li>bind采用拷贝的方式存储绑定对象和参数，如果函数对象或值参数很大、拷贝代价很高，或者无法拷贝，bind的使用会受到限制。因此bind可以搭配ref库，ref库包装对象的引用，让bind存储对象引用的拷贝，降低拷贝的代价。</li>
+<li>使用ref传对象引用时，必须保证bind被调用时引用时有效的。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v</span><span class="params">(<span class="number">10</span>, <span class="number">2</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rw, ref(v));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rw)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(v)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rw)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(v)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> x = (<span class="keyword">int</span>)<span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rwd, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rwd)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(x)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rwd)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(x)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    unwrap_ref(rw).push_back(<span class="number">4</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rw)[<span class="number">10</span>]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">str</span><span class="params">(<span class="string">"hahaha"</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rws, cref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rws)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="5-为ref增加函数调用功能"><a href="#5-为ref增加函数调用功能" class="headerlink" title="5. 为ref增加函数调用功能"></a>5. 为ref增加函数调用功能</h2><ul>
-<li>ref将对象包装为引用语义，降低了复制成本，使引用的行为更像对象，可以让容器安全地持有被包装的引用对象，可以称为”智能引用”</li>
-<li>ref库没有实现TR1的全部定义，不能提供函数调用操作operator(),无法包装一个函数对象的引用并传递给标准库算法。可以修改boost::ref库添加函数调用功能。</li>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//使用ref库</span></span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">20</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, cref(x))(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    g gf;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(ref(gf), _1, <span class="number">20</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    BOOST_AUTO(r, ref(x));</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> *y = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">5</span>);</span><br><span class="line">        r = ref(*y);</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;r&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">delete</span> y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> *w = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">8</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="7-高级议题"><a href="#7-高级议题" class="headerlink" title="7. 高级议题"></a>7. 高级议题</h2><h3 id="为占位符更名"><a href="#为占位符更名" class="headerlink" title="为占位符更名"></a>为占位符更名</h3><ul>
+<li>最简单的方法：为原占位符使用引用创建别名，可以使用<code>BOOST_AUTO</code>，无需关心占位符的真实类型，将推导的工作交给编译器。<h3 id="存储bind表达式"><a href="#存储bind表达式" class="headerlink" title="存储bind表达式"></a>存储bind表达式</h3></li>
+<li>bind表达式生成的函数对象类型声明非常复杂，可以使用typedef库BOOST_AUTO宏辅助，也可以用function库。<h3 id="嵌套绑定"><a href="#嵌套绑定" class="headerlink" title="嵌套绑定"></a>嵌套绑定</h3></li>
+<li>bind可以嵌套，一个bind表达式生成的函数对象可以被另一个bind再绑定，实现类似<code>f(g(x))</code>的形式。bind嵌套要特别小心，不容易写正确和理解。<h3 id="操作符重载"><a href="#操作符重载" class="headerlink" title="操作符重载"></a>操作符重载</h3></li>
+<li>bind重载了比较操作符和逻辑非操作符,可以将多个bind绑定组合起来，形成复杂的逻辑表达式，配合标准库实现语法简单但语义复杂的操作。<h3 id="绑定非标准函数"><a href="#绑定非标准函数" class="headerlink" title="绑定非标准函数"></a>绑定非标准函数</h3></li>
+<li>有的非标准函数bind无法推导出返回值，必须显式地指定bind的返回值类型。</li>
+<li>bind不支持使用了不同调用方式(如<code>__stdcall</code>、<code>__fastcall</code>、<code>extern &quot;C&quot;</code>)的函数，bind将它们看做函数对象，需要显式指定bind的返回值类型。或者在<code>&lt;boost/bind.hpp&gt;</code>之前加上<code>BOOST_BIND_ENABLE_STDCALL</code>、<code>BOOST_BIND_ENABLE_FASTCALL</code>、<code>BOOST_BIND_ENABLE_PASCAL</code>等宏，明确告诉bind支持这些调用。</li>
 </ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/27/liunx-cmd/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="CaseZheng">
-      <meta itemprop="description" content="CaseZheng的博客网站">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaseZheng">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/05/27/liunx-cmd/" class="post-title-link" itemprop="url">linux命令</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-05-27 18:20:00" itemprop="dateCreated datePublished" datetime="2017-05-27T18:20:00+08:00">2017-05-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2018-10-15 23:48:00" itemprop="dateModified" datetime="2018-10-15T23:48:00+08:00">2018-10-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="df"><a href="#df" class="headerlink" title="df"></a>df</h1><p>df可显示磁盘的文件系统与使用情形</p>
-<h2 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h2><ul>
-<li>-a 包含所有文件系统</li>
-<li>-h 以较高可读性显示信息</li>
-<li>-i 显示inode的信息</li>
-<li>-l 显示本地端的文件系统</li>
-<li>-m 以m为单位显示</li>
-</ul>
-<p><img src="/Picture/df.png" alt="示例图片"></p>
-<h1 id="free"><a href="#free" class="headerlink" title="free"></a>free</h1><h2 id="显示内存状态"><a href="#显示内存状态" class="headerlink" title="显示内存状态"></a>显示内存状态</h2><ul>
-<li>free指令会显示内存的使用情况，包括实体内存，虚拟的交换文件内存，共享内存区段，以及系统核心使用的缓冲区等。</li>
-</ul>
-<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><ul>
-<li>-b 以byte为单位显示内存使用情况</li>
-<li>-k 以kb为单位显示内存使用情况</li>
-<li>-m 以m为单位显示内存使用情况</li>
-<li>-o 不显示缓存起调节列</li>
-<li>-t 显示内存总和列</li>
-<li>-s&lt;间隔秒数&gt; 持续观察内存使用情况</li>
-</ul>
-<p><img src="/Picture/free.png" alt="示例图片"></p>
-<h3 id="第一部分Mem行解释"><a href="#第一部分Mem行解释" class="headerlink" title="第一部分Mem行解释"></a>第一部分Mem行解释</h3><ul>
-<li>total:总计物理内存的大小。</li>
-<li>used:已使用多大。</li>
-<li>free:可用有多少。</li>
-<li>Shared:多个进程共享的内存总额。</li>
-<li>Buffers/cached:磁盘缓存的大小</li>
-</ul>
-<p>关系：total = used + free</p>
-<h3 id="第二部分-buffers-cache"><a href="#第二部分-buffers-cache" class="headerlink" title="第二部分(-/+ buffers/cache)"></a>第二部分(-/+ buffers/cache)</h3><ul>
-<li>(-buffers/cache) used内存数：第一部分Mem行中的 used – buffers – cached</li>
-<li>(+buffers/cache) free内存数: 第一部分Mem行中的 free + buffers + cached</li>
-</ul>
-<p>可见-buffers/cache反映的是被程序实实在在吃掉的内存，而+buffers/cache反映的是可以挪用的内存总数。</p>
-<h3 id="第三部分"><a href="#第三部分" class="headerlink" title="第三部分"></a>第三部分</h3><p>第三部分是指交换分区</p>
-<h1 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h1><h2 id="1、常用选项"><a href="#1、常用选项" class="headerlink" title="1、常用选项"></a>1、常用选项</h2><ul>
-<li>-i 指定监听的网络接口 “-i any”表示抓取所有网卡接口上的数据包。</li>
-<li>-t 不打印时间戳。</li>
-<li>-e 显示以太网帧头部信息。</li>
-<li>-n 使用IP地址表示主机，而不是主机名；使用数字表示端口号，而不是服务名称。</li>
-<li>-c 仅抓取指定数量的数据报</li>
-<li>-v 输出稍微详细点的信息，例如，显示IP数据包中的TTL和TOS信息。</li>
-<li>-vv 输出详细报文信息。</li>
-<li>-x 以十六进制显示数据包的内容，单步显示包中以太网帧的头部信息。</li>
-<li>-X 与-x类似，不过还打印每个十六进制对应的ASCII字符。</li>
-<li>-XX 与-X相同，不过还打印以太网帧的头部信息。</li>
-<li>-S 以绝对值来显示TCP报文段的序号，而不是相对值。</li>
-<li>-w 将tcpdump的输出以特殊的格式定向到某个文件。</li>
-<li>-r 从文件中读取数据报信息并显示。</li>
-</ul>
-<h2 id="2、包的过滤"><a href="#2、包的过滤" class="headerlink" title="2、包的过滤"></a>2、包的过滤</h2><p>tcpdump支持用表达式进一步过滤数据包。<br>tcpdump的操作数分为3种：类型（type）、方向（dir）、协议（proto）<br>类型，解释后面跟着的参数的含义。tcpdump支持的类型包括host（主机名或ip地址）、net（用CIDR方法表示的网络地址）、port（端口号）和portrange（端口范围）。</p>
-<ol>
-<li>方向，src指定数据包的发送端，dst指定数据报的目的端。</li>
-<li>协议，指定目标协议。</li>
-<li>tcpdump支持的逻辑操作符。<br>and（或&amp;&amp;），or（或||），not（或!）<br>如果表达式比较复杂，可以使用括号将它们分组。不过使用括号时，需要使用“\”对它转义，或者用单引号“’”将其括住，避免齐备shell所解释。</li>
-</ol>
 
       
     </div>
@@ -1576,6 +1425,149 @@
 <h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><ul>
 <li><a href="https://blog.csdn.net/u012145252/article/details/81775362" target="_blank" rel="noopener">git status 显示中文和解决中文乱码</a></li>
 </ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/27/liunx-cmd/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/05/27/liunx-cmd/" class="post-title-link" itemprop="url">linux命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-05-27 18:20:00" itemprop="dateCreated datePublished" datetime="2017-05-27T18:20:00+08:00">2017-05-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-10-15 23:48:00" itemprop="dateModified" datetime="2018-10-15T23:48:00+08:00">2018-10-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="df"><a href="#df" class="headerlink" title="df"></a>df</h1><p>df可显示磁盘的文件系统与使用情形</p>
+<h2 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h2><ul>
+<li>-a 包含所有文件系统</li>
+<li>-h 以较高可读性显示信息</li>
+<li>-i 显示inode的信息</li>
+<li>-l 显示本地端的文件系统</li>
+<li>-m 以m为单位显示</li>
+</ul>
+<p><img src="/Picture/df.png" alt="示例图片"></p>
+<h1 id="free"><a href="#free" class="headerlink" title="free"></a>free</h1><h2 id="显示内存状态"><a href="#显示内存状态" class="headerlink" title="显示内存状态"></a>显示内存状态</h2><ul>
+<li>free指令会显示内存的使用情况，包括实体内存，虚拟的交换文件内存，共享内存区段，以及系统核心使用的缓冲区等。</li>
+</ul>
+<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><ul>
+<li>-b 以byte为单位显示内存使用情况</li>
+<li>-k 以kb为单位显示内存使用情况</li>
+<li>-m 以m为单位显示内存使用情况</li>
+<li>-o 不显示缓存起调节列</li>
+<li>-t 显示内存总和列</li>
+<li>-s&lt;间隔秒数&gt; 持续观察内存使用情况</li>
+</ul>
+<p><img src="/Picture/free.png" alt="示例图片"></p>
+<h3 id="第一部分Mem行解释"><a href="#第一部分Mem行解释" class="headerlink" title="第一部分Mem行解释"></a>第一部分Mem行解释</h3><ul>
+<li>total:总计物理内存的大小。</li>
+<li>used:已使用多大。</li>
+<li>free:可用有多少。</li>
+<li>Shared:多个进程共享的内存总额。</li>
+<li>Buffers/cached:磁盘缓存的大小</li>
+</ul>
+<p>关系：total = used + free</p>
+<h3 id="第二部分-buffers-cache"><a href="#第二部分-buffers-cache" class="headerlink" title="第二部分(-/+ buffers/cache)"></a>第二部分(-/+ buffers/cache)</h3><ul>
+<li>(-buffers/cache) used内存数：第一部分Mem行中的 used – buffers – cached</li>
+<li>(+buffers/cache) free内存数: 第一部分Mem行中的 free + buffers + cached</li>
+</ul>
+<p>可见-buffers/cache反映的是被程序实实在在吃掉的内存，而+buffers/cache反映的是可以挪用的内存总数。</p>
+<h3 id="第三部分"><a href="#第三部分" class="headerlink" title="第三部分"></a>第三部分</h3><p>第三部分是指交换分区</p>
+<h1 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h1><h2 id="1、常用选项"><a href="#1、常用选项" class="headerlink" title="1、常用选项"></a>1、常用选项</h2><ul>
+<li>-i 指定监听的网络接口 “-i any”表示抓取所有网卡接口上的数据包。</li>
+<li>-t 不打印时间戳。</li>
+<li>-e 显示以太网帧头部信息。</li>
+<li>-n 使用IP地址表示主机，而不是主机名；使用数字表示端口号，而不是服务名称。</li>
+<li>-c 仅抓取指定数量的数据报</li>
+<li>-v 输出稍微详细点的信息，例如，显示IP数据包中的TTL和TOS信息。</li>
+<li>-vv 输出详细报文信息。</li>
+<li>-x 以十六进制显示数据包的内容，单步显示包中以太网帧的头部信息。</li>
+<li>-X 与-x类似，不过还打印每个十六进制对应的ASCII字符。</li>
+<li>-XX 与-X相同，不过还打印以太网帧的头部信息。</li>
+<li>-S 以绝对值来显示TCP报文段的序号，而不是相对值。</li>
+<li>-w 将tcpdump的输出以特殊的格式定向到某个文件。</li>
+<li>-r 从文件中读取数据报信息并显示。</li>
+</ul>
+<h2 id="2、包的过滤"><a href="#2、包的过滤" class="headerlink" title="2、包的过滤"></a>2、包的过滤</h2><p>tcpdump支持用表达式进一步过滤数据包。<br>tcpdump的操作数分为3种：类型（type）、方向（dir）、协议（proto）<br>类型，解释后面跟着的参数的含义。tcpdump支持的类型包括host（主机名或ip地址）、net（用CIDR方法表示的网络地址）、port（端口号）和portrange（端口范围）。</p>
+<ol>
+<li>方向，src指定数据包的发送端，dst指定数据报的目的端。</li>
+<li>协议，指定目标协议。</li>
+<li>tcpdump支持的逻辑操作符。<br>and（或&amp;&amp;），or（或||），not（或!）<br>如果表达式比较复杂，可以使用括号将它们分组。不过使用括号时，需要使用“\”对它转义，或者用单引号“’”将其括住，避免齐备shell所解释。</li>
+</ol>
 
       
     </div>
@@ -1782,6 +1774,7 @@
   
 
   
+
 
 </body>
 </html>

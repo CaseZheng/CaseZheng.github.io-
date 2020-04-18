@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="boost库 bind学习 boost_1_63 bind是C++98标准库中函数适配器bind1st/bind2nd的泛化和增强，可以适配任意的可调用对象，包含函数指针、函数引用、成员函数指针和函数对象。bind最多可以绑定9个函数参数，而且对绑定对象的要求很低，可以在没有result_type内部类型定义的情况下完成对函数对象的绑定。 bind位于名词空间boost，使用bind组件需包含头文">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库学习 bind">
 <meta property="og:url" content="http://www.casezheng.date/2017/05/31/002-bind-note/index.html">
@@ -328,8 +328,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -338,12 +338,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/05/31/001-asio-note/" rel="prev" title="boost 库学习 asio">
-      <i class="fa fa-chevron-left"></i> boost 库学习 asio
+    <a href="/2017/05/27/git/" rel="prev" title="git的使用">
+      <i class="fa fa-chevron-left"></i> git的使用
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/05/31/boost-noncopyable/" rel="next" title="boost 实用工具 noncopyable学习">
-      boost 实用工具 noncopyable学习 <i class="fa fa-chevron-right"></i>
+    <a href="/2017/05/31/001-asio-note/" rel="next" title="boost 库学习 asio">
+      boost 库学习 asio <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -357,6 +357,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -539,6 +540,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '61701ae69e7025edb3d15bbf6c6ff08e',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="shared_ptrshared_ptr包装new操作符从堆上分配的动态对象，实现引用计数型的智能指针，可以被自由地拷贝和赋值，在任意地方共享它，当引用计数未0时，删除被包装的动态分配对象，可以被安全地放在标准容器中。 1. 类摘要 2. 操作函数shared_ptr用来管理new动态分配对象，重载了*和-&amp;gt;操作符模拟原始指针行为，提供隐式bool类型转化判断指针有效性，get()获得原始指">
-<meta name="keywords" content="boost,cpp,智能指针">
+<meta name="keywords" content="cpp,boost,智能指针">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库 内存管理 shared_ptr shared_array 3">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/05/boost-shared-ptr/index.html">
@@ -317,8 +317,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/智能指针/" rel="tag"># 智能指针</a>
           </div>
 
@@ -347,6 +347,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -529,6 +530,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '7f1d2acb0287ef834457eb11be5298cf',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

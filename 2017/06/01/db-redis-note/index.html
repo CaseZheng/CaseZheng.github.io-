@@ -430,8 +430,8 @@
       <i class="fa fa-chevron-left"></i> boost 实用工具 optional学习
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/06/01/redis-dict-note/" rel="next" title="Redis数据库字典大概介绍">
-      Redis数据库字典大概介绍 <i class="fa fa-chevron-right"></i>
+    <a href="/2017/06/01/redis-intset-note/" rel="next" title="Redis数据库整数集合大概介绍">
+      Redis数据库整数集合大概介绍 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -445,6 +445,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -627,6 +628,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '6d8ccf99a44f2d09d4caa5a5a29fe2ed',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

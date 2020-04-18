@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="boost库 asio学习 boost_1_63高性能服务器程序框架 基础知识复习 （书籍 Linux高性能服务器编程） 按照服务器一般原理，可将服务器解构为以下三个主要模块： I/O处理单元。 逻辑单元。 存储单元。    1 服务器模型1.1 C/S模型 C/S(客户端/服务器)模型：所有客户端都通过访问服务器来获取所需的资源。 C/S模型适合资源相对集中的场合，其实现也很简单，缺点明显：服务">
-<meta name="keywords" content="boost,cpp,asio">
+<meta name="keywords" content="cpp,boost,asio">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库学习 asio">
 <meta property="og:url" content="http://www.casezheng.date/2017/05/31/001-asio-note/index.html">
@@ -411,8 +411,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/asio/" rel="tag"># asio</a>
           </div>
 
@@ -422,12 +422,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/05/31/003-ref-note/" rel="prev" title="boost 库学习 ref">
-      <i class="fa fa-chevron-left"></i> boost 库学习 ref
+    <a href="/2017/05/31/002-bind-note/" rel="prev" title="boost 库学习 bind">
+      <i class="fa fa-chevron-left"></i> boost 库学习 bind
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/05/31/002-bind-note/" rel="next" title="boost 库学习 bind">
-      boost 库学习 bind <i class="fa fa-chevron-right"></i>
+    <a href="/2017/05/31/003-ref-note/" rel="next" title="boost 库学习 ref">
+      boost 库学习 ref <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -441,6 +441,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -623,6 +624,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '4c2c095e9c1147d01a1bedcd6e70d2c5',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

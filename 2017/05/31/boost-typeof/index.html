@@ -23,7 +23,7 @@
   </script>
 
   <meta name="description" content="typeoftypeof库使用宏模拟C++0x新增加的typeof和auto关键字，减轻书写烦琐的变量声明工作，简化代码。 1#include &amp;lt;boost/typeof/typeof.hpp&amp;gt; 动机C++是静态强类型语言，所有变量在使用前必须声明类型，让C++具有运行速度快，代码规范等很多优点，但在引入名词空间特性后会导致烦琐的类型声明。C++0x中typeof/auto关键字，可以">
-<meta name="keywords" content="boost,cpp">
+<meta name="keywords" content="cpp,boost">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost库 typeof 实用工具学习">
 <meta property="og:url" content="http://www.casezheng.date/2017/05/31/boost-typeof/index.html">
@@ -294,8 +294,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/boost/" rel="tag"># boost</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/boost/" rel="tag"># boost</a>
           </div>
 
         
@@ -323,6 +323,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -505,6 +506,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c68fc1c012bbeb368de7',
+      clientSecret: '0a7254e5cab29b1e276bca12d626c885e595920a',
+      repo        : 'CaseZheng.github.io',
+      owner       : 'CaseZheng',
+      admin       : ['CaseZheng'],
+      id          : '86748a4508b7f0c5dc2466e156505ebb',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>
