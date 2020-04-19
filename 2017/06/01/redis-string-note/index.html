@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Redis string 笔记 简单动态字符串SDS简介 Redis没有使用C语言传统的字符串(以空格结尾的字符串数组)表示，而是自己构建了一种简单动态字符串(SDS)的抽象类型，并将SDS作为Redis的默认字符串表示。 Redis中C字符串只会作为字符串字面量用在一些无须对字符串值进行修改的地方。当Redis需要的是一个可以修改的字符串值时，Redis会使用SDS来表示字符串值。  SDS定义">
+  <meta name="description" content="Redis string 笔记 简单动态字符串SDS简介">
 <meta name="keywords" content="redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis数据库string SDS大概介绍">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/01/redis-string-note/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="Redis string 笔记 简单动态字符串SDS简介 Redis没有使用C语言传统的字符串(以空格结尾的字符串数组)表示，而是自己构建了一种简单动态字符串(SDS)的抽象类型，并将SDS作为Redis的默认字符串表示。 Redis中C字符串只会作为字符串字面量用在一些无须对字符串值进行修改的地方。当Redis需要的是一个可以修改的字符串值时，Redis会使用SDS来表示字符串值。  SDS定义">
+<meta property="og:description" content="Redis string 笔记 简单动态字符串SDS简介">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2020-04-12T04:56:35.900Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis数据库string SDS大概介绍">
-<meta name="twitter:description" content="Redis string 笔记 简单动态字符串SDS简介 Redis没有使用C语言传统的字符串(以空格结尾的字符串数组)表示，而是自己构建了一种简单动态字符串(SDS)的抽象类型，并将SDS作为Redis的默认字符串表示。 Redis中C字符串只会作为字符串字面量用在一些无须对字符串值进行修改的地方。当Redis需要的是一个可以修改的字符串值时，Redis会使用SDS来表示字符串值。  SDS定义">
+<meta name="twitter:description" content="Redis string 笔记 简单动态字符串SDS简介">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/06/01/redis-string-note/">
 
@@ -248,7 +248,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -314,12 +321,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/06/01/redis-skiplist-note/" rel="prev" title="Redis数据库跳跃表大概介绍">
-      <i class="fa fa-chevron-left"></i> Redis数据库跳跃表大概介绍
+    <a href="/2017/06/01/redis-dict-note/" rel="prev" title="Redis数据库字典大概介绍">
+      <i class="fa fa-chevron-left"></i> Redis数据库字典大概介绍
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/06/01/redis-ziplist-note/" rel="next" title="Redis数据库压缩列表大概介绍">
-      Redis数据库压缩列表大概介绍 <i class="fa fa-chevron-right"></i>
+    <a href="/2017/06/01/redis-list-note/" rel="next" title="Redis数据库链表大概介绍">
+      Redis数据库链表大概介绍 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -464,6 +471,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -529,7 +556,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '6fb3e75a4969c95d4643285e5be94a5c',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

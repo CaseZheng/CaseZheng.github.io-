@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。 Boost库没有专门的单件库，仅在其它库中有不完善的实现。 singlton_default的单件实现singlton_default泛型单件类。 12#include &amp;lt;boost/container/detail/singleton.hpp&amp;gt;using boost::conta">
-<meta name="keywords" content="cpp,boost">
+  <meta name="description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。">
+<meta name="keywords" content="boost,cpp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库实用工具singleton">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/02/boost-singleton/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。 Boost库没有专门的单件库，仅在其它库中有不完善的实现。 singlton_default的单件实现singlton_default泛型单件类。 12#include &amp;lt;boost/container/detail/singleton.hpp&amp;gt;using boost::conta">
+<meta property="og:description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2020-04-12T04:56:35.903Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="boost 库实用工具singleton">
-<meta name="twitter:description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。 Boost库没有专门的单件库，仅在其它库中有不完善的实现。 singlton_default的单件实现singlton_default泛型单件类。 12#include &amp;lt;boost/container/detail/singleton.hpp&amp;gt;using boost::conta">
+<meta name="twitter:description" content="singletonsingleton即单件模式，单件模式的类在程序生命周期中只会存在一个且仅有一个实例。">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/06/02/boost-singleton/">
 
@@ -248,7 +248,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -300,8 +307,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/boost/" rel="tag"># boost</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
           </div>
 
         
@@ -460,6 +467,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -525,7 +552,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'b6cc5114b4a3743120496228b70512ea',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="原型模式的学习与实践 原型模式原型模式：用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。即：新对象的创建可以通过已有对象进行创建。 类图 Prototype模式提供通过已存在对象进行新对象创建的接口。C++中通过拷贝构造函数实现。 优点 性能优良，原型模式是在内存中二进制流的拷贝，比直接new一个对象性能好很多，特别是在循环体内产生大量的对象时，原型模式可以更好的体现其优点。 逃避">
+  <meta name="description" content="原型模式的学习与实践 原型模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-10-原型模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/08/31/design-pattern-10-prototype/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="原型模式的学习与实践 原型模式原型模式：用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。即：新对象的创建可以通过已有对象进行创建。 类图 Prototype模式提供通过已存在对象进行新对象创建的接口。C++中通过拷贝构造函数实现。 优点 性能优良，原型模式是在内存中二进制流的拷贝，比直接new一个对象性能好很多，特别是在循环体内产生大量的对象时，原型模式可以更好的体现其优点。 逃避">
+<meta property="og:description" content="原型模式的学习与实践 原型模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoY_9BwaiI5Mevb800ctddFoyL0rDAxY45bSj5rInStvUSb5gIIfEJHWAG9gXUdCoK_DAO1fo4pFphChoCrE0yfYcwfOMwDRO8Tp61TMicvEQLgABBE6GcfS2z0m0">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.052Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-10-原型模式">
-<meta name="twitter:description" content="原型模式的学习与实践 原型模式原型模式：用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。即：新对象的创建可以通过已有对象进行创建。 类图 Prototype模式提供通过已存在对象进行新对象创建的接口。C++中通过拷贝构造函数实现。 优点 性能优良，原型模式是在内存中二进制流的拷贝，比直接new一个对象性能好很多，特别是在循环体内产生大量的对象时，原型模式可以更好的体现其优点。 逃避">
+<meta name="twitter:description" content="原型模式的学习与实践 原型模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoY_9BwaiI5Mevb800ctddFoyL0rDAxY45bSj5rInStvUSb5gIIfEJHWAG9gXUdCoK_DAO1fo4pFphChoCrE0yfYcwfOMwDRO8Tp61TMicvEQLgABBE6GcfS2z0m0">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/08/31/design-pattern-10-prototype/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -469,6 +476,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -534,7 +561,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '7a5276658d2f26f1a6f0e2b58d8d06e2',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

@@ -19,7 +19,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="CaseZheng的博客网站">
@@ -272,32 +272,15 @@
 
       
           <p>装饰模式的学习与实践</p>
-<h1 id="装饰模式"><a href="#装饰模式" class="headerlink" title="装饰模式"></a>装饰模式</h1><p>装饰模式定义：动态的给一个对象添加一些额外的职责，就增加功能来说，装饰模式相比生成子类更加灵活。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3Epot8pqtDAr6evb800ct_WjIYn9BC_3mDJQko_CmKhbekkDAyvABKabImbZo85hYaIsfoFb1VVX6o84m7cYIci6vfWMwD7S8GBaoxT8ioqpDAGAhWJkR2C02Rb9QkBfAuGsfU2j3t0000"></p>
-<ol>
-<li>Component 抽象构建 一个接口或者抽象类，定义最核心的对象，最原始的对象</li>
-<li>ConcreteComponent 具体构建 最核心、最原始、最基本接口或抽象类的实现，需要修饰的对象</li>
-<li>Decorator 修饰角色 必然有一个private变量指向Componet抽象构建</li>
-<li>ConcreteDecorator 具体装饰角色</li>
-</ol>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
-<li>装饰类和被装饰类可以独立发展，而不会相互耦合。</li>
-<li>装饰模式是继承关系的替代方案。</li>
-<li>装饰模式可以动态扩展一个实现类的功能。</li>
-</ol>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>多层的装饰是比较复杂的，应尽量减少装饰类的数量，降低系统复杂度。</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
-<li>需要扩展一个类的功能，或给一个类增加附加功能</li>
-<li>需要动态地给一个对象增加功能，该功能可以再动态的撤销</li>
-<li>需要为一批兄弟类进行改装或加装功能</li>
-</ol>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>装饰模式是对继承的有力补充。</p>
-<h2 id="简单实现"><a href="#简单实现" class="headerlink" title="简单实现"></a>简单实现</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//装饰模式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Component</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~Component()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Operation</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">    &#125;;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Component()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteComponent</span> :</span> <span class="keyword">public</span> Component</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteComponent()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteComponent()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Operation</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteComponent  "</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Decorator</span> :</span> <span class="keyword">public</span> Component</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Decorator(Component *com)</span><br><span class="line">    &#123;</span><br><span class="line">        m_pCom = com;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">virtual</span> ~Decorator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_pCom;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Operation</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Component *m_pCom;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteDecorator</span> :</span> <span class="keyword">public</span> Decorator</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteDecorator(Component *com) : Decorator(com)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteDecorator()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Operation</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pCom-&gt;Operation();</span><br><span class="line">        AddedBehavior();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">AddedBehavior</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteDecorator "</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Component *com = <span class="keyword">new</span> ConcreteComponent();</span><br><span class="line">    Decorator *dec = <span class="keyword">new</span> ConcreteDecorator(com);</span><br><span class="line">    dec-&gt;Operation();</span><br><span class="line">    <span class="keyword">delete</span> dec;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="装饰模式"><a href="#装饰模式" class="headerlink" title="装饰模式"></a>装饰模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/09/03/design-pattern-14-decorator/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -385,17 +368,15 @@
 
       
           <p>责任链模式学习与实践</p>
-<h1 id="责任链模式"><a href="#责任链模式" class="headerlink" title="责任链模式"></a>责任链模式</h1><p>责任链模式：使多个对象都有机会处理请求，从而避免请求的发送者和接受者之间的耦合关系。将这些对象连成一条链，并沿着这条链传递该请求，直到有对象处理它为之。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3EoKpDAr6evghbWefu9EQbvAGM0OKKW40RoWrABInDBIxHqBGgoyzCGQXspizBBaejIKNe0af13TKjoapFAD6rWnd9XQvOjxH0jmOX3HT6qkAGcfS2T2q0"><br>责任链模式的核心在“链”上，“链”是由多个处理者Concreteandler组成。</p>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><p>将请求和处理分开，请求者可以不用知道谁处理的，处理者不用知道请求的全貌，两者解耦，提高系统灵活性。</p>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>性能，每个请求都从链头遍历到链尾，当链表特别长时，性能是一个非常大的问题。</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>链表中节点数量需要控制，避免出现超长链的情况。</p>
-<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h2 id="简单实现"><a href="#简单实现" class="headerlink" title="简单实现"></a>简单实现</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//责任链模式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Handle</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~Handle()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_pSucc;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">HandleRequest</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetSuccessor</span><span class="params">(Handle *succ)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pSucc = succ;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function">Handle *<span class="title">GetSuccessor</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m_pSucc;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Handle()</span><br><span class="line">    &#123;</span><br><span class="line">        m_pSucc = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Handle(Handle *succ)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Handle *m_pSucc;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteHandleA</span> :</span> <span class="keyword">public</span> Handle</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteHandleA()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteHandleA()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ConcreteHandleA(Handle *succ) : Handle(succ)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">HandleRequest</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(GetSuccessor() != <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteHandleA next"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">            GetSuccessor()-&gt;HandleRequest();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteHandleA process"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteHandleB</span> :</span> <span class="keyword">public</span> Handle</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteHandleB()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteHandleB()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ConcreteHandleB(Handle *succ) : Handle(succ)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">HandleRequest</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(GetSuccessor() != <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteHandleB next"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">            GetSuccessor()-&gt;HandleRequest();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span>&lt;&lt;<span class="string">"ConcreteHandleB process"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Handle *h1 = <span class="keyword">new</span> ConcreteHandleA();</span><br><span class="line">    Handle *h2 = <span class="keyword">new</span> ConcreteHandleB();</span><br><span class="line">    h1-&gt;SetSuccessor(h2);</span><br><span class="line">    h1-&gt;HandleRequest();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="责任链模式"><a href="#责任链模式" class="headerlink" title="责任链模式"></a>责任链模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/09/02/design-pattern-13-chain-of-responsibility/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -483,28 +464,15 @@
 
       
           <p>命令模式的学习与实践</p>
-<h1 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h1><p>命令模式是一个高内聚的模式，将一个请求封装成一个对象，从而让你使用不同的请求把客户端参数化，对请求排队或者记录请求日志，可以提供命令的撤销和恢复功能。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3EoKpDAr6evghbWefuvfNbPwSMWONoyajI5OeoqpDAh1HUR6X-FcN5YuRM5yidlUZS15Fkd9-RcvYN0bIk00JQhXMfoQKbgHgQLcNvcIam8qho2wmKdaxS-sJt4bJTGQd9gPbbgJ3TZiabcVbvOAqQccZsF-jR-hH_EXRxyvABKajI4Uu0-WHTKBUqGBV63kPMBfWNTS56w-R39Q2X0HMtWpaFGnpDV4pxaFGwfEQb0CCR0000"></p>
-<ol>
-<li>Receive接受者角色，执行命令的角色</li>
-<li>Command命令角色，需要执行的所有命令都在这里申明</li>
-<li>Invoker调用者角色，接受到命令，并执行命令</li>
-</ol>
-<p>命令模式简单，封装性非常好，将请求方和执行方分开，扩展性有了保障，通用代码简单。</p>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
-<li>类间解偶，调用者和接收者角色之间没有任何依赖关系，调用者实现功能只需调用Command抽象类的execute方法，不需要了解是那个接收者。</li>
-<li>可扩展性，Command的子类容易扩展，而调用者Invoker和高层次的模块Client不产生严重的代码耦合。</li>
-<li>命令模式结合其他模式会更优秀，命令模式可以结合责任链模式，实现命令族解析任务；结合模板方法模式，则可以减少Command子类的膨胀问题。</li>
-</ol>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>Command的子类，如果由N个命令，Command的子类会有N个，该类会膨胀的非常大。</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>在出现命令的地方都可以使用命令模式。</p>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h2 id="简单实现"><a href="#简单实现" class="headerlink" title="简单实现"></a>简单实现</h2><p>在实际应用中可以有多个Reciever，将Reciever封装在Command中，不对Client暴露，并在Command中维护队列，将多个事件按队列依次执行。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//命令模式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Reciever</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Reciever() &#123;&#125;;</span><br><span class="line">    <span class="keyword">virtual</span> ~Reciever() &#123;&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecieverA</span> :</span> <span class="keyword">public</span> Reciever</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    RecieverA() &#123;&#125;;</span><br><span class="line">    <span class="keyword">virtual</span> ~RecieverA() &#123;&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="string">"  A"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecieverB</span> :</span> <span class="keyword">public</span> Reciever</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    RecieverB() &#123;&#125;;</span><br><span class="line">    <span class="keyword">virtual</span> ~RecieverB() &#123;&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="string">"  B"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Command</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~Command() &#123;&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Excute</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Command()&#123;&#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteCommand</span> :</span> <span class="keyword">public</span> Command</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteCommand(Reciever *rec)</span><br><span class="line">    &#123;</span><br><span class="line">        m_pRev = rec;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteCommand()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_pRev;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Excute</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pRev-&gt;Action();</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Reciever *m_pRev;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Invoker</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Invoker(Command* cmd)</span><br><span class="line">    &#123;</span><br><span class="line">        m_pCmd = cmd;</span><br><span class="line">    &#125;</span><br><span class="line">    ~Invoker()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_pCmd;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Invoke</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pCmd-&gt;Excute();</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Command *m_pCmd;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Reciever *reva = <span class="keyword">new</span> RecieverA();</span><br><span class="line">    Command *cmda = <span class="keyword">new</span> ConcreteCommand(reva);</span><br><span class="line">    Invoker *inva = <span class="keyword">new</span> Invoker(cmda);</span><br><span class="line">    inva-&gt;Invoke();</span><br><span class="line">    Reciever *revb = <span class="keyword">new</span> RecieverB();</span><br><span class="line">    Command *cmdb = <span class="keyword">new</span> ConcreteCommand(revb);</span><br><span class="line">    Invoker *invb = <span class="keyword">new</span> Invoker(cmdb);</span><br><span class="line">    invb-&gt;Invoke();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/09/02/design-pattern-12-command/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -592,17 +560,15 @@
 
       
           <p>中介者模式的学习与实践</p>
-<h1 id="中介者模式"><a href="#中介者模式" class="headerlink" title="中介者模式"></a>中介者模式</h1><p>中介者模式：用一个中介对象封装一系列的对象交互，中介者使各对象不需要显示地相互作用，从而使其耦合松散可以独立地改变它们之间的交互。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/ZPBBJi9058RtynJp0YM1fGj2ujg7Q614aWgcb9MQD09AbPitI1hHD8P8I4IynGAjF8mpqs7LLt1qjCWjSJF9EUUVy_tdpCIocgngkMq5n1KvcuKRA96IjOmATy4-I6Sq1DLKSajRW_JOPOyMjk_nw8JfHNPtnemdqZFnmF16DzZMFRD0gsrIk_MTidVHmSCggHU4RD9ycUWc7biV-W7u0Qrdqd4LQMWHgA1DpYF5D-oUp_5uQrAfiNwUjyPszzV4jLVjypnshvXLnlQGo_1xYxqs_ifcs8g2ad8EpKE54eekf7J8Jzfga-O3z-4xPZW4sL6Nr4w504P2K71eOq2VBtsdHCR5YJKIoS0xDIeixv9UcPRglcFCRo1m4_wsiweQ4TM5lKcv7Mal6ZmSc0udIJFf1PhqTI-8mHBY2iMKBKMNZF5FNGJ4K3h1lzud"></p>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><p>减少类间的依赖，将原有的一对多的依赖变成一对一的依赖。降低类间的耦合。</p>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>中介者会膨胀的很大，而且逻辑复杂，原先对象直接的依赖关系转换为中介者和同事类的依赖关系，同事类越多，中介者的逻辑就越复杂。</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>类图中出现了蜘蛛网状结构，使用中介者模式将蜘蛛网梳理为星形结构，使混乱的关系变得清晰简单。</p>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h2 id="简单实现"><a href="#简单实现" class="headerlink" title="简单实现"></a>简单实现</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//中介者模式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mediator</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Colleage</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ~Colleage() &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">SetState</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span> &amp;sdt)</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="built_in">string</span> <span class="title">GetState</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Colleage() &#123;&#125;</span><br><span class="line">    Colleage(Mediator *mdt)</span><br><span class="line">    &#123;</span><br><span class="line">        m_pMdt = mdt;</span><br><span class="line">    &#125;</span><br><span class="line">    Mediator *m_pMdt;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mediator</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~Mediator() &#123;&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">ActionA</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">ActionB</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Mediator() &#123;&#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteMediator</span> :</span> <span class="keyword">public</span> Mediator</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteMediator() &#123;&#125;</span><br><span class="line">    ConcreteMediator(Colleage *clgA, Colleage *clgB)</span><br><span class="line">    &#123;</span><br><span class="line">        m_pClgA = clgA;</span><br><span class="line">        m_pClgB = clgB;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteMediator() &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetConcreteColleageA</span><span class="params">(Colleage *clgA)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pClgA = clgA;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetConcreteColleageB</span><span class="params">(Colleage *clgB)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pClgB = clgB;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function">Colleage *<span class="title">GetConcreteColleageA</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m_pClgA;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function">Colleage *<span class="title">GetConcreteColleageB</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m_pClgB;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">IntroColleage</span><span class="params">(Colleage *clgA, Colleage *clgB)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pClgA = clgA;</span><br><span class="line">        m_pClgB = clgB;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">ActionA</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="string">" A "</span>&lt;&lt;m_pClgA-&gt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">ActionB</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;__FUNCTION__&lt;&lt;<span class="string">" B "</span>&lt;&lt;m_pClgB-&gt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Colleage * m_pClgA;</span><br><span class="line">    Colleage * m_pClgB;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteColleageA</span> :</span> <span class="keyword">public</span> Colleage</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteColleageA() &#123;&#125;</span><br><span class="line">    ConcreteColleageA(Mediator *mdt) : Colleage(mdt)</span><br><span class="line">    &#123;</span><br><span class="line">        ;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteColleageA() &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pMdt-&gt;ActionB();</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"state of ConcreteColleageA:"</span>&lt;&lt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetState</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span>&amp; sdt)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_sSdt = sdt;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">GetState</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m_sSdt;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">string</span> m_sSdt;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConcreteColleageB</span> :</span> <span class="keyword">public</span> Colleage</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ConcreteColleageB() &#123;&#125;</span><br><span class="line">    ConcreteColleageB(Mediator *mdt) : Colleage(mdt)</span><br><span class="line">    &#123;</span><br><span class="line">        ;</span><br><span class="line">    &#125;</span><br><span class="line">    ~ConcreteColleageB() &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Action</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_pMdt-&gt;ActionA();</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"state of ConcreteColleageB:"</span>&lt;&lt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetState</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span>&amp; sdt)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_sSdt = sdt;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">GetState</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m_sSdt;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">string</span> m_sSdt;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ConcreteMediator *m = <span class="keyword">new</span> ConcreteMediator();</span><br><span class="line"></span><br><span class="line">    ConcreteColleageA *ca = <span class="keyword">new</span> ConcreteColleageA(m);</span><br><span class="line">    ConcreteColleageB *cb = <span class="keyword">new</span> ConcreteColleageB(m);</span><br><span class="line"></span><br><span class="line">    m-&gt;IntroColleage(ca, cb);</span><br><span class="line">    m-&gt;ActionA();</span><br><span class="line"></span><br><span class="line">    ca-&gt;SetState(<span class="string">"a"</span>);</span><br><span class="line">    cb-&gt;SetState(<span class="string">"b"</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;ca-&gt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;cb-&gt;GetState()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    ca-&gt;Action();</span><br><span class="line">    cb-&gt;Action();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="中介者模式"><a href="#中介者模式" class="headerlink" title="中介者模式"></a>中介者模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/31/design-pattern-11-mediator/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -690,32 +656,15 @@
 
       
           <p>原型模式的学习与实践</p>
-<h1 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h1><p>原型模式：用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。即：新对象的创建可以通过已有对象进行创建。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoY_9BwaiI5Mevb800ctddFoyL0rDAxY45bSj5rInStvUSb5gIIfEJHWAG9gXUdCoK_DAO1fo4pFphChoCrE0yfYcwfOMwDRO8Tp61TMicvEQLgABBE6GcfS2z0m0"></p>
-<p>Prototype模式提供通过已存在对象进行新对象创建的接口。C++中通过拷贝构造函数实现。</p>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
-<li>性能优良，原型模式是在内存中二进制流的拷贝，比直接new一个对象性能好很多，特别是在循环体内产生大量的对象时，原型模式可以更好的体现其优点。</li>
-<li>逃避构造函数的约束，直接在内存中拷贝，构造函数不会执行，优点是减少了约束，缺点也是减少了约束。</li>
-</ol>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
-<li>资源优化场景，类初始化需要消耗很多资源，包括数据、硬件资源等。</li>
-<li>性能和安全要求的场景，通过new产生一个对象需要非常繁琐的数据准备或访问权限，可以使用原型模式。</li>
-<li>一个对象多个修改者的场景，一个对象需要提供给多个对象访问，而且各个调用者可能都需要修改其值时，可以考虑使用原型模式拷贝多个对象供调用者使用。</li>
-</ol>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><ol>
-<li>构造函数不会执行</li>
-<li>浅拷贝和深拷贝</li>
-</ol>
-<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><ol>
-<li><strong>Builder模式重在复杂对象的一步步创建（并不直接返回对象）</strong></li>
-<li><strong>AbstractFaxtory模式重在产生多个相互依赖类的对象</strong></li>
-<li><strong>Prototype模式重在从自身复制自身创建新类</strong></li>
-</ol>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/31/design-pattern-10-prototype/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -803,32 +752,15 @@
 
       
           <p>代理模式的学习与实践</p>
-<h1 id="模板方法模式"><a href="#模板方法模式" class="headerlink" title="模板方法模式"></a>模板方法模式</h1><p>代理模式（委托模式）：为其他对象提供一个代理以控制对这个对象的访问。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p>抽象主题角色：可以是抽象类，也可以是接口，普通的业务类型定义，无特殊要求<br>具体主题角色：被代理角色、被委托角色。业务逻辑的具体执行者<br>代理主题角色：委托类、代理类。负责对真实角色的应用，把所有抽象主题类定义的方法限制委托给真正主题角色实现，并且在真实主题角色处理完毕前后做预处理和善后处理工作</p>
-<p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWkJSfAJIvHgEPI00BjbFpY_DpKaioyT0rDgxByp1IkMgwy_99KXPpKj18hXMTTUrziNFXan-wNYsQyM3xfHUScBgWvGQc9EQIPzRHr-vEzax6P5L2KNr59q9IYpFGCe35FTYz-Fg4DrHXan-YM5kZMsC7yoGKn6xiWo5swTiXUuN98pKi11XO0"></p>
-<p>一个代理类可以代理多个被委托对象或被代理者，因此一个代理类具体代理哪个真实主题角色由场景类决定。最简单的情况就是一个主题类和一个代理类。</p>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
-<li>职责清晰</li>
-<li>高扩展性</li>
-<li>智能化</li>
-</ol>
-<p>实现逻辑和实现的彻底解耦</p>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
-<li>创建开销大的对象的时候，将创建过程交给代理完成。</li>
-<li>智能指针</li>
-</ol>
-<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><ol>
-<li>普通代理，客户端只能访问代理角色，而不能访问真实角色。普通代理模式的约束问题，应通过团队内的编程规范约束，因为每一个主题类都是可被重用和可维护的，使用技术约束的方法对相同维护是一种非常不利的因素。</li>
-<li>强制代理，通过真实角色指定的代理类访问，由真实角色管理代理角色，即创建真实角色，返回代理角色。代理的管理由真实角色自己完成。</li>
-<li>代理可以增强目标对象方法（拦截、过滤等）</li>
-<li>虚拟代理，在需要的时候再初始化主题对象，避免被代理对象较多而引起的初始化缓慢问题。缺点是需要在每个方法中判断主题对象是否被创建。</li>
-<li>动态代理，在实现阶段不关心谁代理谁，在运行阶段才指定代理哪一个对象。面对横切面编程（AOP）</li>
-</ol>
-<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="模板方法模式"><a href="#模板方法模式" class="headerlink" title="模板方法模式"></a>模板方法模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/30/design-pattern-9-proxy/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -916,31 +848,15 @@
 
       
           <p>建造者模式的学习与实践</p>
-<h1 id="建造者模式"><a href="#建造者模式" class="headerlink" title="建造者模式"></a>建造者模式</h1><p>建造者模式：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。</p>
-<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd0gpSn9IIrIgEPI009jC3S0g493qweiFpD5eJengRYaA36vf9Qh5gh5EJylkIYr99M0LhXwbyoYrEIIVBX2e7wWaQN960e3Yl9JWC90TRLSNEYsw9OMwDROmToB8QrNb9cUKQ9d1pE42swhBbX6Dn-krI4rBmKO0000"></p>
-<ol>
-<li>Product 产品 实现模版方法和基本方法</li>
-<li>Builder 抽象建造者 规范Product的组建，一般由子类实现。</li>
-<li>ConcreteBuilder 具体建造者 实现抽象类定义的所有方法，并且返回一个组建好的对象。</li>
-<li>Director 导演类 负责安排已有模块的顺序，然后告诉Builder开始建造。</li>
-</ol>
-<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
-<li>封装性 客户端不必知道产品内部组成的细节</li>
-<li>建造者独立，容易扩展</li>
-<li>便于控制细节风险</li>
-</ol>
-<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
-<li>相同的方法，不同的执行顺序，产生不同的事件结果时，采用建造者模式</li>
-<li>多个部件或零件都可以装配到一个对象中，但产生的运行结果又不相同时，则可以使用该模式</li>
-<li>产品类非常复杂，或者产品类中的调用顺序不同产生了不同的效能</li>
-</ol>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>建造者模式关注的是零件类型和装配工艺（顺序），这是建造者模式和工厂方法模式最大的区别，虽然同为建造类模式，但注重点不同。工厂模式重点是创建，创建对象时其主要职责，组装顺序则不是其所关心的。AbstractFaxtory模式强调的是为创建多个相互依赖的对象提供一个同一的接口。</p>
-<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><p>使用建造者模式时可以考虑模版方法模式，通过组合多种模式达成目的。</p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="建造者模式"><a href="#建造者模式" class="headerlink" title="建造者模式"></a>建造者模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/30/design-pattern-8-builder/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1028,30 +944,15 @@
 
       
           <p>模板方法模式的学习与实践</p>
-<h1 id="模板方法模式"><a href="#模板方法模式" class="headerlink" title="模板方法模式"></a>模板方法模式</h1><p>模板方法模式：定义一个操作中的算法的框架，而将一些步骤延迟到子类中。使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。模板方法模式很简单，只使用了继承机制。<br>抽象模板的方法分为两类：</p>
-<ol>
-<li>基本方法：由子类实现，并且在模板中被调用。</li>
-<li>模板方法：可能有一个或几个，一般是一个具体方法，也就是一个框架，实现对基本方法的调度，完成固定的逻辑。一般模板方法不允许被覆写。</li>
-</ol>
-<p>具体模板：实现父类所定义的一个或多个抽象方法，即父类定义的基本方法在子类中实现。</p>
-<h2 id="模板方法的类图"><a href="#模板方法的类图" class="headerlink" title="模板方法的类图"></a>模板方法的类图</h2><p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd1CAYufIamk2KdDBSX9B4bLgEPI009bi38DJQko_CmKXUf4gAfQY6HAVd5-Rcf9PbuwBXN59Va5EEIqYqhpe59SjLnv-K0xSrBJIgmKddNjVR5nuRCL2v_DtSy5THxCMOROt8N3CHWkW5bJb9cU0RJdQUls9tidOxV7Y1hsGBo3QWt20jtI0jqQEuo0vq9u5PSAXzIy563C0G00"></p>
-<h2 id="模板方法模式优点"><a href="#模板方法模式优点" class="headerlink" title="模板方法模式优点"></a>模板方法模式优点</h2><ol>
-<li>封装不变部分，扩展可变部分。</li>
-<li>提取公共部分代码，便于维护。</li>
-<li>行为由父类控制，子类实现。</li>
-</ol>
-<h2 id="模板方法模式缺点"><a href="#模板方法模式缺点" class="headerlink" title="模板方法模式缺点"></a>模板方法模式缺点</h2><p>模板方法模式和一般的设计习惯不一样，一般设计抽象类负责最抽象、最一般的事物属性和方法，实现类完成具体的事物属性和方法，但在模板方法模式中，抽象类定义了一部分抽象方法，由子类实现，子类的执行结果影响父类的结果，即子类对父类产生了影响。</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol>
-<li>多个子类有共有的方法，并且逻辑基本相同。</li>
-<li>重要、复杂的算法，可以将核心算法设计为模板方法，周边细节功能由各个子类实现。</li>
-<li>重构时，模板方法是常用的模式，将相同的代码抽象到父类中，然后通过钩子函数约束其行为。</li>
-</ol>
-<h2 id="模板方法的扩展"><a href="#模板方法的扩展" class="headerlink" title="模板方法的扩展"></a>模板方法的扩展</h2><p>父类定义抽象的方法确定系统某个功能的默认行为，子类覆写该方法，改变父类的行为。即由子类的方法返回值确定公共部分的执行结果。</p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-</ol>
-
+<h1 id="模板方法模式"><a href="#模板方法模式" class="headerlink" title="模板方法模式"></a>模板方法模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/29/design-pattern-7-template/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1139,54 +1040,15 @@
 
       
           <p>抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较</p>
-<h1 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h1><p>抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。</p>
-<h2 id="抽象工厂模式优点"><a href="#抽象工厂模式优点" class="headerlink" title="抽象工厂模式优点"></a>抽象工厂模式优点</h2><ol>
-<li>封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类</li>
-<li>对象间约束关系非公开状态</li>
-</ol>
-<h2 id="抽象工厂模式缺点"><a href="#抽象工厂模式缺点" class="headerlink" title="抽象工厂模式缺点"></a>抽象工厂模式缺点</h2><p>对象扩展困难</p>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式</p>
-<h2 id="抽象工厂模式注意事项"><a href="#抽象工厂模式注意事项" class="headerlink" title="抽象工厂模式注意事项"></a>抽象工厂模式注意事项</h2><p>抽象工厂模式扩展困难时对象横向扩展困难，而纵向扩展是非常容易扩展的。</p>
-<h2 id="抽象工厂模式和工厂模式"><a href="#抽象工厂模式和工厂模式" class="headerlink" title="抽象工厂模式和工厂模式"></a>抽象工厂模式和工厂模式</h2><p>AbstractFactory模式和Factory模式的区别在于AbstractFactory模式是为创建一组（有多类）相关或依赖的对象提供创建接口，而Factory模式是为一类对象提供创建接口或延迟对象的创建到子类中实现。AbstractFactory模式通常使用Factory模式实现。</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:right">工厂方法模式</th>
-<th style="text-align:center">抽象工厂模式</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">针对的是一个产品等级结构</td>
-<td style="text-align:center">针对的是面向多个产品等级结构</td>
-</tr>
-<tr>
-<td style="text-align:right">一个抽象产品类</td>
-<td style="text-align:center">多个抽象产品类</td>
-</tr>
-<tr>
-<td style="text-align:right">可以派生出多个具体产品类</td>
-<td style="text-align:center">每个抽象产品类可以派生出多个具体产品类</td>
-</tr>
-<tr>
-<td style="text-align:right">一个抽象工厂类，可以派生出多个具体工厂类</td>
-<td style="text-align:center">一个抽象工厂类，可以派生出多个具体工厂类</td>
-</tr>
-<tr>
-<td style="text-align:right">每个具体工厂类只能创建一个具体产品类的实例</td>
-<td style="text-align:center">每个具体工厂类可以创建多个具体产品类的实例</td>
-</tr>
-</tbody>
-</table>
-</div>
-<h2 id="抽象工厂模式实现"><a href="#抽象工厂模式实现" class="headerlink" title="抽象工厂模式实现"></a>抽象工厂模式实现</h2><p>抽象工厂模式类图<br><img src="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000"></p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li>设计模式之禅</li>
-<li>GoF+23种设计模式解析</li>
-<li><a href="http://blog.csdn.net/wyxhd2008/article/details/5597975" target="_blank" rel="noopener">http://blog.csdn.net/wyxhd2008/article/details/5597975</a></li>
-</ol>
-
+<h1 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/28/design-pattern-6-abstact-factory/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1274,12 +1136,14 @@
 
       
           <h1 id="安装依赖环境"><a href="#安装依赖环境" class="headerlink" title="安装依赖环境"></a>安装依赖环境</h1><p>最好使用yum安装，如果没有可以下载源码编译安装<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install -y ruby ruby-devel lua lua-devel luajit luajit-devel ctags git python python-devel python3 python3-devel tcl-devel perl perl-devel perl-ExtUtils-ParseXS perl-ExtUtils-XSpp perl-ExtUtils-CBuilder perl-ExtUtils-Embed gcc</span><br></pre></td></tr></table></figure></p>
-<h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/vim/vim.git</span><br><span class="line">cd vim</span><br><span class="line">./configure --with-features=huge \</span><br><span class="line">    --enable-multibyte \</span><br><span class="line">    --enable-rubyinterp=yes \</span><br><span class="line">    --with-ruby-command=/usr/bin/ruby \</span><br><span class="line">    --enable-pythoninterp=yes \</span><br><span class="line">    --with-python-config-dir=/usr \</span><br><span class="line">    --enable-python3interp=yes \</span><br><span class="line">    --with-python3-config-dir=/usr \</span><br><span class="line">    --enable-perlinterp=yes \</span><br><span class="line">    --enable-fontset \</span><br><span class="line">    --enable-luainterp=yes \</span><br><span class="line">    --enable-gui=auto \</span><br><span class="line">    --enable-gnome-check \</span><br><span class="line">    --with-x \</span><br><span class="line">    --enable-cscope \</span><br><span class="line">    --prefix=/usr/local/vim80</span><br></pre></td></tr></table></figure>
-<p>支持python、lua</p>
-<p>完成后<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make</span><br><span class="line">sudo make install</span><br></pre></td></tr></table></figure></p>
-<h1 id="如果有旧版本的将其备份，最好别删"><a href="#如果有旧版本的将其备份，最好别删" class="headerlink" title="如果有旧版本的将其备份，最好别删"></a>如果有旧版本的将其备份，最好别删</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo mv /usr/bin/vim /usr/bin/vim7.4</span><br><span class="line">sudo ln -s /usr/local/vim80/bin/vim /usr/bin/vim</span><br><span class="line">vim --version</span><br></pre></td></tr></table></figure>
-<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><h2 id="requires-Vim-compiled-with-Python-2-6-or-3-3-support"><a href="#requires-Vim-compiled-with-Python-2-6-or-3-3-support" class="headerlink" title="requires Vim compiled with Python (2.6+ or 3.3+) support"></a>requires Vim compiled with Python (2.6+ or 3.3+) support</h2><p>当同时存在python2和python3时会出现这种问题,去除编译命令中的python2或python3即可, 例如去除python2后的编译命令如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">./configure --with-features=huge \</span><br><span class="line">    --enable-multibyte \</span><br><span class="line">    --enable-rubyinterp=yes \</span><br><span class="line">    --with-ruby-command=/usr/bin/ruby \</span><br><span class="line">    --enable-python3interp=yes \</span><br><span class="line">    --with-python3-config-dir=/usr \</span><br><span class="line">    --enable-perlinterp=yes \</span><br><span class="line">    --enable-fontset \</span><br><span class="line">    --enable-luainterp=yes \</span><br><span class="line">    --enable-gui=auto \</span><br><span class="line">    --enable-gnome-check \</span><br><span class="line">    --with-x \</span><br><span class="line">    --enable-cscope \</span><br><span class="line">    --prefix=/usr/local/vim80</span><br></pre></td></tr></table></figure></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/26/vim-install/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1433,6 +1297,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 

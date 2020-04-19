@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="迭代器模式的学习与实践 迭代器模式迭代器模式：提供一种方法访问一个容器对象中各个元素，而又不需暴露该对象的内部细节。 类图  Iterator 抽象迭代器 抽象迭代器负责定义访问和遍历元素的接口 ConcreteIterator 具体迭代器 实现迭代器接口，完成容器元素的遍历 Aggregate 抽象容器 负责提供具体迭代器角色的接口 ConcreteAggregate 具体容器 具体容器实现容器">
+  <meta name="description" content="迭代器模式的学习与实践 迭代器模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-17-迭代器模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/09/05/design-pattern-17-iterator/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="迭代器模式的学习与实践 迭代器模式迭代器模式：提供一种方法访问一个容器对象中各个元素，而又不需暴露该对象的内部细节。 类图  Iterator 抽象迭代器 抽象迭代器负责定义访问和遍历元素的接口 ConcreteIterator 具体迭代器 实现迭代器接口，完成容器元素的遍历 Aggregate 抽象容器 负责提供具体迭代器角色的接口 ConcreteAggregate 具体容器 具体容器实现容器">
+<meta property="og:description" content="迭代器模式的学习与实践 迭代器模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/RP3T2i8m38NlynIzLAHxX3Af2Bln7SeCTR2racOmKD_T8EiSjBdA8UVBNvlO4S_J2FteKb9dxmczOrGlK18dIoYgOoJ7aGv7-C1gjJ7qX8nxP2jc8BUv3fHOw9-uuRBbNRh4W5dPcGW32ptLHkswIgrSGCzF_JR_8w00LqVM5GCD_i7QbETLvZMDANQ35iDT7le5">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.072Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-17-迭代器模式">
-<meta name="twitter:description" content="迭代器模式的学习与实践 迭代器模式迭代器模式：提供一种方法访问一个容器对象中各个元素，而又不需暴露该对象的内部细节。 类图  Iterator 抽象迭代器 抽象迭代器负责定义访问和遍历元素的接口 ConcreteIterator 具体迭代器 实现迭代器接口，完成容器元素的遍历 Aggregate 抽象容器 负责提供具体迭代器角色的接口 ConcreteAggregate 具体容器 具体容器实现容器">
+<meta name="twitter:description" content="迭代器模式的学习与实践 迭代器模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/RP3T2i8m38NlynIzLAHxX3Af2Bln7SeCTR2racOmKD_T8EiSjBdA8UVBNvlO4S_J2FteKb9dxmczOrGlK18dIoYgOoJ7aGv7-C1gjJ7qX8nxP2jc8BUv3fHOw9-uuRBbNRh4W5dPcGW32ptLHkswIgrSGCzF_JR_8w00LqVM5GCD_i7QbETLvZMDANQ35iDT7le5">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/09/05/design-pattern-17-iterator/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -456,6 +463,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -521,7 +548,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '76c854076df07a6e47eb5824c7e31af5',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

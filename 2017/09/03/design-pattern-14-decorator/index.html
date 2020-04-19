@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="装饰模式的学习与实践 装饰模式装饰模式定义：动态的给一个对象添加一些额外的职责，就增加功能来说，装饰模式相比生成子类更加灵活。 类图  Component 抽象构建 一个接口或者抽象类，定义最核心的对象，最原始的对象 ConcreteComponent 具体构建 最核心、最原始、最基本接口或抽象类的实现，需要修饰的对象 Decorator 修饰角色 必然有一个private变量指向Componet">
+  <meta name="description" content="装饰模式的学习与实践 装饰模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-14-装饰模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/09/03/design-pattern-14-decorator/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="装饰模式的学习与实践 装饰模式装饰模式定义：动态的给一个对象添加一些额外的职责，就增加功能来说，装饰模式相比生成子类更加灵活。 类图  Component 抽象构建 一个接口或者抽象类，定义最核心的对象，最原始的对象 ConcreteComponent 具体构建 最核心、最原始、最基本接口或抽象类的实现，需要修饰的对象 Decorator 修饰角色 必然有一个private变量指向Componet">
+<meta property="og:description" content="装饰模式的学习与实践 装饰模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3Epot8pqtDAr6evb800ct_WjIYn9BC_3mDJQko_CmKhbekkDAyvABKabImbZo85hYaIsfoFb1VVX6o84m7cYIci6vfWMwD7S8GBaoxT8ioqpDAGAhWJkR2C02Rb9QkBfAuGsfU2j3t0000">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.058Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-14-装饰模式">
-<meta name="twitter:description" content="装饰模式的学习与实践 装饰模式装饰模式定义：动态的给一个对象添加一些额外的职责，就增加功能来说，装饰模式相比生成子类更加灵活。 类图  Component 抽象构建 一个接口或者抽象类，定义最核心的对象，最原始的对象 ConcreteComponent 具体构建 最核心、最原始、最基本接口或抽象类的实现，需要修饰的对象 Decorator 修饰角色 必然有一个private变量指向Componet">
+<meta name="twitter:description" content="装饰模式的学习与实践 装饰模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3Epot8pqtDAr6evb800ct_WjIYn9BC_3mDJQko_CmKhbekkDAyvABKabImbZo85hYaIsfoFb1VVX6o84m7cYIci6vfWMwD7S8GBaoxT8ioqpDAGAhWJkR2C02Rb9QkBfAuGsfU2j3t0000">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/09/03/design-pattern-14-decorator/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -469,6 +476,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -534,7 +561,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'dabc74d32f4332ad8550abae8bcb708b',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

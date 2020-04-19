@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="模板方法模式的学习与实践 模板方法模式模板方法模式：定义一个操作中的算法的框架，而将一些步骤延迟到子类中。使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。模板方法模式很简单，只使用了继承机制。抽象模板的方法分为两类：  基本方法：由子类实现，并且在模板中被调用。 模板方法：可能有一个或几个，一般是一个具体方法，也就是一个框架，实现对基本方法的调度，完成固定的逻辑。一般模板方法不允许">
+  <meta name="description" content="模板方法模式的学习与实践 模板方法模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-7-模板方法模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/08/29/design-pattern-7-template/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="模板方法模式的学习与实践 模板方法模式模板方法模式：定义一个操作中的算法的框架，而将一些步骤延迟到子类中。使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。模板方法模式很简单，只使用了继承机制。抽象模板的方法分为两类：  基本方法：由子类实现，并且在模板中被调用。 模板方法：可能有一个或几个，一般是一个具体方法，也就是一个框架，实现对基本方法的调度，完成固定的逻辑。一般模板方法不允许">
+<meta property="og:description" content="模板方法模式的学习与实践 模板方法模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd1CAYufIamk2KdDBSX9B4bLgEPI009bi38DJQko_CmKXUf4gAfQY6HAVd5-Rcf9PbuwBXN59Va5EEIqYqhpe59SjLnv-K0xSrBJIgmKddNjVR5nuRCL2v_DtSy5THxCMOROt8N3CHWkW5bJb9cU0RJdQUls9tidOxV7Y1hsGBo3QWt20jtI0jqQEuo0vq9u5PSAXzIy563C0G00">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.042Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-7-模板方法模式">
-<meta name="twitter:description" content="模板方法模式的学习与实践 模板方法模式模板方法模式：定义一个操作中的算法的框架，而将一些步骤延迟到子类中。使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。模板方法模式很简单，只使用了继承机制。抽象模板的方法分为两类：  基本方法：由子类实现，并且在模板中被调用。 模板方法：可能有一个或几个，一般是一个具体方法，也就是一个框架，实现对基本方法的调度，完成固定的逻辑。一般模板方法不允许">
+<meta name="twitter:description" content="模板方法模式的学习与实践 模板方法模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd1CAYufIamk2KdDBSX9B4bLgEPI009bi38DJQko_CmKXUf4gAfQY6HAVd5-Rcf9PbuwBXN59Va5EEIqYqhpe59SjLnv-K0xSrBJIgmKddNjVR5nuRCL2v_DtSy5THxCMOROt8N3CHWkW5bJb9cU0RJdQUls9tidOxV7Y1hsGBo3QWt20jtI0jqQEuo0vq9u5PSAXzIy563C0G00">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/08/29/design-pattern-7-template/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -467,6 +474,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -532,7 +559,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'e2d0e0c5020ea156afa563d0f1c949af',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

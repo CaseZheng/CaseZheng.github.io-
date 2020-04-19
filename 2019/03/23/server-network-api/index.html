@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
-<meta name="keywords" content="linux,cpp,网络">
+  <meta name="description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;">
+<meta name="keywords" content="cpp,linux,网络">
 <meta property="og:type" content="article">
 <meta property="og:title" content="服务器开发-网络通信API和注意事项">
 <meta property="og:url" content="http://www.casezheng.date/2019/03/23/server-network-api/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
+<meta property="og:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2019-03-23T13:41:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="服务器开发-网络通信API和注意事项">
-<meta name="twitter:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt; socketsocket函数建立协议簇为aomain 协议类型为type 协议类型的某个特定类型为protocol的套接字文件描述符成功返回标识套接字的文件描述符 失败返回-1,错误原因通过查看errno获得常用协议簇 domain  A">
+<meta name="twitter:description" content="Linux下网络编程常用函数需要包含头文件12#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;">
 
 <link rel="canonical" href="http://www.casezheng.date/2019/03/23/server-network-api/">
 
@@ -241,7 +241,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -401,8 +408,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/linux/" rel="tag"># linux</a>
               <a href="/tags/cpp/" rel="tag"># cpp</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
               <a href="/tags/网络/" rel="tag"># 网络</a>
           </div>
 
@@ -562,6 +569,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -627,7 +654,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '5d5847c678908795db7976ea1b659cf6',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

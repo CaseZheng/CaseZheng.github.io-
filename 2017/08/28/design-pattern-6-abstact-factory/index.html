@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+  <meta name="description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-6-抽象工厂方法模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/08/28/design-pattern-6-abstact-factory/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+<meta property="og:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.039Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-6-抽象工厂方法模式">
-<meta name="twitter:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式抽象工厂模式：为创建一组相关或相互依赖的对象提供接口，而别无需指定它们的具体类。 抽象工厂模式优点 封装性，高层模块调用产生对象的接口即可，不需要了解对象的实现类 对象间约束关系非公开状态  抽象工厂模式缺点对象扩展困难 使用场景一组没有任何关系的对象都有相同约束，则可以使用抽象工厂模式 抽象工厂模式注意事项抽象工厂模式扩展困难时对象">
+<meta name="twitter:description" content="抽象工厂模式介绍与实践，抽象工厂模式与工厂模式比较 抽象工厂模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/XPJ13e8m38RlUuebNXG2YJrw85eIpxx210ucAcGC4uFux18TeEkAtBh-w_wlwzZMHcdJNCuYEwkwbWTTvarcTh8LilyMGxnSlUFm-RNG2RifBQ-PBamnvDPsTqWIOnbVfcFA0LSEs7BmRSykeiE4BXFEC277X2mJpZ0XnuGi4_umxLLcIdqVa6muxdNYL1TgQivojRcLfrm6ibN7skXUstbqwDMH1jcZI7-6TSBZ9eYvQOm2njPqAG5h21X3m1c2luRWho7u6A8F8cggw96CpqlG6NSLWaxWhmG57IfN8SWjMOMD1McQa_UWn4qL9-JwFNOPeOVTgmGF7oFS5jUy_uUz0000">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/08/28/design-pattern-6-abstact-factory/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -491,6 +498,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -556,7 +583,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '8e94355d87f080641d0c6bea55e28417',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

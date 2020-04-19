@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现  实体(entity):表示客观世界中的众多概念 ER图中矩形表示 属性(attribute):每个实体都有属性 ER图中椭圆表示 联系(relation):实体和实体之间通常具有某种联系 ER图中菱形表示 一对一 一对多 多对多    ER模型到关系表的映射(">
+  <meta name="description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现">
 <meta name="keywords" content="数据库">
 <meta property="og:type" content="article">
 <meta property="og:title" content="数据库建模">
 <meta property="og:url" content="http://www.casezheng.date/2019/01/20/database-modeing/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现  实体(entity):表示客观世界中的众多概念 ER图中矩形表示 属性(attribute):每个实体都有属性 ER图中椭圆表示 联系(relation):实体和实体之间通常具有某种联系 ER图中菱形表示 一对一 一对多 多对多    ER模型到关系表的映射(">
+<meta property="og:description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2019-01-20T10:57:04.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="数据库建模">
-<meta name="twitter:description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现  实体(entity):表示客观世界中的众多概念 ER图中矩形表示 属性(attribute):每个实体都有属性 ER图中椭圆表示 联系(relation):实体和实体之间通常具有某种联系 ER图中菱形表示 一对一 一对多 多对多    ER模型到关系表的映射(">
+<meta name="twitter:description" content="ER建模数据库建设最重要的一步:需求分析阶段(ER建模阶段)ER建模阶段:数据库开发人员协同需求方以ER图的方式对业务需求进行可视化展现">
 
 <link rel="canonical" href="http://www.casezheng.date/2019/01/20/database-modeing/">
 
@@ -241,7 +241,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -459,6 +466,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -524,7 +551,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'ac2528296e1da36ece44cca03a1797df',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:  1#include &amp;lt;boo">
-<meta name="keywords" content="cpp,boost,asio">
+  <meta name="description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:">
+<meta name="keywords" content="boost,cpp,asio">
 <meta property="og:type" content="article">
 <meta property="og:title" content="boost 库学习 ref">
 <meta property="og:url" content="http://www.casezheng.date/2017/05/31/003-ref-note/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:  1#include &amp;lt;boo">
+<meta property="og:description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2020-04-12T04:56:35.881Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="boost 库学习 ref">
-<meta name="twitter:description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:  1#include &amp;lt;boo">
+<meta name="twitter:description" content="boost库 ref学习 boost_1_63 STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。 特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。boost.ref应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/05/31/003-ref-note/">
 
@@ -248,7 +248,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -316,8 +323,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/boost/" rel="tag"># boost</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/asio/" rel="tag"># asio</a>
           </div>
 
@@ -327,12 +334,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/05/31/001-asio-note/" rel="prev" title="boost 库学习 asio">
-      <i class="fa fa-chevron-left"></i> boost 库学习 asio
+    <a href="/2017/05/31/002-bind-note/" rel="prev" title="boost 库学习 bind">
+      <i class="fa fa-chevron-left"></i> boost 库学习 bind
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/05/31/boost-noncopyable/" rel="next" title="boost 实用工具 noncopyable学习">
-      boost 实用工具 noncopyable学习 <i class="fa fa-chevron-right"></i>
+    <a href="/2017/05/31/001-asio-note/" rel="next" title="boost 库学习 asio">
+      boost 库学习 asio <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -477,6 +484,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -542,7 +569,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '1cb195cc4d81500b8c77abce64bd174e',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

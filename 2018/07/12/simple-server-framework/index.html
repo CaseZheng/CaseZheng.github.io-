@@ -19,16 +19,16 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
-<meta name="keywords" content="cpp,boost,libevent">
+  <meta name="description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架">
+<meta name="keywords" content="boost,cpp,libevent">
 <meta property="og:type" content="article">
 <meta property="og:title" content="服务器框架设计与编码">
 <meta property="og:url" content="http://www.casezheng.date/2018/07/12/simple-server-framework/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
+<meta property="og:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/ZPDVIiD04CRVznG31QbemUT4Ip5KB8X8zJrijgjTI3PXTn84zG2Un4Fuu6tq6axM_Aj9IVCIldpV_2OpcomiSeDv4ZCHSsjXTMLu8k650LqdXIAFnn2bQGmhhN0gKcqHB1gbd-28xlVI5DBSKj4fzCmWrOzt7BV75sV-076Tw-aUQ_bCpPpdp4a5JSATbdxVh5lwx8rLCmNrJEsJ6nN9GchiJZkXnXOzpswvaPimGtDEl5mWk6WOSIldr2HRblAIb3z0l4RCHgX1cVaRml5QEGHSPsACHv4Ehb53j0Sn-dOKwT0QDKXJYJIZl3BK9RRQCQlZcUNPx7LUVu0U_7n-VBz_iNz7LQM2VQbs_NLojxvVqUptq89cXGSNj5iQALb8lQ5_yHS0">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/XLLTRzem57rkVeMbIGXeG7kc3BLDgShKQOW2UuoSv1Oo4YUp7RIfst_VTUo4VBWgBzZtt8_ZUu-TMo4fbqMQE652XI3USnp06PXyaZ9_v3G5ykOG_7qAiap8sKmSAOV8poMVUyhd1VWP-8AaVdxPtZZ_d2hXnOgPhgunJK9MB9R3qKsrlOkY7O-7OSQ494Boc1t80F_Hw9Bb_ccxNVlUFGa3bvopE2BZCA3yeE8dVLOOLuIIb8Vm0ogWvBPKstlSVH1qHBOcG16tUtjh6fv0bdvwgVpE4CgCpv7qYhrc2aIBsJKReYDCMw-n_p8EzRbKHIyOQXO-Xry5O4F6-jHZF6yPSOvnO3GXPUiUW2OwuN3qvRFnA16Tx4MDTpZg0qiMLUO9i28rP_V3DFBbdnoGFYZFBQwDcvbCwkDYnIp67KSkylWUWceI5cm38lUoo5RbUo6j0LHaLVrki-hHRRIbt_blM2lfjB-IuOf9uAyqX9OO1wGIOq-YTO1BF3KBdNoSr-iFfuRurSJGI6a-rydTrjeYmRh0Oa6KrWebDCEbnbJjKi09yOuGdkvOj6Cv5gv7NzDfMzPDd_RSJGqBjerJR3XDSs4DF6SdM4KMQ0zSn9bDK1vD4k3wzR26Ri0k4FcEe13Hrx54lgACPhCzJGebzvyjXNQm1off2q4HHlYa8QHNBV2H2lc3nr8xN7PDCLxKKagnBH3CcPHJCOfhiXaOecvJXtYmxbwre6jJXtSxsTJHohVZmctv6wUOm7DsG56-zO7w2KF4yiMOJdbyEChfeldwEwthDodooTz5TIMTvbUY4LsXpSZfL25rzvmssIfl7pUSEuMTMs0HVlx-0m00">
@@ -38,7 +38,7 @@
 <meta property="og:updated_time" content="2018-07-12T10:16:50.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="服务器框架设计与编码">
-<meta name="twitter:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架先看下总体的服务器框架设计图服务器启动,根据不同服务实例化出对应的CLibeventFrame实例,例如Http服务器实例化CLibeventHttpFrame,Rpc服务实例化CLibeventRpcFrame,Tcp服务实例化CLibeventTcpFrame,Timer定时器服务实例化CLibeventTimerFrame">
+<meta name="twitter:description" content="一个libevent和boost库写的轻量级服务器框架 总体服务器框架">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/ZPDVIiD04CRVznG31QbemUT4Ip5KB8X8zJrijgjTI3PXTn84zG2Un4Fuu6tq6axM_Aj9IVCIldpV_2OpcomiSeDv4ZCHSsjXTMLu8k650LqdXIAFnn2bQGmhhN0gKcqHB1gbd-28xlVI5DBSKj4fzCmWrOzt7BV75sV-076Tw-aUQ_bCpPpdp4a5JSATbdxVh5lwx8rLCmNrJEsJ6nN9GchiJZkXnXOzpswvaPimGtDEl5mWk6WOSIldr2HRblAIb3z0l4RCHgX1cVaRml5QEGHSPsACHv4Ehb53j0Sn-dOKwT0QDKXJYJIZl3BK9RRQCQlZcUNPx7LUVu0U_7n-VBz_iNz7LQM2VQbs_NLojxvVqUptq89cXGSNj5iQALb8lQ5_yHS0">
 
 <link rel="canonical" href="http://www.casezheng.date/2018/07/12/simple-server-framework/">
@@ -247,7 +247,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -292,8 +299,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/boost/" rel="tag"># boost</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
               <a href="/tags/libevent/" rel="tag"># libevent</a>
           </div>
 
@@ -453,6 +460,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -518,7 +545,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '3f58ece1b4e17170a860581eba32f9aa',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

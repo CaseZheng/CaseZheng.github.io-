@@ -19,7 +19,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="CaseZheng的博客网站">
@@ -274,27 +274,14 @@
           <h1 id="Redis-intset-整数集合-笔记"><a href="#Redis-intset-整数集合-笔记" class="headerlink" title="Redis intset 整数集合 笔记"></a>Redis intset 整数集合 笔记</h1><ul>
 <li>整数集合是集合键的底层实现之一，当一个集合值包含整数值元素，并且这个集合的元素数量不多时，Redis就会使用整数集合做为集合键的底层实现。</li>
 </ul>
-<h2 id="整数集合的实现"><a href="#整数集合的实现" class="headerlink" title="整数集合的实现"></a>整数集合的实现</h2><ul>
-<li>整数集合(intset)是Redis用于保存整数值的集合抽象数据结构，可以保存类型为int16_t、int32_t、int64_t的整数值，并且保证集合中不会出现重复元素。</li>
-<li><p>每个intset.h/intset结构表示一个整数集合：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#define INTSET_ENC_INT16 (sizeof(int16_t))</span><br><span class="line">#define INTSET_ENC_INT32 (sizeof(int32_t))</span><br><span class="line">#define INTSET_ENC_INT64 (sizeof(int64_t))</span><br><span class="line"></span><br><span class="line">typedef struct intset &#123;</span><br><span class="line">    uint32_t encoding;  //编码方式</span><br><span class="line">    uint32_t length;    //集合包含的元素数量 即contents数组的长度</span><br><span class="line">    int8_t contents[];  //保存元素的数组 整数集合的每个元素都是contents数组的一个数组项，各个项在数组中按值的大小从小到大排序，并且数组中不包含任何重复项。</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>contents结构类型声明为int8_t，但实际上contents不保存任何int8_t类型的值，contents数组的真正类型取决于encoding属性的值。encoding的值可以是INTSET_ENC_INT16,INTSET_ENC_INT32,INTSET_ENC_INT64。</p>
-</li>
-</ul>
-<h2 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h2><ul>
-<li>当添加一个新元素到整数集合里面，并且新的类型比集合现有所有元素的类型都长时，整数集合需要升级，然后将新元素添加到整数集合里面。</li>
-<li>升级整数集合三步进行<ol>
-<li>根据新元素类型，扩展整数集合底层数组空间大小，并为新元素分配空间</li>
-<li>将底层数组现有元素转换成与新元素相同的类型，并将类型转化后的元素放在争取的位上，在放置元素的过程中，需要继续维持底层数组的有序性质不变。</li>
-<li>将新元素添加到底层数组里面。 </li>
-</ol>
-</li>
-<li>想整数集合添加新元素的时间复杂度为O(N)</li>
-</ul>
-<h2 id="升级的好处"><a href="#升级的好处" class="headerlink" title="升级的好处"></a>升级的好处</h2><pre><code>1. 提高数组集合操作的灵活性, C语言为静态类型语言，为了避免类型错误，通常不会将两种不同类型的值放在同一个数据结构中。整数集合通过自动升级底层数组来适应新元素，所以我们可以随意将int16_t, int32_t, int64_t类型的整数添加到集合中，而不必担心类型错误。
-2. 尽可能节约内存
-</code></pre><h2 id="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"><a href="#整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。" class="headerlink" title="整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。"></a>整数数组不支持降级，一旦对数组进行了升级，编码会一直保持升级后的状态。</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/06/01/redis-intset-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -382,141 +369,15 @@
 
       
           <p>Redis是key-value数据库</p>
-<h1 id="Redis优势"><a href="#Redis优势" class="headerlink" title="Redis优势"></a>Redis优势</h1><ol>
-<li>高性能,数据存在内存</li>
-<li>支持多种数据结构(字符串,列表,哈希表,集合,有序集合)</li>
-<li>单个操作和多个操作(MULTI和EXEC执行包裹)均支持事物,即原子性</li>
-<li>支持发布订阅</li>
-<li>支持key过期(秒和毫秒),过期key删除有惰性删除和定期删除两种策略</li>
-<li>支持持久化(数据保存到磁盘), RDB(保存快照,有数据丢失风险,但恢复快,文件小,性能消耗低(会fork子进程进行备份,对父进程性能无影响))和AOF(保存操作日志,数据完整,但恢复慢,文件大(有优化策略,可能合并多个操作),性能消耗大)</li>
-<li>支持主从</li>
-</ol>
-<h1 id="服务器中的数据库"><a href="#服务器中的数据库" class="headerlink" title="服务器中的数据库"></a>服务器中的数据库</h1><ul>
-<li><p>Redis服务器将所有数据库保存在服务器状态server.h/redisServer结构的db数组中，db数组中每个项是一个server.h/redisDb结构，每个redisDb结构代表一个数据库。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    //...</span><br><span class="line">    redisDb *db;    // 一个数组，保存着服务器中的所有数据库 数组大小为dbnum</span><br><span class="line">    //...</span><br><span class="line">    int dbnum;      // 服务器的数据库数量 由服务器配置的database选项决定 默认情况下该值为16</span><br><span class="line">    //...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>初始化服务器时，程序更具服务器状态的dbnum属性决定创建多少个数据库。dbnum属性的值有服务器配置的database选项决定。该值默认是16，所以Redis数据库默认情况下会创建16个数据库。</p>
-</li>
-</ul>
-<h1 id="切换数据库"><a href="#切换数据库" class="headerlink" title="切换数据库"></a>切换数据库</h1><ul>
-<li>每个Redis客户端都有自己的目标数据库，每当客户端执行数据库写命令或读命令的时候，目标数据库就会成为这些命令的操作对象。</li>
-<li><p>默认情况下，Redis客户端的目标数据库为0号数据库。使用SELECT命令切换数据库。在客户端状态client结构的db属性中记录了客户端当前的目标数据库。client.db指针指向redisServer.db数组中的其中一个元素，被指向的元素就是客户端的目标数据库。通过修改client.db指针，让它指向服务器中的不同数据库，实现切换目标是数据库的功能，这就是SELECT命令的实现原理。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">typedef struct client &#123;</span><br><span class="line">    //...</span><br><span class="line">    redisDb *db;            // 记录客户端目前的目标数据库</span><br><span class="line">    //...</span><br><span class="line">&#125; client;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Redis没有返回客户端目标数据库的命令。如果使用多数据库，那么最好每次在执行危险操作时，先显示地切换到指定的数据库，然后才执行别的命令。</p>
-</li>
-</ul>
-<h1 id="数据库键空间"><a href="#数据库键空间" class="headerlink" title="数据库键空间"></a>数据库键空间</h1><ul>
-<li>Redis是一个键值对数据库服务器，服务器中的每个数据库都由server.h/redisDb结构表示。redisDb结构的dict字典保存了数据库中的所有键值对, 称为键空间。</li>
-<li>键空间和用户所见的数据库直接对应：<ol>
-<li>键空间的键即数据库的键，每个键都是一个字符串对象。</li>
-<li>键空间的值即数据库的值，每个值可以是字符串对象，列表对象，哈希表对象，集合对象，有序集合对象中的任意一种Redis对象。</li>
-</ol>
-</li>
-</ul>
-<h2 id="添加新键"><a href="#添加新键" class="headerlink" title="添加新键"></a>添加新键</h2><ul>
-<li>添加一个新键值对到数据库，实际就是将一个新键值对添加到键空间字典里面。</li>
-</ul>
-<h2 id="删除键"><a href="#删除键" class="headerlink" title="删除键"></a>删除键</h2><ul>
-<li>删除数据库中的一个键，实际上就是在键空间里面删除键对应的键值对对象。</li>
-</ul>
-<h2 id="更新键"><a href="#更新键" class="headerlink" title="更新键"></a>更新键</h2><ul>
-<li>对一个数据库键进行更新，实际上是对键空间里面键对应的值对象进行更新，根据值对象的类型不同，更新的具体方法也有所不同。</li>
-</ul>
-<h2 id="对键取值"><a href="#对键取值" class="headerlink" title="对键取值"></a>对键取值</h2><ul>
-<li>对一个数据库键取值，实际就是去除键所对应的值对象，根据值对象的类型不同，具体的取值方法也不同。</li>
-</ul>
-<h2 id="其它键空间操作"><a href="#其它键空间操作" class="headerlink" title="其它键空间操作"></a>其它键空间操作</h2><h2 id="读写键空间时的维护操作"><a href="#读写键空间时的维护操作" class="headerlink" title="读写键空间时的维护操作"></a>读写键空间时的维护操作</h2><ul>
-<li>当使用Redis命令对数据库进行读写操作时，服务器不仅会对键空间执行指定的读写操作，还会执行一些额外的维护操作：<ol>
-<li>读取一个键之后(读操作和写操作)，服务器会根据键释放存在来更新服务器的键空间命中次数和不命中次数，这两个值在INFO stats命令的keyspace_hits属性和keyspace_misses属性中可查看。</li>
-<li>读取一个键之后，服务器会更新键的LRU(最后一次使用)时间，用于计算键的闲置时间，使用OBJECT idletime <key>命令可以查看键的闲置时间。</key></li>
-<li>服务器读取一个键，发现这个键过期了，会先删除这个过期键，在执行余下的操作。</li>
-<li>如果客户端使用WATCH命令监视了某个键，服务器会对被监视的键进行修改后标记为脏，让事物注意到这个键已经被修改。</li>
-<li>服务器每修改一次键，都会对脏键计数器的值增1，该计数器会触发服务器的持久化以及复制操作。</li>
-<li>如果服务器开启了数据库通知功能，那么键更新后服务器会按照配置发送相应的数据库通知。</li>
-</ol>
-</li>
-</ul>
-<h1 id="设置键的生存时间或过期时间"><a href="#设置键的生存时间或过期时间" class="headerlink" title="设置键的生存时间或过期时间"></a>设置键的生存时间或过期时间</h1><ul>
-<li>通过EXPIRE命令或者PEXPIRE命令，客户端可以以秒或者毫秒精度为数据库中的某个键设置生存时间(TTL)，在经过指定时间后，服务器会自动删除生存时间为0的键。</li>
-<li>通过EXPIREAT命令或者PEXPIREAT命令，客户端可以以秒或者毫秒精度给数据库中的某个键设置过期时间，过期时间是一个UNIX时间戳，当键的过期时间来临，服务器就会自动删除这个键。</li>
-<li>TTL命令和PTTL命令接受一个带有生存时间或者过期时间的键，返回这个键的剩余生存时间，即该键被服务器自动删除还有多长时间。</li>
-</ul>
-<h2 id="设置过期时间"><a href="#设置过期时间" class="headerlink" title="设置过期时间"></a>设置过期时间</h2><ul>
-<li>Redis有四个不同命令用于设置键的生存时间或过期时间。<ol>
-<li>EXPIPE <key> <ttl> 命令用于键key的生存是假设置为ttl秒</ttl></key></li>
-<li>PEXPIPE <key> <ttl> 命令用于键key的生存是假设置为ttl毫秒</ttl></key></li>
-<li>EXPIPEAT <key> <timestamp> 命令用于将键key的过期时间设置为timestamp所制定的秒数时间戳</timestamp></key></li>
-<li>PEXPIPEAT <key> <timestamp> 命令用于将键key的过期时间设置为timestamp所制定的毫秒数时间戳</timestamp></key></li>
-</ol>
-</li>
-<li>EXPIPE、PEXPIPE、EXPIPEAT最终都会转化为PEXPIPEAT命令。</li>
-</ul>
-<h2 id="保存过期时间"><a href="#保存过期时间" class="headerlink" title="保存过期时间"></a>保存过期时间</h2><ul>
-<li>redisDb结构的expires字典保存了数据库中所有键的过期时间，称为过期字典<ol>
-<li>过期字典的键是一个指针，指向键空间中的某个键对象</li>
-<li>过期字典的值是一个long long类型的整数，保存了键所指向的数据库键的过期时间(一个毫秒精度的UNIX时间戳)。</li>
-</ol>
-</li>
-<li>当客户端执行PEXPIREAT命令(或其它三个命令)为一个数据库键设置过期时间时，服务器会在数据库的过期字典中关联给定的数据库键和过期时间。</li>
-</ul>
-<h2 id="移除过期时间"><a href="#移除过期时间" class="headerlink" title="移除过期时间"></a>移除过期时间</h2><ul>
-<li>PERSIST命令移除一个键的过期时间，PERSIST命令是PEXPIREAT命令的反操作，PERSIST命令在过期字典中查找给定的键，并解除键和值在过期字典中的关联。</li>
-</ul>
-<h2 id="计算并返回剩余生存时间"><a href="#计算并返回剩余生存时间" class="headerlink" title="计算并返回剩余生存时间"></a>计算并返回剩余生存时间</h2><ul>
-<li>TTL命令以秒为单位返回键的剩余生存时间，而PTTL命令则以毫秒为单位返回键的剩余生存时间，这两个命令都是通过计算键的过期时间和当前时间之间的差来实现的。</li>
-</ul>
-<h2 id="过期键的判定"><a href="#过期键的判定" class="headerlink" title="过期键的判定"></a>过期键的判定</h2><ul>
-<li>通过过期字典，1.检查给定键是否存在于过期字典，如果存在，取得键的过期时间，2.检查当前UNIX时间戳是否大于键的过期时间，如果是的话，那么键已经过期，否则键未过期。</li>
-</ul>
-<h1 id="Redis的过期键删除策略"><a href="#Redis的过期键删除策略" class="headerlink" title="Redis的过期键删除策略"></a>Redis的过期键删除策略</h1><ul>
-<li>Redis实际使用惰性删除和定期删除两种过期键删除策略。</li>
-</ul>
-<h2 id="惰性删除策略的实现"><a href="#惰性删除策略的实现" class="headerlink" title="惰性删除策略的实现"></a>惰性删除策略的实现</h2><ul>
-<li>过期键的惰性删除策略由db.c/expireIfNeeded函数实现，所有读写数据库的Redis命令在执行之前都会调用expireIfNeeded函数对输入键进行检查：1.如果输入键已经过期，expireIfNeeded函数将输入键从数据库中删除。2.如果输入键未过期，expireIfNeeded函数不做动作。<h2 id="定期删除策略的实现"><a href="#定期删除策略的实现" class="headerlink" title="定期删除策略的实现"></a>定期删除策略的实现</h2></li>
-<li>过期键的定期删除策略由server.c/activeExpireCycle函数实现，每当Redis的服务器周期性操作server.c/serverCron函数执行时，activeExpireCycle函数就会被调用，在规定时间内，分多次遍历服务器中的各个数据库，从数据库的expires字典中随机检查一部分键的过期时间，并删除其中的过期键。</li>
-<li>activeExpireCycle函数的工作模式如下：<ol>
-<li>函数每次运行时，都从一定数量的数据库中取出一定数量的随机键进行检查，并删除其中的过期键</li>
-<li>全局变量current_db记录当前activeExpireCycle函数检查的进度，并在下次activeExpireCycle函数调用时从上次的进度进行处理。</li>
-<li>当服务器中所有数据库都被检查一遍，current_db变量重置为0，然后再开始下一轮的检查。</li>
-</ol>
-</li>
-</ul>
-<h1 id="AOF、RDB和复制功能对过期键的处理"><a href="#AOF、RDB和复制功能对过期键的处理" class="headerlink" title="AOF、RDB和复制功能对过期键的处理"></a>AOF、RDB和复制功能对过期键的处理</h1><h2 id="生成RDB文件"><a href="#生成RDB文件" class="headerlink" title="生成RDB文件"></a>生成RDB文件</h2><ul>
-<li>执行SAVE命令或者BGSAVE命令创建一个新的RDB文件时，程序会对数据库中的键进行检查，已过期的键不会被保存到新创建的RDB文件中。</li>
-</ul>
-<h2 id="载入RDB文件"><a href="#载入RDB文件" class="headerlink" title="载入RDB文件"></a>载入RDB文件</h2><ul>
-<li>启动服务器时，如果服务器开启RDB功能，服务器将对RDB文件进行载入<ol>
-<li>服务器以主服务器模式运行，载入RDB文件时，程序会对文件中保存的键进行检查，未过期的键会被载入数据库，过期键会被忽略。</li>
-<li>服务器以从服务器模式运行，载入RDB文件时，文件中保存的所有键都会被载入数据库。因为主从服务器进行数据同步时，从服务器数据库会被清空，所以过期键对载入RDB文件的从服务器不会造成影响。</li>
-</ol>
-</li>
-</ul>
-<h2 id="AOF文件写入"><a href="#AOF文件写入" class="headerlink" title="AOF文件写入"></a>AOF文件写入</h2><ul>
-<li>当服务器以AOF持久化模式运行时，如果数据中的某个键已经过期，但它还没有被惰性删除或者定期删除，那么AOF文件不会因为这个过期键而产生任何影响。当过期键被惰性删除或定期删除后，程序会向AOF文件追加一条DEL命令，来显示记录该键已被删除。</li>
-</ul>
-<h2 id="AOF重写"><a href="#AOF重写" class="headerlink" title="AOF重写"></a>AOF重写</h2><ul>
-<li>在执行AOF重写的过程中，程序对数据库中的键进行检查，已过期的键不会被保存到重写后的AOF文件中。</li>
-</ul>
-<h2 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h2><ul>
-<li>当服务器运行在复制模式下时，从夫妻的过期键删除动作由主服务器控制：<ol>
-<li>主服务器在删除一个过期键之后，会显式地向所有从服务器发送一个DEL命令，告知从服务器删除这个过期键。</li>
-<li>从服务器在执行客户端发送的读命令时，即使碰到过期键也不删除，而是继续像处理未过期键一样来处理过期键。</li>
-<li>从服务器只有在接到主服务器发来的DEL命令之后，才会删除过期键。</li>
-</ol>
-</li>
-</ul>
-<h1 id="数据库通知"><a href="#数据库通知" class="headerlink" title="数据库通知"></a>数据库通知</h1><ul>
-<li>该功能让客户端通过订阅给定的频道或者模式，获知数据库中键的变化，以及数据库中命令的执行情况。</li>
-<li>关注某个键执行了什么命令的通知称为键空间通知。</li>
-<li>关注某个命令被什么键执行了的通知成为键事件通知。</li>
-</ul>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
-<li><a href="http://www.runoob.com/redis/redis-tutorial.html" target="_blank" rel="noopener">Redis 教程</a></li>
-<li><a href="https://www.cnblogs.com/tdws/p/5754706.html" target="_blank" rel="noopener">Redis两种持久化方式(RDB&amp;AOF)</a></li>
-<li><a href="http://doc.redisfans.com/index.html" target="_blank" rel="noopener">Redis 命令参考</a></li>
-</ul>
-
+<h1 id="Redis优势"><a href="#Redis优势" class="headerlink" title="Redis优势"></a>Redis优势</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/06/01/db-redis-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -604,28 +465,14 @@
 
       
           <h1 id="optional"><a href="#optional" class="headerlink" title="optional"></a>optional</h1><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;boost/optional.hpp&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> boost;</span><br></pre></td></tr></table></figure>
-<h2 id="“无意义”的值"><a href="#“无意义”的值" class="headerlink" title="“无意义”的值"></a>“无意义”的值</h2><p>函数正确执行，结果不一定是有效的返回值，也可能是“无意义”的值。例如，求一个值得倒数，传入参数为0。</p>
-<h2 id="类摘要"><a href="#类摘要" class="headerlink" title="类摘要"></a>类摘要</h2><p>optional像一个仅能存放一个元素的容器，实现“未初始化”的概念：如果元素未初始化，容器就是空的，否则，容器内就是有效的、已经初始化的值。</p>
-<p><img src="/Picture/boost_optional.jpg" alt="optional类摘要"></p>
-<h2 id="操作函数"><a href="#操作函数" class="headerlink" title="操作函数"></a>操作函数</h2><p>optional的模版类型参数T可以是任何类型，但必须是可拷贝构造的。创建optional对象的方法：</p>
-<ul>
-<li>无参optional()或者optional(boost::none)构造未初始化optional对象。boost::none是一个类似空指针的none_t类型常量，表示未初始化。</li>
-<li>optional(v)构造一个已初始化的optional对象，其值未v的拷贝。如果模版类型为T&amp;，optional内部持有对引用的包装。</li>
-<li>optional(condition, v)根据条件condition来构造optional对象，如果条件成立则初始化为v，否则为未初始化。</li>
-<li>optional支持拷贝构造和赋值操作，可以从另一个optional对象构造。可以给optional对象赋none值，恢复初未初始化状态。</li>
-</ul>
-<p>optional采用指针语义来访问内部保存的额元素，因此optional未初始化的行为就像一个空指针。optional重载了operator*和operator-&gt;实现与指针相同的操作，get()和get_ptr()可以以函数形式获得元素的引用的指针。</p>
-<p>成员函数get_value_or(default)是一个特别的访问函数，保证返回一个有效值，如果optional已初始化，返回内部元素，否则返回default。</p>
-<p>optional用隐式类型转换进行bool测试(用于条件判断)，就像对一个指针的判断。</p>
-<p>optional支持比较运算，包括==、!=、&lt;、&gt;、&lt;=、&gt;=。optional进行”深比较”，同时加入对未初始化的判断。</p>
-<h2 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">optional&lt;<span class="keyword">double</span>&gt; <span class="title">calc</span><span class="params">(<span class="keyword">int</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> optional&lt;<span class="keyword">double</span>&gt;(x!=<span class="number">0</span>, <span class="number">1.0</span>/x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//optional</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">TestOptional</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    optional&lt;<span class="keyword">int</span>&gt; op0;</span><br><span class="line">    <span class="function">optional&lt;<span class="keyword">int</span>&gt; <span class="title">op1</span><span class="params">(op0)</span></span>;</span><br><span class="line">    assert(!op0);</span><br><span class="line">    assert(op0==op1);</span><br><span class="line">    assert(op1.get_value_or(<span class="number">253</span>) == <span class="number">253</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="function">optional&lt;<span class="built_in">string</span>&gt; <span class="title">ops</span><span class="params">(<span class="string">"test"</span>)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;*ops&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">    <span class="function">optional&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp;&gt; <span class="title">opv</span><span class="params">(v)</span></span>;</span><br><span class="line">    assert(opv);</span><br><span class="line"></span><br><span class="line">    opv-&gt;push_back(<span class="number">5</span>);</span><br><span class="line">    assert(opv-&gt;size() == <span class="number">11</span>);</span><br><span class="line"></span><br><span class="line">    opv = none;</span><br><span class="line">    assert(!opv);</span><br><span class="line"></span><br><span class="line">    optional&lt;<span class="keyword">double</span>&gt; d = calc(<span class="number">10</span>);</span><br><span class="line">    <span class="keyword">if</span>(d)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;*d&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    BOOST_AUTO(x, make_optional(<span class="number">5</span>));    <span class="comment">//工厂函数</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;*x&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="工厂函数"><a href="#工厂函数" class="headerlink" title="工厂函数"></a>工厂函数</h2><p>optional提供工厂函数make_optional()，根据参数类型自动推导optional的类型，辅助创建optional对象。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">optional&lt;T&gt; <span class="title">make_optional</span><span class="params">(T <span class="keyword">const</span> &amp;v)</span></span>;</span><br><span class="line"><span class="function">optional&lt;T&gt; <span class="title">make_optional</span><span class="params">(<span class="keyword">bool</span> condition, T <span class="keyword">const</span> &amp;v)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>make_optional()无法推导T引用类型的optional对象，如果需要一个optional<t&>的对象，不能使用make_optional函数。</t&></p>
-<h2 id="高级议题"><a href="#高级议题" class="headerlink" title="高级议题"></a>高级议题</h2><h3 id="异常"><a href="#异常" class="headerlink" title="异常"></a>异常</h3><p>optional<t>同STL容器一样，值提供基本的异常保证，不会超过被包装的类型T,它自身不会抛出任何异常，只有在T构造时可能会抛出异常。</t></p>
-<h3 id="就地创建"><a href="#就地创建" class="headerlink" title="就地创建"></a>就地创建</h3><p>optional<t>要求类型T具有拷贝语义，因为optional<t>内部会保存值得拷贝，但很多复杂对象的拷贝代价很高，而仅仅是个拷贝的临时用途，因此optional库提出“就地创建”的概念，可以不要求类型具有拷贝语义，直接用构造函数所需的参数创建对象。boost库in_place_factory。</t></t></p>
-<h3 id="引用类型"><a href="#引用类型" class="headerlink" title="引用类型"></a>引用类型</h3><p>optional的模版参数类型可以是引用(T&amp;)，在很多方面和原始类型T有不同(无法使用就地创建、就地赋值，可以声明时不指定初值、在赋值时转移包装的对象，而不是对原包装的对象赋值)，</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/06/01/boost-optional/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -713,18 +560,14 @@
 
       
           <h1 id="typeof"><a href="#typeof" class="headerlink" title="typeof"></a>typeof</h1><p>typeof库使用宏模拟C++0x新增加的typeof和auto关键字，减轻书写烦琐的变量声明工作，简化代码。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/typeof/typeof.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
-<h2 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h2><p>C++是静态强类型语言，所有变量在使用前必须声明类型，让C++具有运行速度快，代码规范等很多优点，但在引入名词空间特性后会导致烦琐的类型声明。<br>C++0x中typeof/auto关键字，可以让C++编译器在运行时自动推导表达式的类型。</p>
-<h2 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h2><p>头文件<boost typeof.hpp>中定义的两个宏:BOOST_TYPEOF和BOOST_AUTO,分别仿真C++新标准的typeof和auto关键字，在编译器自动推导表达式类型，不仅能够推导C++语言内建类型，也支持标准库中的容器类型。BOOST_TYPEOF和BOOST_AUTO完全模仿typeof和auto关键词。</boost></p>
-<p>宏的简要声明如下：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BOOST_TYPEOF(Expr)\</span></span><br><span class="line">    boost::type_of::decode_begin&lt;BOOST_TYPEOF_ENCODED_VECTOR(Expr) &gt;::type</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BOOST_AUTO(Var, Expr) BOOST_TYPEOF(Expr) Var = Expr</span></span><br></pre></td></tr></table></figure>
-<p>BOOST_TYPEOF使用一个表达式作为宏的参数，推导Expr的类型。BOOST_AUTO实际调用BOOST_TYPEOF，因此BOOST_AUTO不仅可以声明普通变量，也可以在变量名前加&amp;或者*修饰，声明引用或者指针变量。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//typeof</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">TestTypeof</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//typeof(1) tint = 1;</span></span><br><span class="line">    <span class="comment">//typeof(1&gt;0) tbool = 1&gt;0;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> tint1 = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">auto</span> tbool1 = <span class="number">1</span>&gt;<span class="number">0</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;tint1&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;tbool1&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    BOOST_TYPEOF(<span class="number">1</span>) tint2 = <span class="number">1</span>;</span><br><span class="line">    BOOST_TYPEOF(<span class="number">3.14</span>) tdouble2 = <span class="number">3.14</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;tint2&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;tdouble2&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    BOOST_AUTO(tdp, <span class="keyword">new</span> <span class="keyword">double</span>[<span class="number">20</span>]);</span><br><span class="line">    BOOST_AUTO(tpair, make_pair(<span class="number">1</span>, <span class="string">"string"</span>));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;tpair.second&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="向typeof库注册自定义类"><a href="#向typeof库注册自定义类" class="headerlink" title="向typeof库注册自定义类"></a>向typeof库注册自定义类</h2><p>typeof库支持C++内建的基本类型和STL中的大多数类型，但并不能支持所有类型，如果用户自定义类向应用于typeof库，需要使用库提供的一组宏注册。<br>向typeof库注册类型，先使用以下语句开始 #include BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP() 后面注册类型使用宏BOOST_TYPEOF_REGISTER_TYPE，必须在全局名字空间使用，宏的参数是类型的完全名称，包括名字空间限定。</p>
-<h2 id="高级议题"><a href="#高级议题" class="headerlink" title="高级议题"></a>高级议题</h2><h3 id="为BOOST-AUTO更名"><a href="#为BOOST-AUTO更名" class="headerlink" title="为BOOST_AUTO更名"></a>为BOOST_AUTO更名</h3><p>BOOST_AUTO名字有点长，书写不便，可以用auto_t代替BOOST_AUTO</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> auto_t BOOST_AUTO</span></span><br></pre></td></tr></table></figure>
-<h3 id="模版类型自动推导"><a href="#模版类型自动推导" class="headerlink" title="模版类型自动推导"></a>模版类型自动推导</h3><p>typeof库不仅能推导一般表达式的类型，也能推导带有模版的复杂表达式。在模版语境中需要时使用BOOST_TYPEOF_TPL和BOOST_AUTO_TPL。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/31/boost-typeof/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -814,13 +657,109 @@
           <h1 id="noncopyable"><a href="#noncopyable" class="headerlink" title="noncopyable"></a>noncopyable</h1><ul>
 <li>noncopyable允许程序轻松地实现一个禁止复制的类。</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//包含noncopyable</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;boost/noncopyable.hpp&gt;</span></span></span><br><span class="line"><span class="comment">//或者包含utility，utility包含数个小工具的实现</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;boost/utility.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
-<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><pre><code>在C++中定义一个类，如果不明确定义拷贝构造函数和拷贝复制操作符，编译器会自动生成。
-如果不需要类的复制语义，希望禁止复制类的实例，只需要私有化拷贝构造函数和复制操作符。
-</code></pre><h2 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h2><pre><code>noncopyable为实现不可拷贝的类提供了简单清晰的解决方案，从boost::noncopyable派生即可。
-继承使用默认的私有继承是允许的，显示写出private或者public修饰符，效果是一样的。使用noncopyable明确表达类设计者的意图，对用户友好，与其它boost库配合良好。
-</code></pre><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">do_not_copy</span> :</span> boost::noncopyable</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/31/boost-noncopyable/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
 
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/001-asio-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="CaseZheng">
+      <meta itemprop="description" content="CaseZheng的博客网站">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaseZheng">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/05/31/001-asio-note/" class="post-title-link" itemprop="url">boost 库学习 asio</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-05-31 16:10:00" itemprop="dateCreated datePublished" datetime="2017-05-31T16:10:00+08:00">2017-05-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络库/" itemprop="url" rel="index"><span itemprop="name">网络库</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="boost库-asio学习-boost-1-63"><a href="#boost库-asio学习-boost-1-63" class="headerlink" title="boost库 asio学习 boost_1_63"></a>boost库 asio学习 boost_1_63</h1><h1 id="高性能服务器程序框架-基础知识复习-（书籍-Linux高性能服务器编程）"><a href="#高性能服务器程序框架-基础知识复习-（书籍-Linux高性能服务器编程）" class="headerlink" title="高性能服务器程序框架 基础知识复习 （书籍 Linux高性能服务器编程）"></a>高性能服务器程序框架 基础知识复习 （书籍 Linux高性能服务器编程）</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/31/001-asio-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -911,242 +850,14 @@
 <li>STL和Boost中的算法和函数大量使用函数对象作为判断式或谓词参数，这些参数都是传值语义，算法和函数在内部保留函数对象的拷贝并使用。</li>
 <li>特殊情况下作为参数的函数对象拷贝代价过高或者不希望拷贝对象或者拷贝是不可行的。<code>boost.ref</code>应用代理模式，引入对象引用的包装器概念解决这个问题，为了使用ref需要包含头文件:</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/ref.hpp&gt;</span></span></span><br></pre></td></tr></table></figure>
-<h2 id="1-类摘要"><a href="#1-类摘要" class="headerlink" title="1. 类摘要"></a>1. 类摘要</h2><ul>
-<li>ref库定义了一个很小很简单的引用类型的包装器，reference_wrapper,</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">class</span> <span class="title">reference_wrapper</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">reference_wrapper</span><span class="params">(T&amp; t)</span>: <span class="title">t_</span><span class="params">(&amp;t)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="keyword">operator</span> T&amp; () <span class="keyword">const</span> &#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T&amp; <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> *t_; &#125;</span><br><span class="line">    <span class="function">T* <span class="title">get_pointer</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> t_; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* t_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>reference_wrapper的构造函数接受类型T的引用类型，内部使用指针存储t的引用，构造出一个reference_wrapper对象，包装了引用。get()和get_pointer()这两个函数分别返回存储的引用和指针，相当于揭开对t的包装。</li>
-</ul>
-<h2 id="2-基本用法"><a href="#2-基本用法" class="headerlink" title="2. 基本用法"></a>2. 基本用法</h2><ul>
-<li>reference_wrapper只在使用T的语境下才会执行隐式转换，其它情况下需要调用类型转换函数或者get()函数得到真正操作被包装对象。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw</span><span class="params">(x)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(x==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    (<span class="keyword">int</span> &amp;)rw = <span class="number">100</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(<span class="number">100</span>==rw)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="keyword">int</span>&gt; <span class="title">rw2</span><span class="params">(rw)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;(rw2.get()==<span class="number">100</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str;</span><br><span class="line">    <span class="function">reference_wrapper&lt;<span class="built_in">string</span>&gt; <span class="title">rws</span><span class="params">(str)</span></span>;</span><br><span class="line">    *rws.get_pointer() = <span class="string">"ref"</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;str&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;rws.get().size()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-工厂函数"><a href="#3-工厂函数" class="headerlink" title="3. 工厂函数"></a>3. 工厂函数</h2><ul>
-<li>ref库提供了两个便捷的工厂函数ref()和cref()，通过参数类型推导构造reference_wrapper对象。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">reference_wrapper&lt;T&gt; <span class="title">ref</span><span class="params">(T&amp; t)</span></span>;</span><br><span class="line"><span class="function">reference_wrapper&lt;T <span class="keyword">const</span>&gt; <span class="title">cref</span><span class="params">(T <span class="keyword">const</span>&amp; t)</span></span>;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>ref可以根据参数类型自动推导正确的<code>reference_wrapper&lt;T&gt;</code>对象，<code>ref()</code>产生类型为T，<code>cref()</code>产生类型为T const。</li>
-<li>reference_wrapper支持拷贝，因此ref()和cref()可以直接总在需要拷贝语义的函数参数中。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> x = <span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rw, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rw).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">string</span> str = <span class="string">"hahahahah"</span>;</span><br><span class="line">    BOOST_AUTO(rws, ref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(rws).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">sqrt</span>(ref(x))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="4-操作包装"><a href="#4-操作包装" class="headerlink" title="4. 操作包装"></a>4. 操作包装</h2><ul>
-<li>ref库运用模版元编程技术提供两个特征类is_reference_wrapper和unwrap_reference，用于检测reference_wrapper对象。<code>is_reference_wrapper&lt;T&gt;</code>的bool成员变量value可以判断T是否为一个reference_wrapper。<code>unwrap_reference&lt;T&gt;</code>的内部定义type表明了T的真实类型，无论它是否经过reference_wrapper包装。</li>
-<li><code>unwrap_ref()</code>利用<code>unwrap_reference&lt;T&gt;</code>直接解开reference_wrapper的包装(如果有的话)，返回被包装对象的引用。直接对一个未包装的对象使用<code>unwrap_ref()</code>直接返回对象自身的引用。<code>unwrap_ref()</code>可以安全地用在泛型代码中，而不必关心对象的包装特性，总能够正确地操作对象。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v</span><span class="params">(<span class="number">10</span>, <span class="number">2</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rw, ref(v));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rw)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(v)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rw)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(v)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> x = (<span class="keyword">int</span>)<span class="number">2.12345</span>;</span><br><span class="line">    BOOST_AUTO(rwd, cref(x));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(rwd)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;is_reference_wrapper&lt;BOOST_TYPEOF(x)&gt;::value&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(rwd)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="keyword">typeid</span>(unwrap_reference&lt;BOOST_TYPEOF(x)&gt;::type).name()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    unwrap_ref(rw).push_back(<span class="number">4</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rw)[<span class="number">10</span>]&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">str</span><span class="params">(<span class="string">"hahaha"</span>)</span></span>;</span><br><span class="line">    BOOST_AUTO(rws, cref(str));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;unwrap_ref(rws)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="5-为ref增加函数调用功能"><a href="#5-为ref增加函数调用功能" class="headerlink" title="5. 为ref增加函数调用功能"></a>5. 为ref增加函数调用功能</h2><ul>
-<li>ref将对象包装为引用语义，降低了复制成本，使引用的行为更像对象，可以让容器安全地持有被包装的引用对象，可以称为”智能引用”</li>
-<li>ref库没有实现TR1的全部定义，不能提供函数调用操作operator(),无法包装一个函数对象的引用并传递给标准库算法。可以修改boost::ref库添加函数调用功能。</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.casezheng.date/2017/05/31/001-asio-note/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="CaseZheng">
-      <meta itemprop="description" content="CaseZheng的博客网站">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaseZheng">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/05/31/001-asio-note/" class="post-title-link" itemprop="url">boost 库学习 asio</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-05-31 16:10:00" itemprop="dateCreated datePublished" datetime="2017-05-31T16:10:00+08:00">2017-05-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-12 12:56:35" itemprop="dateModified" datetime="2020-04-12T12:56:35+08:00">2020-04-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络库/" itemprop="url" rel="index"><span itemprop="name">网络库</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="boost库-asio学习-boost-1-63"><a href="#boost库-asio学习-boost-1-63" class="headerlink" title="boost库 asio学习 boost_1_63"></a>boost库 asio学习 boost_1_63</h1><h1 id="高性能服务器程序框架-基础知识复习-（书籍-Linux高性能服务器编程）"><a href="#高性能服务器程序框架-基础知识复习-（书籍-Linux高性能服务器编程）" class="headerlink" title="高性能服务器程序框架 基础知识复习 （书籍 Linux高性能服务器编程）"></a>高性能服务器程序框架 基础知识复习 （书籍 Linux高性能服务器编程）</h1><ul>
-<li>按照服务器一般原理，可将服务器解构为以下三个主要模块：<ol>
-<li>I/O处理单元。</li>
-<li>逻辑单元。</li>
-<li>存储单元。</li>
-</ol>
-</li>
-</ul>
-<h2 id="1-服务器模型"><a href="#1-服务器模型" class="headerlink" title="1 服务器模型"></a>1 服务器模型</h2><h3 id="1-1-C-S模型"><a href="#1-1-C-S模型" class="headerlink" title="1.1 C/S模型"></a>1.1 C/S模型</h3><ul>
-<li>C/S(客户端/服务器)模型：所有客户端都通过访问服务器来获取所需的资源。<br><img src="/Picture/asio_CS.jpg" alt="TCP服务器和TCP客户端的工作流程"></li>
-<li>C/S模型适合资源相对集中的场合，其实现也很简单，缺点明显：服务器是通信的中心，当访问量很大时，所有客户都讲得到很慢的响应。</li>
-</ul>
-<h3 id="1-2-P2P模型"><a href="#1-2-P2P模型" class="headerlink" title="1.2 P2P模型"></a>1.2 P2P模型</h3><ul>
-<li>P2P(点对点)模型摒弃了以服务器为中心的格局，让网络上所有主机重新回归对等的地位。P2P模型让每台机器在消耗服务的同时也在给别人提供服务，让资源充分、自由地共享。缺点：当用户之间传输的请求过多时，网络的负载将加重。P2P模式通常带有一个专门的发现服务器，提供查找服务甚至提供内容服务，让每个客户尽快地找到自己需要的资源。P2P模型可以看做C/S模型的扩展：每台主机既是客户端，也是服务器。<br><img src="/Picture/asio_P2P.jpg" alt="P2P模型 带有发现服务器的P2P模型"></li>
-</ul>
-<h2 id="2-服务器编程框架"><a href="#2-服务器编程框架" class="headerlink" title="2 服务器编程框架"></a>2 服务器编程框架</h2><ul>
-<li>服务器基本框架都一样，不同在于逻辑处理。<br><img src="/Picture/asio_service_1.jpg" alt="服务器基本框架"></li>
-</ul>
-<p><img src="/Picture/asio_service_2.jpg" alt="服务器基本模块功能描述"></p>
-<ul>
-<li>I/O处理单元是服务器管理客户连接的模块。主要工作：1.等待并接受新的客户连接;2.接收客户数据;3.将服务器响应的数据返回客户端。对于服务器集群，I/O处理单元是一个专门的接入服务器，实现负载均衡，在所有逻辑服务器中选取负荷最小的一台为新客户服务。</li>
-<li>一个逻辑单元是一个进程或线程，主要工作：分析并处理客户数据，并将结果传递给I/O处理单元或者直接发送给客户端。对服务器集群，一个逻辑单元就是一台逻辑服务器，服务器通常拥有多个逻辑单元，实现对多个客户任务的并行处理。</li>
-<li>网络存储单元可以是数据库、缓存和文件，甚至一台独立服务器，但它不是必须的。</li>
-<li>请求队列是各个单元间通信方式的抽象。对服务器集群，请求队列是各台服务器之间预先建立的、静态的、永久的TCP连接，该TCP连接提高服务器间交换数据的效率，避免动态建立TCP连接的额外的系统开销。</li>
-</ul>
-<h2 id="3-I-O模型"><a href="#3-I-O模型" class="headerlink" title="3 I/O模型"></a>3 I/O模型</h2><ul>
-<li>阻塞I/O，系统调用可能无法立即完成而被操作系统挂起，直到等待的事件发生为止。socket在创建时默认是阻塞的。通过给socket系统调用第二个参数传递SOCK_NONBLOCK标志，或通过fcntl系统调用的F_SETFL命令，可将socket设置为非阻塞的。对非阻塞I/O的系统调用总是立即返回，而不管事件是否已经发生。非阻塞I/O只有在事件已经发生的情况下操作，才能提高程序效率，因此非阻塞I/O通常和其它I/O通知机制一起使用。</li>
-<li>I/O复用，应用程序通过I/O复用函数向内核注册一组事件，内核通过I/O复用函数把其中就绪的事件通知给应用程序。</li>
-<li>SIGIO信号，为一个目标文件描述符指定宿主进程，被指定的宿主进程将捕获到SIGIO信号。当目标文件描述符上有事件发生时，SIGIO信号的信号处理函数将被触发。</li>
-<li>理论上：阻塞I/O、I/O复用和信号驱动I/O都是同步I/O模型。因为在以上三种模型中，I/O的读写操作都是在I/O事件发生之后，由应用程序来完成的。</li>
-<li>对于POSIX规范定义的异步I/O模型，用户可以直接对I/O执行读写操作，读写操作告诉内核用户读写缓冲区的位置，以及I/O操作完成后内核通知应用程序的方式，异步I/O的读写总是立即返回，不论I/O是否阻塞，因为真正的读写操作由内核接管。同步I/O模型要求用户代码自执行I/O操作，而异步I/O由内核来执行I/O操作。同步I/O向应用程序通知的是I/O就绪事件，而异步I/O向引用程序通知的是I/O完成事件。<br><img src="/Picture/asio_IO.jpg" alt="IO模型对比"></li>
-</ul>
-<h2 id="4-两种高效的事件处理模式"><a href="#4-两种高效的事件处理模式" class="headerlink" title="4 两种高效的事件处理模式"></a>4 两种高效的事件处理模式</h2><ul>
-<li>服务器通常需要处理三类事件:I/O事件、信号及定时器事件。</li>
-<li>同步I/O模型通常用于Reactor模式，异步I/O模型则用于实现Proactor模式。</li>
-</ul>
-<h3 id="4-1-Reactor模式"><a href="#4-1-Reactor模式" class="headerlink" title="4.1 Reactor模式"></a>4.1 Reactor模式</h3><p><img src="/Picture/asio_Reactor_1.jpg" alt="Reactor介绍"><br><img src="/Picture/asio_Reactor_2.jpg" alt="Reactor模式"></p>
-<h3 id="4-2-Proactor模式"><a href="#4-2-Proactor模式" class="headerlink" title="4.2 Proactor模式"></a>4.2 Proactor模式</h3><ul>
-<li>Proactor模式将所有I/O操作都交给主线程和内核来处理，工作线程仅仅负责业务逻辑。因此，Proactor模式更加符合服务器基本框架。<br><img src="/Picture/asio_Proactor_1.jpg" alt="Proactor介绍"><br><img src="/Picture/asio_Proactor_2.jpg" alt="Proactor模式"></li>
-</ul>
-<h3 id="4-3-模拟Proactor模式"><a href="#4-3-模拟Proactor模式" class="headerlink" title="4.3 模拟Proactor模式"></a>4.3 模拟Proactor模式</h3><ul>
-<li>使用同步I/O方式模拟Proactor模式，原理：主线程执行数据读写操作，读写完成之后，主线程向工作线程通知这一”完成时间”。从工作线程角度，直接获得了数据读写的结果，下面只是对读写的结果进行逻辑处理。<br><img src="/Picture/asio_Proactor_3.jpg" alt="模拟Proactor模式"></li>
-</ul>
-<h1 id="Boost-Asio-学习"><a href="#Boost-Asio-学习" class="headerlink" title="Boost.Asio 学习"></a>Boost.Asio 学习</h1><ul>
-<li>asio库基于操作系统提供的异步机制，采用前摄器设计模式(Proactor)实现可移植的异步或者同步IO操作，并且并不要求使用多线程和锁定，有效避免多线程编程带来的诸多有害副作用(如条件竞争、死锁等)。</li>
-<li>Boost.Asio是一个跨平台、主要用于网络和其他一些底层输入/输出编程的C++库。</li>
-<li>Boost.Asio在网络通信、COM串行端口和文件上成功地抽象了输入输出的概念。</li>
-<li>Boost.Asio依赖如下库：<ol>
-<li>Boost.System:为Boost库提供操作系统支持。</li>
-<li>Boost.Regex(可选的):以便重载Read_until()或者async_read_until()是使用boost::regex参数。</li>
-<li>Boost.DateTime(可选的):以便使用Boost.Asio中的计时器。</li>
-<li>OpenSSL(可选的):以便使用Boost.Asio提供的SSL支持。</li>
-</ol>
-</li>
-<li>asio 位于名字空间boost::asio ,需要包含头文件如下:</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#define BOOST_REGEX_NO_LIB</span><br><span class="line">#define BOOST_DATE_TIME_SOURCE</span><br><span class="line">#define BOOST_SYSTEM_NO_LIB</span><br><span class="line">#include &lt;boost/asio.hpp&gt;</span><br><span class="line">using namespace boost::asio;</span><br></pre></td></tr></table></figure>
-<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h2><ul>
-<li>asio库基于Proactor封装了操作系统的select、poll/epoll、kqueue、overlappedI/O等机制，实现异步IO模型。</li>
-<li>asio的核心类是io_service, 相当于前摄器模式中的Proactor角色，asio的任何操作都需要io_service的参与。</li>
-<li>同步模式下，程序发起一个I/O操作，向io_service提交请求，io_service把操作转交给操作系统，同步等待，等I/O操作完成，操作系统通知io_service，然后io_service将结果发回程序，完成整个同步流程。</li>
-<li>异步模式下，程序除了发起I/O操作，还需要定义一个用于回调的完成处理函数。io_service同样把IO操作转交给操作系统，但不同步等待，而是立即返回，调用io_service的run()成员函数等待异步操作完成，当异步操作完成时io_service从操作系统获取执行结果，调用完成处理函数。</li>
-<li>asio不直接使用操作系统提供的线程，而是定义了一个自己的线程概念：stand，保证多线程环境中代码可以正确执行，而无需使用互斥量。io_service::stand::wrap()函数可以包装一个函数在strand中执行。</li>
-<li>asio专门用两个类mutable_buffer和const_buffer来封装缓存区，它们可以安全的应用到异步的读写当中,使用自由函数buffer()可以包装常用的C++容器类型(array,vector,string等),用read()、write()函数读取缓存区。</li>
-<li>asio使用system库的error_code和system_error表示程序运行错误。基本所有函数有两种重载，一是有error_code的输出参数，调用后检查这个参数验证错误，二是没有error_code参数，发生错误则抛出system_error异常, 调用代码用try-catch块捕获错误。</li>
-</ul>
-<h2 id="2-定时器"><a href="#2-定时器" class="headerlink" title="2. 定时器"></a>2. 定时器</h2><ul>
-<li>定时器功能的主要类是deadline_timer</li>
-<li>定时器deadline_timer有两种形式的构造函数，都要求有io_service对象，用于提交IO请求，另一个参数是posix_time的绝对时间点或者是自当前时间开始的时间长度。</li>
-<li>定时器对象创建，立即开始计时，可用成员函数wait()同步等待定时器终止，或使用async_wait()异步等待，当定时器终止时会调用handler函数。</li>
-<li>如果创建定时器不制定终止时间，定时器不会工作，可用成员函数expires_at()和expires_from_now()分别设定定时器终止的绝对时间和相对时间，然后调用wait()或async_wait()等待。expires_at()和expires_from_now()的无参重载形式可以获得定时器的终止时间。</li>
-<li>定时器cancel()函数。通知所有异步操作取消，转而等待定时器终止。</li>
-</ul>
-<h2 id="3-定时器用法"><a href="#3-定时器用法" class="headerlink" title="3. 定时器用法"></a>3. 定时器用法</h2><h3 id="同步定时器"><a href="#同步定时器" class="headerlink" title="同步定时器"></a>同步定时器</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//同步定时器</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    io_service service;             <span class="comment">//所有asio程序必须有一个io_service对象</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;time(<span class="number">0</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">deadline_timer <span class="title">t</span><span class="params">(service,               <span class="comment">//定时器，io_service作为构造函数的参数。</span></span></span></span><br><span class="line"><span class="function"><span class="params">            boost::posix_time::seconds(<span class="number">2</span>))</span></span>; <span class="comment">//2s后定时器终止。</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;t.expires_at()&lt;&lt;<span class="built_in">endl</span>;             <span class="comment">//查看定时器停止时的绝对时间</span></span><br><span class="line"></span><br><span class="line">    t.wait();                               <span class="comment">//调用wait()同步等待。</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;time(<span class="number">0</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"timer over"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>io_service对象，是前摄器中最重要的proactor角色。<h3 id="异步定时器"><a href="#异步定时器" class="headerlink" title="异步定时器"></a>异步定时器</h3></li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//异步定时器</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">handle</span><span class="params">(<span class="keyword">const</span> boost::system::error_code &amp;e)</span>     <span class="comment">//异步定时器回调函数 asio库要求回调函数只能有一个参数，而且必须是const asio::error_code &amp;类型。</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;time(<span class="number">0</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"timer over"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;e&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    io_service service;             <span class="comment">//所有asio程序必须有一个io_service对象</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;time(<span class="number">0</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">deadline_timer <span class="title">t</span><span class="params">(service,               <span class="comment">//定时器，io_service作为构造函数的参数。</span></span></span></span><br><span class="line"><span class="function"><span class="params">            boost::posix_time::seconds(<span class="number">2</span>))</span></span>; <span class="comment">//2s后定时器终止。</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;t.expires_at()&lt;&lt;<span class="built_in">endl</span>;             <span class="comment">//查看定时器停止时的绝对时间</span></span><br><span class="line"></span><br><span class="line">    t.async_wait(handle);                   <span class="comment">//调用wait()异步等待，传入回调函数。</span></span><br><span class="line"></span><br><span class="line">    service.run();                  <span class="comment">//启动前摄器的事件处理循环，阻塞等待所有的操作完成并分派事件。</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"not wait"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="异步绑定器使用bind"><a href="#异步绑定器使用bind" class="headerlink" title="异步绑定器使用bind"></a>异步绑定器使用bind</h3><ul>
-<li>由于async_wait()接受的回调函数类型是固定的，必须使用bind库来绑定参数以适配它的接口。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_t</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"print"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">timer_test</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> count;</span><br><span class="line">    <span class="keyword">int</span> count_max;</span><br><span class="line">    function&lt;<span class="keyword">void</span>()&gt; f;</span><br><span class="line">    deadline_timer t;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> F&gt;</span><br><span class="line">    timer_test(io_service &amp;ios, <span class="keyword">int</span> x, F func):</span><br><span class="line">        f(func), count_max(x), count(<span class="number">0</span>),t(ios, posix_time::millisec(<span class="number">500</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        t.async_wait(bind(&amp;timer_test::call_func, <span class="keyword">this</span>, boost::asio::placeholders::error));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">call_func</span><span class="params">(<span class="keyword">const</span> system::error_code &amp;)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(count &gt;= count_max)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ++count;</span><br><span class="line">        f();</span><br><span class="line">        t.expires_at(t.expires_at() + posix_time::millisec(<span class="number">500</span>));</span><br><span class="line">        t.async_wait(bind(&amp;timer_test::call_func, <span class="keyword">this</span>, boost::asio::placeholders::error));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    io_service service;             <span class="comment">//所有asio程序必须有一个io_service对象</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;time(<span class="number">0</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="function">deadline_timer <span class="title">t</span><span class="params">(service,               <span class="comment">//定时器，io_service作为构造函数的参数。</span></span></span></span><br><span class="line"><span class="function"><span class="params">            boost::posix_time::seconds(<span class="number">2</span>))</span></span>; <span class="comment">//2s后定时器终止。</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;t.expires_at()&lt;&lt;<span class="built_in">endl</span>;             <span class="comment">//查看定时器停止时的绝对时间</span></span><br><span class="line">    t.async_wait(handle);                   <span class="comment">//调用wait()异步等待，传入回调函数。</span></span><br><span class="line">    <span class="function">timer_test <span class="title">tt</span><span class="params">(service, <span class="number">6</span>, <span class="keyword">print_t</span>)</span></span>;</span><br><span class="line">    service.run();                  <span class="comment">//启动前摄器的事件处理循环，阻塞等待所有的操作完成并分派事件。</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"not wait"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="4-网络通信简述"><a href="#4-网络通信简述" class="headerlink" title="4.网络通信简述"></a>4.网络通信简述</h2><ul>
-<li>asio库支持TCP、UDP和TCMP通信协议。</li>
-<li>boost::asio::ip名字空间提供网络通信方面的函数和类，封装原始的Berkeley Socket API。 </li>
-<li>ip::tcp类是asio网络通信(TCP)部分主要的类，其中定义了用于TCP通信的typedef类型，用于协作完成网络通信。typedef包括端点类endpoint、套接字类socket、流类iostream、接受器acceptor、解析器resolver等。</li>
-</ul>
-<h2 id="5-IP地址和端点"><a href="#5-IP地址和端点" class="headerlink" title="5. IP地址和端点"></a>5. IP地址和端点</h2><ul>
-<li>IP地址独立于TCP、UDP等通信协议，asio库使用类ip::address来表示IP地址，可以同时支持ipv4和ipv6两种地址。</li>
-<li>address类最重要的方法是静态成员函数from_string()，是工厂函数，可以从字符串产生ip地址，地址的版本可以用is_v4()和is_v6()来检测。address成员函数to_string()把ip地址转化为字符串。</li>
-<li>端口在asio库中用ip::tcp::endpoint类来表示。主要用法是通过构造函数创建一个用于socket通信的端口对象，端口地址和端口号用address()和port()获得。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ip::address addr;</span><br><span class="line">    addr = addr.from_string(<span class="string">"127.0.0.1"</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.is_v4()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.is_v6()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.to_string()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    addr = addr.from_string(<span class="string">"ab::12:13:14"</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.is_v4()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.is_v6()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;addr.to_string()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    ip::<span class="function">tcp::endpoint <span class="title">epp</span><span class="params">(addr, <span class="number">8000</span>)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;epp.address()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;epp.port()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="6-同步socket处理"><a href="#6-同步socket处理" class="headerlink" title="6. 同步socket处理"></a>6. 同步socket处理</h2><ul>
-<li>ip::tcp的内部类型socket、acceptor和resolver是asio库TCP通信中最核心的一组类，封装了socket的连接、断开、数据收发。</li>
-<li>socket类是TCP通信的基本类。调用成员函数connect()可以连接到一个指定的通信端口，连接成功后用local_endpoint()和remote_endpoint()获得连接两端的端点信息，用read_some()和write_some()阻塞读写数据，当操作完成后使用close()函数关闭socket。如果不关闭socket，在socket析构时会自动调用close()关闭。</li>
-<li>acceptor类用于服务器端，对用socket API的accept()函数功能，用于服务器端，在指点的端口号接受连接，必须配合socket类才能完成通信。</li>
-<li>resolver类用于客户端解析网址获得可用的IP地址，解析到的IP地址可以使用socket对象连接。对应socket API的getaddrinfo()系列函数。</li>
-<li>buffer()函数可以包装很多种类的容器成为asio组件可用的缓冲区类型，通常不能直接把数组、vector等容器作为asio的读写参数，必须要buffer()函数包装。</li>
-</ul>
-<h2 id="7-异步socket处理"><a href="#7-异步socket处理" class="headerlink" title="7. 异步socket处理"></a>7. 异步socket处理</h2><ul>
-<li>异步程序的处理流程与同步程序基本相同，需要将同步调用函数换成异步调用函数，并增加回调函数，在回调函数中再启动一个异步调用。</li>
-</ul>
-<h2 id="8-查询网络地址"><a href="#8-查询网络地址" class="headerlink" title="8. 查询网络地址"></a>8. 查询网络地址</h2><ul>
-<li>resolver类通过域名获得可用的IP，实现与IP版本无关的网址解析。</li>
-<li>resolver使用内部类query和iterator共同完成查询IP地址的工作：首先使用网址和服务名创建queruy对象，然后由resolve()函数生成iterator对象，它代表了查询到的ip端点，使用socket对象尝试连接，知道找到一个可用的为止。</li>
-<li>resolver不仅能够解析域名，也支持使用IP和服务名。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    io_service service;</span><br><span class="line">    ip::<span class="function">tcp::resolver <span class="title">rlv</span><span class="params">(service)</span></span>;</span><br><span class="line">    ip::tcp::tcp::endpoint endpoint;</span><br><span class="line">    ip::tcp::<span class="function">resolver::query <span class="title">qry</span><span class="params">(<span class="string">"www.google.com"</span>, <span class="string">"http"</span>)</span></span>;</span><br><span class="line">    ip::tcp::resolver::iterator iter = rlv.resolve(qry);</span><br><span class="line">    ip::tcp::resolver::iterator end;</span><br><span class="line">    system::error_code ec = error::host_not_found;</span><br><span class="line">    <span class="keyword">for</span>(;ec &amp;&amp; iter!=end; ++iter)</span><br><span class="line">    &#123;</span><br><span class="line">        endpoint = *iter;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;endpoint.address().to_string()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="7-高级议题"><a href="#7-高级议题" class="headerlink" title="7.高级议题"></a>7.高级议题</h2><h3 id="超时处理"><a href="#超时处理" class="headerlink" title="超时处理"></a>超时处理</h3><ul>
-<li>使用定时器，在网络通信中实现超时处理，在异步调用后声明一个deadline_timer对象，然后设定等待时间和回调函数。</li>
-</ul>
-<h3 id="流操作"><a href="#流操作" class="headerlink" title="流操作"></a>流操作</h3><ul>
-<li>对于有连接的TCP协议，asio库专门提供了一个ip::tcp::iostream类贱货socket通信，ip::tcp::iostream是std::basic_iostream的子类，可以像标准流一样操作，内部集成了resolver的域名解析功能和acceptor的接受连接功能。</li>
-</ul>
-<h3 id="UDP协议通信"><a href="#UDP协议通信" class="headerlink" title="UDP协议通信"></a>UDP协议通信</h3><ul>
-<li>asio的udp和tcp处理流程相似，由于udp协议无连接，故不需要建立连接，使用send_to()和receive_from()直接通过端点发送数据。</li>
-</ul>
-<h3 id="串口通信"><a href="#串口通信" class="headerlink" title="串口通信"></a>串口通信</h3>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/31/003-ref-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1237,49 +948,14 @@
 <li>bind是C++98标准库中函数适配器bind1st/bind2nd的泛化和增强，可以适配任意的可调用对象，包含函数指针、函数引用、成员函数指针和函数对象。bind最多可以绑定9个函数参数，而且对绑定对象的要求很低，可以在没有<code>result_type</code>内部类型定义的情况下完成对函数对象的绑定。</li>
 <li>bind位于名词空间boost，使用bind组件需包含头文件<code>&lt;boost/bind.hpp&gt;</code>, 即:</li>
 </ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/bind.hpp&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> boost;</span><br></pre></td></tr></table></figure>
-<h2 id="1-工作原理"><a href="#1-工作原理" class="headerlink" title="1. 工作原理"></a>1. 工作原理</h2><ul>
-<li>bind并不是单独的类或函数，是非常庞大的家族，依据绑定的参数个数和要绑定的调用对象类型，有数十种不同形式，名字都叫做bind，编译器会根据具体的绑定代码自动确定要使用的正确形式。</li>
-<li>bind接受的第一个参数必须是一个可调用对象，包括函数指针、函数引用、函数对象和成员函数指针，bind接受最多九个参数。参数数量必须与可调用对象的参数数量相等，这些参数将被传递给可调用对象作为输入参数。</li>
-<li>绑定完成后，bind返回一个函数对象，内部保存了可调用对象的拷贝，具有operator(),返回值类型自动推导为可调用对象的返回值类型，在发生调用时，函数对象把之前存储的参数转发给可调用对象完成调用。</li>
-<li>bind占位符被定义为_1、_2、_3一直到_9，位于一个匿名名词空间。占位符可以取代bind中参数的位置，在发生函数调用时才接受真正的参数。</li>
-<li>bind占位符的名字代表它在调用式中的顺序，而在绑定表达式中没有顺序的要求。</li>
-</ul>
-<h2 id="2-绑定普通函数"><a href="#2-绑定普通函数" class="headerlink" title="2. 绑定普通函数"></a>2. 绑定普通函数</h2><ul>
-<li>bind可以绑定普通函数，包括函数、函数指针。</li>
-<li>必须在绑定表达式中提供函数要求的所有参数，无论是真实参数还是占位符均可以。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f3</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b, <span class="keyword">int</span> c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a+b+c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f4</span>:</span> <span class="keyword">public</span> <span class="built_in">std</span>::binary_function&lt;<span class="keyword">int</span>,<span class="keyword">int</span>,<span class="keyword">int</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> <span class="keyword">const</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (x + y); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定普通函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于f2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于f3(1, 2, 3)</span></span><br><span class="line">    </span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;          <span class="comment">//相当于f2(4, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind2nd(f4(), <span class="number">9</span>)(<span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _2)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(4, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _2, _1)(<span class="number">4</span>, <span class="number">5</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f2, _1, _1)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f2(5, 5)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _1, <span class="number">8</span>, _2)(<span class="number">5</span>, <span class="number">4</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(5, 8, 4)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(f3, _3, _2, _2)(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//f3(3, 2, 2)</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f2_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*f3_type)</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    f2_type pf2 = f2;</span><br><span class="line">    f3_type pf3 = f3;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf2, <span class="number">1</span>, <span class="number">2</span>)()&lt;&lt;<span class="built_in">endl</span>;            <span class="comment">//相当于*pf2(1, 2)</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(pf3, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)()&lt;&lt;<span class="built_in">endl</span>;         <span class="comment">//相当于*pf3(1, 2, 3)</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-绑定成员函数"><a href="#3-绑定成员函数" class="headerlink" title="3. 绑定成员函数"></a>3. 绑定成员函数</h2><ul>
-<li>bind可以绑定类的成员函数。类的成员函数指针不能直接调用operator()，必须绑定一个对象或者函数，通过this指针调用成员函数。因此bind需要用一个占位符的位置让用户提供一个类的实例、引用或者指针，通过对象作为第一个参数来调用成员函数。所以使用成员函数最多只能绑定8个参数。</li>
-<li>bind可以代替标准库中的mem_fun和mem_fun_ref帮顶起，用来配合标准算法操作容器中对象。</li>
-<li>bind同样支持绑定虚拟成员函数，用法与非虚函数相同，虚函数的行为将由实际调用发生时的实例来决定。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Test():x(<span class="number">0</span>)&#123;&#125;</span><br><span class="line">    Test(<span class="keyword">int</span> _x):x(_x)&#123;&#125;</span><br><span class="line">    ~Test()&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">f2</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;<span class="string">"a:"</span>&lt;&lt;a&lt;&lt;<span class="string">" b:"</span>&lt;&lt;b&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;x&lt;&lt;<span class="string">" "</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test</span><span class="params">(Test &amp;t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    t.print();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">print_test_p</span><span class="params">(Test *t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != t) &#123; t-&gt;print(); &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//绑定成员函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Test t;</span><br><span class="line">    Test &amp;yt = t;</span><br><span class="line">    Test *pt = &amp;t;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, t, _1, <span class="number">10</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, yt, <span class="number">9</span>, <span class="number">10</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _1, _2)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;Test::f2, pt, _2, _1)(<span class="number">20</span>, <span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; vecTest;</span><br><span class="line">    vecTest.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    vecTest.push_back(Test(<span class="number">4</span>));</span><br><span class="line"></span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), print_test);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), mem_fun_ref(&amp;Test::print));    <span class="comment">//mem_fun_ref用于容器存储对象实体时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest.begin(), vecTest.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Test*&gt; vecTest_p;</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">5</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">6</span>));</span><br><span class="line">    vecTest_p.push_back(<span class="keyword">new</span> Test(<span class="number">7</span>));</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), print_test_p);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), mem_fun(&amp;Test::print));    <span class="comment">//mem_fen用于容器存储对象指针时</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    for_each(vecTest_p.begin(), vecTest_p.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="4-绑定成员变量"><a href="#4-绑定成员变量" class="headerlink" title="4. 绑定成员变量"></a>4. 绑定成员变量</h2><ul>
-<li>bind可以绑定public成员变量</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;Test&gt; v;</span><br><span class="line">    v.push_back(Test(<span class="number">1</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">2</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">3</span>));</span><br><span class="line">    v.push_back(Test(<span class="number">4</span>));</span><br><span class="line">    for_each(v.begin(), v.end(), boost::bind(&amp;Test::print, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v2</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">    transform(v.begin(), v.end(), v2.begin(), bind(&amp;Test::x, _1));  <span class="comment">//bind取出Test对象的成员变量x，transform算法调用bind表达式操作容器v，逐个吧变量填入到v2中</span></span><br><span class="line">    for_each(v2.begin(), v2.end(), boost::bind(print_test_int, _1));</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">typedef</span> pair&lt;<span class="keyword">int</span>, <span class="built_in">string</span>&gt; <span class="keyword">pair_t</span>;</span><br><span class="line">    <span class="function"><span class="keyword">pair_t</span> <span class="title">p</span><span class="params">(<span class="number">123</span>, <span class="string">"bind"</span>)</span></span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::first, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(&amp;<span class="keyword">pair_t</span>::second, p)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="5-绑定函数对象"><a href="#5-绑定函数对象" class="headerlink" title="5. 绑定函数对象"></a>5. 绑定函数对象</h2><ul>
-<li>bind可以绑定函数对象，包括标准库中的所有预定义的函数对象</li>
-<li>如果函数对象有内部定义result_type,bind可以自动推导出返回值类型，如果函数对象未定义result_type,则需要用模版参数指明返回值类型。</li>
-<li>标准库和boost库大部分函数对象都具有result_type定义。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">f</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">g</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">int</span> result_type;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">operator</span><span class="params">()</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> x + y;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//绑定函数对象</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, <span class="number">10</span>)(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;     <span class="comment">//标准库 具有result_type类型定义</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind&lt;<span class="keyword">int</span>&gt;(f(), _1, _2)(<span class="number">10</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;      <span class="comment">//自定义函数对象，可以通过模版制定返回值类型</span></span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(g(), _1, _2)(<span class="number">15</span>, <span class="number">15</span>)&lt;&lt;<span class="built_in">endl</span>;           <span class="comment">//自定义函数对象，定义result_type</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="6-使用ref库"><a href="#6-使用ref库" class="headerlink" title="6. 使用ref库"></a>6. 使用ref库</h2><ul>
-<li>bind采用拷贝的方式存储绑定对象和参数，如果函数对象或值参数很大、拷贝代价很高，或者无法拷贝，bind的使用会受到限制。因此bind可以搭配ref库，ref库包装对象的引用，让bind存储对象引用的拷贝，降低拷贝的代价。</li>
-<li>使用ref传对象引用时，必须保证bind被调用时引用时有效的。</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//使用ref库</span></span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">20</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(greater&lt;<span class="keyword">int</span>&gt;(), _1, cref(x))(<span class="number">13</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    g gf;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;boost::bind(ref(gf), _1, <span class="number">20</span>)(<span class="number">10</span>)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    BOOST_AUTO(r, ref(x));</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> *y = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">5</span>);</span><br><span class="line">        r = ref(*y);</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;r&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">delete</span> y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> *w = <span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">8</span>);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;bind(f3, r, <span class="number">1</span>, <span class="number">1</span>)()&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="7-高级议题"><a href="#7-高级议题" class="headerlink" title="7. 高级议题"></a>7. 高级议题</h2><h3 id="为占位符更名"><a href="#为占位符更名" class="headerlink" title="为占位符更名"></a>为占位符更名</h3><ul>
-<li>最简单的方法：为原占位符使用引用创建别名，可以使用<code>BOOST_AUTO</code>，无需关心占位符的真实类型，将推导的工作交给编译器。<h3 id="存储bind表达式"><a href="#存储bind表达式" class="headerlink" title="存储bind表达式"></a>存储bind表达式</h3></li>
-<li>bind表达式生成的函数对象类型声明非常复杂，可以使用typedef库BOOST_AUTO宏辅助，也可以用function库。<h3 id="嵌套绑定"><a href="#嵌套绑定" class="headerlink" title="嵌套绑定"></a>嵌套绑定</h3></li>
-<li>bind可以嵌套，一个bind表达式生成的函数对象可以被另一个bind再绑定，实现类似<code>f(g(x))</code>的形式。bind嵌套要特别小心，不容易写正确和理解。<h3 id="操作符重载"><a href="#操作符重载" class="headerlink" title="操作符重载"></a>操作符重载</h3></li>
-<li>bind重载了比较操作符和逻辑非操作符,可以将多个bind绑定组合起来，形成复杂的逻辑表达式，配合标准库实现语法简单但语义复杂的操作。<h3 id="绑定非标准函数"><a href="#绑定非标准函数" class="headerlink" title="绑定非标准函数"></a>绑定非标准函数</h3></li>
-<li>有的非标准函数bind无法推导出返回值，必须显式地指定bind的返回值类型。</li>
-<li>bind不支持使用了不同调用方式(如<code>__stdcall</code>、<code>__fastcall</code>、<code>extern &quot;C&quot;</code>)的函数，bind将它们看做函数对象，需要显式指定bind的返回值类型。或者在<code>&lt;boost/bind.hpp&gt;</code>之前加上<code>BOOST_BIND_ENABLE_STDCALL</code>、<code>BOOST_BIND_ENABLE_FASTCALL</code>、<code>BOOST_BIND_ENABLE_PASCAL</code>等宏，明确告诉bind支持这些调用。</li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/31/002-bind-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1367,65 +1043,14 @@
 
       
           <h1 id="git色彩显示"><a href="#git色彩显示" class="headerlink" title="git色彩显示"></a>git色彩显示</h1><p>git默认不显示色彩</p>
-<p>进行全局设置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git config --global color.diff auto</span><br><span class="line">git config --global color.status auto</span><br><span class="line">git config --global color.branch auto</span><br><span class="line">git config --global color.interactive auto</span><br><span class="line">git config --global color.ui auto</span><br></pre></td></tr></table></figure></p>
-<p>或者在.gitconfig写入配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[color]</span><br><span class="line">    diff = auto</span><br><span class="line">    branch = auto</span><br><span class="line">    status = auto</span><br><span class="line">    interactive = auto</span><br></pre></td></tr></table></figure></p>
-<p>查看自己配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --list</span><br></pre></td></tr></table></figure></p>
-<h1 id="Git-status乱码"><a href="#Git-status乱码" class="headerlink" title="Git status乱码"></a>Git status乱码</h1><p>设置core.quotepath为false<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ git status</span><br><span class="line">... ...</span><br><span class="line">        &quot;source/Picture/\350\277\233\347\250\213\347\212\266\346\200\201\345\233</span><br><span class="line">... ...</span><br><span class="line">$git config --global core.quotepath false</span><br><span class="line">$ git status</span><br><span class="line">... ...</span><br><span class="line">        source/Picture/进程状态图.jpg</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure></p>
-<h1 id="Git组成"><a href="#Git组成" class="headerlink" title="Git组成"></a>Git组成</h1><h2 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h2><ol>
-<li>克隆现有仓库 <code>git clone ssh://user@domain.com/repo.git</code></li>
-<li>创建一个新的本地仓库 <code>git init</code></li>
-</ol>
-<h2 id="本地修改"><a href="#本地修改" class="headerlink" title="本地修改"></a>本地修改</h2><ol>
-<li>查看本地仓库已更改文件信息 <code>git status</code></li>
-<li>查看对已版本控制文件的修改 <code>git diff</code></li>
-<li>添加当前工作空间所有修改到暂存区 <code>git add .</code></li>
-<li>添加单一文件修改到暂存区 <code>git add -p &lt;file&gt;</code></li>
-<li>将所有修改(工作空间和暂存区，工作空间修改可以省略git add)提交到当前分支 <code>git commit -a</code></li>
-<li>提交暂存区修改到当前分支 <code>git commit</code></li>
-<li>Change the last commit. Don‘t amend published commits!  <code>git commit --amend</code></li>
-</ol>
-<h2 id="提交历史查看"><a href="#提交历史查看" class="headerlink" title="提交历史查看"></a>提交历史查看</h2><ol>
-<li>显示所有提交历史记录，从最新的开始 <code>git log</code></li>
-<li>显示特定文件详细的修改历史 <code>git log -p &lt;file&gt;</code></li>
-<li>查看历史提交历史，只显示commit_id和注释 <code>git log --pretty=oneline</code></li>
-<li>逐行显示当前文件修改内容和修改时间 <code>git blame &lt;file&gt;</code></li>
-<li>一条综合信息展示的git log命令<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git log --graph --pretty=format:&apos;%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen (%cr) %C(bold blue)&lt;%an&gt;%Creset&apos; --abbrev-commit --</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="分支和标签"><a href="#分支和标签" class="headerlink" title="分支和标签"></a>分支和标签</h2><ol>
-<li>列出所有现有分支 <code>git branch -av</code></li>
-<li>选择分支 <code>git checkout &lt;branch&gt;</code></li>
-<li>基于当前分支，创建一个新分支 <code>git branch &lt;new-branch&gt;</code></li>
-<li>创建一个分支，并切换过去 <code>git checkout -b &lt;new-branch&gt;</code></li>
-<li>基于远程分支，创建一个新的分支 <code>git checkout --track &lt;remote/branch&gt;</code></li>
-<li>删除本地分支 <code>git branch -d &lt;branch&gt;</code></li>
-<li>创建一个标签 <code>git tag &lt;tag-name&gt;</code></li>
-</ol>
-<h2 id="跟新和发布"><a href="#跟新和发布" class="headerlink" title="跟新和发布"></a>跟新和发布</h2><ol>
-<li>列出远程库的名称 加-v显示详细信息 <code>git remote -v</code></li>
-<li>显示特定远程库的信息 <code>git remote show &lt;remote&gt;</code></li>
-<li>添加一个远程库 <code>git remote add &lt;shortname&gt; &lt;url&gt;</code></li>
-<li>从远程库获取所有更新，但不合并 <code>git fetch &lt;remote&gt;</code></li>
-<li>从远程库获取所有更新，并合并到指定分支 <code>git pull &lt;remote&gt; &lt;branch&gt;</code></li>
-<li>将branch分支推送到远程库remote <code>git push &lt;remote&gt; &lt;branch&gt;</code></li>
-<li>从远程库删除一个分支 <code>git branch -dr &lt;remote/branch&gt;</code></li>
-<li>推送所有本地新增的标签 <code>git push --tags</code></li>
-</ol>
-<h2 id="合并"><a href="#合并" class="headerlink" title="合并"></a>合并</h2><ol>
-<li>合并某个分支到当前分支 <code>git merge &lt;branch&gt;</code></li>
-</ol>
-<h2 id="撤销"><a href="#撤销" class="headerlink" title="撤销"></a>撤销</h2><ol>
-<li>丢弃工作环境中的所有本地修改 <code>git reset --hard HEAD</code></li>
-<li>丢弃特定文件中的本地修改 <code>git checkout HEAD &lt;file&gt;</code></li>
-<li>Revert a commit (by producing a new commit with contrary changes) <code>git revert &lt;commit&gt;</code></li>
-<li>将头指针指向commit提交，并放弃所有修改 <code>git reset --hard &lt;commit&gt;</code></li>
-</ol>
-<h1 id="将一个git仓库同时推送到两个源配置"><a href="#将一个git仓库同时推送到两个源配置" class="headerlink" title="将一个git仓库同时推送到两个源配置"></a>将一个git仓库同时推送到两个源配置</h1><p>在.git下找到config文件编辑，加入以下以下内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">... ...</span><br><span class="line"># 仓库名</span><br><span class="line">[remote &quot;blog&quot;]</span><br><span class="line">    # 要推送到仓库地址  可以填多个</span><br><span class="line">    url = git@github.com:CaseZheng/CaseZheng.github.io.git</span><br><span class="line">    url = git@git.coding.net:CaseZheng/Blog.git</span><br></pre></td></tr></table></figure></p>
-<h1 id="Git碰到问题"><a href="#Git碰到问题" class="headerlink" title="Git碰到问题"></a>Git碰到问题</h1><h2 id="fatal-no-submodule-mapping-found-in-gitmodules-for-path-‘xxx-xxx’"><a href="#fatal-no-submodule-mapping-found-in-gitmodules-for-path-‘xxx-xxx’" class="headerlink" title="fatal: no submodule mapping found in .gitmodules for path ‘xxx/xxx’"></a>fatal: no submodule mapping found in .gitmodules for path ‘xxx/xxx’</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rm --cached xxx/xxx</span><br></pre></td></tr></table></figure>
-<h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><ul>
-<li><a href="https://blog.csdn.net/u012145252/article/details/81775362" target="_blank" rel="noopener">git status 显示中文和解决中文乱码</a></li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/27/git/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1513,62 +1138,14 @@
 
       
           <h1 id="df"><a href="#df" class="headerlink" title="df"></a>df</h1><p>df可显示磁盘的文件系统与使用情形</p>
-<h2 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h2><ul>
-<li>-a 包含所有文件系统</li>
-<li>-h 以较高可读性显示信息</li>
-<li>-i 显示inode的信息</li>
-<li>-l 显示本地端的文件系统</li>
-<li>-m 以m为单位显示</li>
-</ul>
-<p><img src="/Picture/df.png" alt="示例图片"></p>
-<h1 id="free"><a href="#free" class="headerlink" title="free"></a>free</h1><h2 id="显示内存状态"><a href="#显示内存状态" class="headerlink" title="显示内存状态"></a>显示内存状态</h2><ul>
-<li>free指令会显示内存的使用情况，包括实体内存，虚拟的交换文件内存，共享内存区段，以及系统核心使用的缓冲区等。</li>
-</ul>
-<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><ul>
-<li>-b 以byte为单位显示内存使用情况</li>
-<li>-k 以kb为单位显示内存使用情况</li>
-<li>-m 以m为单位显示内存使用情况</li>
-<li>-o 不显示缓存起调节列</li>
-<li>-t 显示内存总和列</li>
-<li>-s&lt;间隔秒数&gt; 持续观察内存使用情况</li>
-</ul>
-<p><img src="/Picture/free.png" alt="示例图片"></p>
-<h3 id="第一部分Mem行解释"><a href="#第一部分Mem行解释" class="headerlink" title="第一部分Mem行解释"></a>第一部分Mem行解释</h3><ul>
-<li>total:总计物理内存的大小。</li>
-<li>used:已使用多大。</li>
-<li>free:可用有多少。</li>
-<li>Shared:多个进程共享的内存总额。</li>
-<li>Buffers/cached:磁盘缓存的大小</li>
-</ul>
-<p>关系：total = used + free</p>
-<h3 id="第二部分-buffers-cache"><a href="#第二部分-buffers-cache" class="headerlink" title="第二部分(-/+ buffers/cache)"></a>第二部分(-/+ buffers/cache)</h3><ul>
-<li>(-buffers/cache) used内存数：第一部分Mem行中的 used – buffers – cached</li>
-<li>(+buffers/cache) free内存数: 第一部分Mem行中的 free + buffers + cached</li>
-</ul>
-<p>可见-buffers/cache反映的是被程序实实在在吃掉的内存，而+buffers/cache反映的是可以挪用的内存总数。</p>
-<h3 id="第三部分"><a href="#第三部分" class="headerlink" title="第三部分"></a>第三部分</h3><p>第三部分是指交换分区</p>
-<h1 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h1><h2 id="1、常用选项"><a href="#1、常用选项" class="headerlink" title="1、常用选项"></a>1、常用选项</h2><ul>
-<li>-i 指定监听的网络接口 “-i any”表示抓取所有网卡接口上的数据包。</li>
-<li>-t 不打印时间戳。</li>
-<li>-e 显示以太网帧头部信息。</li>
-<li>-n 使用IP地址表示主机，而不是主机名；使用数字表示端口号，而不是服务名称。</li>
-<li>-c 仅抓取指定数量的数据报</li>
-<li>-v 输出稍微详细点的信息，例如，显示IP数据包中的TTL和TOS信息。</li>
-<li>-vv 输出详细报文信息。</li>
-<li>-x 以十六进制显示数据包的内容，单步显示包中以太网帧的头部信息。</li>
-<li>-X 与-x类似，不过还打印每个十六进制对应的ASCII字符。</li>
-<li>-XX 与-X相同，不过还打印以太网帧的头部信息。</li>
-<li>-S 以绝对值来显示TCP报文段的序号，而不是相对值。</li>
-<li>-w 将tcpdump的输出以特殊的格式定向到某个文件。</li>
-<li>-r 从文件中读取数据报信息并显示。</li>
-</ul>
-<h2 id="2、包的过滤"><a href="#2、包的过滤" class="headerlink" title="2、包的过滤"></a>2、包的过滤</h2><p>tcpdump支持用表达式进一步过滤数据包。<br>tcpdump的操作数分为3种：类型（type）、方向（dir）、协议（proto）<br>类型，解释后面跟着的参数的含义。tcpdump支持的类型包括host（主机名或ip地址）、net（用CIDR方法表示的网络地址）、port（端口号）和portrange（端口范围）。</p>
-<ol>
-<li>方向，src指定数据包的发送端，dst指定数据报的目的端。</li>
-<li>协议，指定目标协议。</li>
-<li>tcpdump支持的逻辑操作符。<br>and（或&amp;&amp;），or（或||），not（或!）<br>如果表达式比较复杂，可以使用括号将它们分组。不过使用括号时，需要使用“\”对它转义，或者用单引号“’”将其括住，避免齐备shell所解释。</li>
-</ol>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/05/27/liunx-cmd/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1722,6 +1299,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 

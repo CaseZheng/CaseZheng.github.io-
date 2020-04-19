@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="策略模式的学习与实践 策略模式策略模式定义：定义一组算法，将每个算法封装起来，并且使它们之间可以互相互换。 类图  Context 封装角色（上下文角色），起承上启下封装作用，屏蔽高层模块对策略、算法的直接访问，封装可能存在的变化。 Strategy 抽象策略角色 策略、算法家族的抽象，通常为接口，定义每个策略或算法必须具有的方法和属性。 ConcreteStrategy 具体策略角色 实现抽象策">
+  <meta name="description" content="策略模式的学习与实践 策略模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-15-策略模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/09/03/design-pattern-15-strategy/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="策略模式的学习与实践 策略模式策略模式定义：定义一组算法，将每个算法封装起来，并且使它们之间可以互相互换。 类图  Context 封装角色（上下文角色），起承上启下封装作用，屏蔽高层模块对策略、算法的直接访问，封装可能存在的变化。 Strategy 抽象策略角色 策略、算法家族的抽象，通常为接口，定义每个策略或算法必须具有的方法和属性。 ConcreteStrategy 具体策略角色 实现抽象策">
+<meta property="og:description" content="策略模式的学习与实践 策略模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3Epoj9hIXHgEPI009jADSJI1Qb9IQdQcXQbULdfd3LSa7L1vSK9PQafbV2D3ZcfESNPPPavEBM0ZGpkIYr91L9Ar0EGrItj42tnWvk0HVCPRf5cUaP9Rhv21c7rBmKe0y0">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.060Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-15-策略模式">
-<meta name="twitter:description" content="策略模式的学习与实践 策略模式策略模式定义：定义一组算法，将每个算法封装起来，并且使它们之间可以互相互换。 类图  Context 封装角色（上下文角色），起承上启下封装作用，屏蔽高层模块对策略、算法的直接访问，封装可能存在的变化。 Strategy 抽象策略角色 策略、算法家族的抽象，通常为接口，定义每个策略或算法必须具有的方法和属性。 ConcreteStrategy 具体策略角色 实现抽象策">
+<meta name="twitter:description" content="策略模式的学习与实践 策略模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd3Epoj9hIXHgEPI009jADSJI1Qb9IQdQcXQbULdfd3LSa7L1vSK9PQafbV2D3ZcfESNPPPavEBM0ZGpkIYr91L9Ar0EGrItj42tnWvk0HVCPRf5cUaP9Rhv21c7rBmKe0y0">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/09/03/design-pattern-15-strategy/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -471,6 +478,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -536,7 +563,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'd9dc37de1a88e01f743aeab28aed8c8a',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="github源码分析仓库 容器的介绍研究数据的特定排列方式，以便于搜寻或排序或其它特殊目的，这一专门学科称为数据结构。任何特定的数据结构都是为了实现某种特定的算法。STL容器将运用最广泛的的一些数据结构实现出来。常见数据结构：array(数组)、list(链表)、tree(树)、queue(队列)、hash table(散列表)、set(集合)、map(映射表)等。这些数据结构分为序列式和关联式两">
+  <meta name="description" content="github源码分析仓库 容器的介绍">
 <meta name="keywords" content="cpp,stl">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SGI STL 标准库 vector和list 3">
 <meta property="og:url" content="http://www.casezheng.date/2017/06/10/stl-vector-list-3/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="github源码分析仓库 容器的介绍研究数据的特定排列方式，以便于搜寻或排序或其它特殊目的，这一专门学科称为数据结构。任何特定的数据结构都是为了实现某种特定的算法。STL容器将运用最广泛的的一些数据结构实现出来。常见数据结构：array(数组)、list(链表)、tree(树)、queue(队列)、hash table(散列表)、set(集合)、map(映射表)等。这些数据结构分为序列式和关联式两">
+<meta property="og:description" content="github源码分析仓库 容器的介绍">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2020-04-12T04:56:35.922Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SGI STL 标准库 vector和list 3">
-<meta name="twitter:description" content="github源码分析仓库 容器的介绍研究数据的特定排列方式，以便于搜寻或排序或其它特殊目的，这一专门学科称为数据结构。任何特定的数据结构都是为了实现某种特定的算法。STL容器将运用最广泛的的一些数据结构实现出来。常见数据结构：array(数组)、list(链表)、tree(树)、queue(队列)、hash table(散列表)、set(集合)、map(映射表)等。这些数据结构分为序列式和关联式两">
+<meta name="twitter:description" content="github源码分析仓库 容器的介绍">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/06/10/stl-vector-list-3/">
 
@@ -248,7 +248,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -563,6 +570,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -628,7 +655,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : 'd50be12ea73ec12e145b7e50313a706b',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

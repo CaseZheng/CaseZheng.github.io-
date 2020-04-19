@@ -19,21 +19,21 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+  <meta name="description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块">
 <meta name="keywords" content="linux">
 <meta property="og:type" content="article">
 <meta property="og:title" content="linux系统架构">
 <meta property="og:url" content="http://www.casezheng.date/2018/03/13/linux-1-system-architecture/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+<meta property="og:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.151Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="linux系统架构">
-<meta name="twitter:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块Linux内核由5个子系统组成:进程调度、内存管理、虚拟文件系统、网络接口、进程间通信。 进程调度SCHED进程调度指系统对进程的多种状态之间转换的策略。Linux进程调度主要有三种策略：SCHED_OTHER、SCHED_FIFO和SCHED_RR。  SCHED_OTHE">
+<meta name="twitter:description" content="Linux系统从应用角度来看，分为内核空间和用户空间两部分。内核空间是Linux操作系统的主要部分。 Linux内核主要模块">
 
 <link rel="canonical" href="http://www.casezheng.date/2018/03/13/linux-1-system-architecture/">
 
@@ -248,7 +248,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -481,6 +488,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -546,7 +573,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '21922b88dc43ec3c20d1bb0651dd3690',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

@@ -19,16 +19,16 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。 工厂方法优点 良好的封装性，代码结构清晰，一个对象创建是有约束的，只要知道对象类的名称（或约束字符串）就可以了，不需要知道创建对象的过程，降低模块间耦合。 工厂方法模式的扩展性非常优秀。 屏蔽产品类，调用者不用关心产品类的实现，只需要关系产品的接口。 工厂模式是典型的解耦框">
+  <meta name="description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-5-工厂方法模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/08/23/design-pattern-5-factory/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。 工厂方法优点 良好的封装性，代码结构清晰，一个对象创建是有约束的，只要知道对象类的名称（或约束字符串）就可以了，不需要知道创建对象的过程，降低模块间耦合。 工厂方法模式的扩展性非常优秀。 屏蔽产品类，调用者不用关心产品类的实现，只需要关系产品的接口。 工厂模式是典型的解耦框">
+<meta property="og:description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoayfJIvHgEPI009bA5T34ypLhaFmQw4QdFFpaejIIr9HDMgZ2SCDm1I76UIMc5oINrG9indAXMj4upiNfIOYcM9Lbf-Peg2bK9sOL5nI15HQY-50LFErqOGn74Z0FfXtjO3se0U1Rcc1ReqTB2Yvq1q0bOPoCNJh5MMcPvJesQ4xdCiXDIy56540">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoayfJIvHgEPI009bA5T34ypLhaFmQw4QdFFpaejIIr9HDMgZ2SCDm1I76UIMc5oINrG9indAXMj4upiNfIOYcM85iruBQ1uNkfjqImjqQ-nWViEGrYlAJCyeqRE3EO7B8JKl1HWa0000">
@@ -36,7 +36,7 @@
 <meta property="og:updated_time" content="2020-04-12T04:56:36.033Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-5-工厂方法模式">
-<meta name="twitter:description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。 工厂方法优点 良好的封装性，代码结构清晰，一个对象创建是有约束的，只要知道对象类的名称（或约束字符串）就可以了，不需要知道创建对象的过程，降低模块间耦合。 工厂方法模式的扩展性非常优秀。 屏蔽产品类，调用者不用关心产品类的实现，只需要关系产品的接口。 工厂模式是典型的解耦框">
+<meta name="twitter:description" content="工厂方法模式工厂方法模式的定义：定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLWWeoayfJIvHgEPI009bA5T34ypLhaFmQw4QdFFpaejIIr9HDMgZ2SCDm1I76UIMc5oINrG9indAXMj4upiNfIOYcM9Lbf-Peg2bK9sOL5nI15HQY-50LFErqOGn74Z0FfXtjO3se0U1Rcc1ReqTB2Yvq1q0bOPoCNJh5MMcPvJesQ4xdCiXDIy56540">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/08/23/design-pattern-5-factory/">
@@ -252,7 +252,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -473,6 +480,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -538,7 +565,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '1e4e13c3cd2c323723888da301604441',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');

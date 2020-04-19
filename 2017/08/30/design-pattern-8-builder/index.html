@@ -19,22 +19,22 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"www.casezheng.date","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="建造者模式的学习与实践 建造者模式建造者模式：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。 类图  Product 产品 实现模版方法和基本方法 Builder 抽象建造者 规范Product的组建，一般由子类实现。 ConcreteBuilder 具体建造者 实现抽象类定义的所有方法，并且返回一个组建好的对象。 Director 导演类 负责安排已有模块的顺序，然后">
+  <meta name="description" content="建造者模式的学习与实践 建造者模式">
 <meta name="keywords" content="设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式探秘-8-建造者模式">
 <meta property="og:url" content="http://www.casezheng.date/2017/08/30/design-pattern-8-builder/index.html">
 <meta property="og:site_name" content="CaseZheng">
-<meta property="og:description" content="建造者模式的学习与实践 建造者模式建造者模式：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。 类图  Product 产品 实现模版方法和基本方法 Builder 抽象建造者 规范Product的组建，一般由子类实现。 ConcreteBuilder 具体建造者 实现抽象类定义的所有方法，并且返回一个组建好的对象。 Director 导演类 负责安排已有模块的顺序，然后">
+<meta property="og:description" content="建造者模式的学习与实践 建造者模式">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd0gpSn9IIrIgEPI009jC3S0g493qweiFpD5eJengRYaA36vf9Qh5gh5EJylkIYr99M0LhXwbyoYrEIIVBX2e7wWaQN960e3Yl9JWC90TRLSNEYsw9OMwDROmToB8QrNb9cUKQ9d1pE42swhBbX6Dn-krI4rBmKO0000">
 <meta property="og:updated_time" content="2020-04-12T04:56:36.047Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式探秘-8-建造者模式">
-<meta name="twitter:description" content="建造者模式的学习与实践 建造者模式建造者模式：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。 类图  Product 产品 实现模版方法和基本方法 Builder 抽象建造者 规范Product的组建，一般由子类实现。 ConcreteBuilder 具体建造者 实现抽象类定义的所有方法，并且返回一个组建好的对象。 Director 导演类 负责安排已有模块的顺序，然后">
+<meta name="twitter:description" content="建造者模式的学习与实践 建造者模式">
 <meta name="twitter:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuKhEIImkLd0gpSn9IIrIgEPI009jC3S0g493qweiFpD5eJengRYaA36vf9Qh5gh5EJylkIYr99M0LhXwbyoYrEIIVBX2e7wWaQN960e3Yl9JWC90TRLSNEYsw9OMwDROmToB8QrNb9cUKQ9d1pE42swhBbX6Dn-krI4rBmKO0000">
 
 <link rel="canonical" href="http://www.casezheng.date/2017/08/30/design-pattern-8-builder/">
@@ -250,7 +250,14 @@
                 </span>
             </span>
 
-          <br>
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
@@ -468,6 +475,26 @@
   </div>
 
         
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
 
 
 
@@ -533,7 +560,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       owner       : 'CaseZheng',
       admin       : ['CaseZheng'],
       id          : '3d5de810708ec21943d0ec2f5a0fba95',
-        language: '',
+        language: 'zh-CN',
       distractionFreeMode: true
     });
     gitalk.render('gitalk-container');
